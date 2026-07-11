@@ -1,3 +1,4 @@
+
 <nz-card nzTitle="📊 Histórico de Estudos" style="margin: 24px;">
   
   <div nz-row [nzGutter]="24" style="margin-bottom: 24px;">
@@ -14,20 +15,22 @@
     </div>
   </div>
 
-  <nz-table #basicTable [nzData]="registrosFiltrados" nzBordered>
-    <thead>
+<nz-table #basicTable [nzData]="registrosFiltrados" nzBordered>
+  <thead>
+    <tr>
+      <th nzWidth="40px"></th> <th>Data</th>
+      <th>Matéria</th>
+      <th>Assunto</th>
+      <th>Tipo</th>
+      <th>Tempo</th>
+      <th>Questões (Acertos/Feitas)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <ng-container *ngFor="let data of basicTable.data">
       <tr>
-        <th>Data</th>
-        <th>Matéria</th>
-        <th>Assunto</th>
-        <th>Tipo</th>
-        <th>Tempo</th>
-        <th>Questões (Acertos/Feitas)</th>
-        <th>Revisão</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let data of basicTable.data">
+        <td [nzShowExpand]="true" [(nzExpand)]="data.expandido"></td>
+        
         <td>{{ data.dataEstudo | date: 'dd/MM/yyyy' }}</td>
         <td><strong>{{ data.materia?.nome }}</strong></td>
         <td>{{ data.assunto?.nome }}</td>
@@ -36,16 +39,43 @@
         <td>
           <nz-tag nzColor="green">{{ data.questoesAcertadas }}/{{ data.questoesFeitas }}</nz-tag>
         </td>
-        <td>
-          <span *ngIf="data.revisaoAssunto; else semRevisao">
-            🔄 {{ data.revisaoAssunto?.nome }} 
-            <nz-tag nzColor="orange" *ngIf="data.questoesRevisaoFeitas > 0">
-              Q: {{ data.questoesRevisaoAcertadas }}/{{ data.questoesRevisaoFeitas }}
-            </nz-tag>
-          </span>
-          <ng-template #semRevisao><span style="color: #bfbfbf;">Não revisado</span></ng-template>
-        </td>
       </tr>
-    </tbody>
-  </nz-table>
-</nz-card>
+
+      <tr [nzExpand]="data.expandido">
+        <div style="padding: 16px; background: #fafafa; border-radius: 4px;">
+          <div nz-row [nzGutter]="16">
+            
+            <div nz-col [nzSpan]="12">
+              <h4 style="color: #1890ff;">📝 Detalhes do Conteúdo</h4>
+              <p><strong>Nome do Material:</strong> {{ data.materialNome || 'Não informado' }}</p>
+              <p><strong>Ponto de Parada:</strong> {{ data.pontoParada || 'Não informado' }}</p>
+              <p><strong>Link do Documento:</strong> 
+                <a *ngIf="data.linkDocumento; else semLink" [href]="data.linkDocumento" target="_blank">Acessar material</a>
+                <ng-template #semLink><span>Nenhum link salvo</span></ng-template>
+              </p>
+              <p><strong>Observações:</strong> {{ data.observacoes || 'Sem observações.' }}</p>
+            </div>
+
+            <div nz-col [nzSpan]="12" style="border-left: 1px solid #e8e8e8; padding-left: 16px;">
+              <h4 style="color: #fa8c16;">🔄 Dados da Revisão</h4>
+              <div *ngIf="data.revisaoAssunto; else blocoSemRevisao">
+                <p><strong>Assunto Revisado:</strong> {{ data.revisaoAssunto?.nome }}</p>
+                <p><strong>Complemento:</strong> {{ data.revisaoComplemento || 'Sem detalhes' }}</p>
+                <p><strong>Questões de Revisão:</strong> 
+                  <nz-tag nzColor="orange">{{ data.questoesRevisaoAcertadas }}/{{ data.questoesRevisaoFeitas }}</nz-tag>
+                  <span style="font-size: 12px; color: #8c8c8c;" *ngIf="data.questoesRevisaoFeitas > 0">
+                    ({{ ((data.questoesRevisaoAcertadas / data.questoesRevisaoFeitas) * 100) | number:'1.0-1' }}% de acerto)
+                  </span>
+                </p>
+              </div>
+              <ng-template #blocoSemRevisao>
+                <p style="color: #bfbfbf; font-style: italic;">Nenhuma revisão realizada nesta sessão.</p>
+              </ng-template>
+            </div>
+
+          </div>
+        </div>
+      </tr>
+    </ng-container>
+  </tbody>
+</nz-table></nz-card>

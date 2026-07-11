@@ -60,4 +60,24 @@ export class VisualizarRegistrosComponent implements OnInit {
     }
     this.cdr.detectChanges();
   }
+  private aplicarFiltroEAutoExpansao(materiaId: number | null): void {
+  // 1. Filtra a lista
+  if (!materiaId) {
+    this.registrosFiltrados = [...this.listaRegistros];
+  } else {
+    this.registrosFiltrados = this.listaRegistros.filter(
+      reg => reg.materia && reg.materia.id === materiaId
+    );
+  }
+
+  // 2. Reseta o estado de expansão de todos para não misturar
+  this.registrosFiltrados.forEach(reg => reg.expandido = false);
+
+  // 3. PRIORIDADE: Abre o último registro do topo automaticamente se a lista não estiver vazia
+  if (this.registrosFiltrados.length > 0) {
+    this.registrosFiltrados[0].expandido = true;
+  }
+
+  this.cdr.detectChanges();
+}
 }
