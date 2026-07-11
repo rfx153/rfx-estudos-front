@@ -52,6 +52,11 @@ export class RegistroService {
   }
 
   criarAssunto(assunto: { nome: string; materiaId: number }): Observable<Assunto> {
-  return this.http.post<Assunto>('http://localhost:8080/api/assuntos', assunto);
-}
+    return this.http.post<Assunto>('http://localhost:8080/api/assuntos', assunto);
+  }
+    // Adicione esse método dentro da classe RegistroService
+  listarTiposMaterial(): Observable<MaterialTipo[]> {
+      return this.http.get<MaterialTipo[]>('http://localhost:8080/api/material-tipos');
+    }
+
 }

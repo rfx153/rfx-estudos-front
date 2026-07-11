@@ -51,7 +51,7 @@ export class RegistroListaComponent implements OnInit {
   
   // Listas fictícias iniciais (ajuste conforme criar os services delas depois)
   listaAssuntos: Assunto[] = [] 
-  listaTiposMaterial: MaterialTipo[] = [{ id: 1, nome: 'PDF' }, { id: 2, nome: 'Videoaula' }, { id: 3, nome: 'Questões' }];
+listaTiposMaterial: MaterialTipo[] = [];
 
   carregando = true;
   salvando = false;
@@ -92,6 +92,16 @@ export class RegistroListaComponent implements OnInit {
     this.materiaService.listarTodas().subscribe(materias => {
       this.listaMaterias = materias;
       this.cdr.detectChanges();
+    });
+    //listar os tipos de materias
+    this.registroService.listarTiposMaterial().subscribe({
+    next: (tipos) => {
+      this.listaTiposMaterial = tipos;
+      this.cdr.detectChanges(); // Atualiza a tela com os dados novos do banco
+    },
+    error: (err) => {
+      console.error('Erro ao carregar tipos de material:', err);
+    }
     });
 
     this.registroService.listarTodos().subscribe({
