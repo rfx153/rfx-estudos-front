@@ -1,0 +1,51 @@
+<nz-card nzTitle="📊 Histórico de Estudos" style="margin: 24px;">
+  
+  <div nz-row [nzGutter]="24" style="margin-bottom: 24px;">
+    <div nz-col [nzSpan]="8">
+      <label style="font-weight: bold; display: block; margin-bottom: 8px;">Filtrar por Matéria</label>
+      <nz-select 
+        [ngModel]="materiaSelecionadaId" 
+        (ngModelChange)="filtrarPorMateria($event)" 
+        nzAllowClear 
+        nzPlaceHolder="Todas as matérias" 
+        style="width: 100%;">
+        <nz-option *ngFor="let m of listaMaterias" [nzLabel]="m.nome" [nzValue]="m.id"></nz-option>
+      </nz-select>
+    </div>
+  </div>
+
+  <nz-table #basicTable [nzData]="registrosFiltrados" nzBordered>
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Matéria</th>
+        <th>Assunto</th>
+        <th>Tipo</th>
+        <th>Tempo</th>
+        <th>Questões (Acertos/Feitas)</th>
+        <th>Revisão</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let data of basicTable.data">
+        <td>{{ data.dataEstudo | date: 'dd/MM/yyyy' }}</td>
+        <td><strong>{{ data.materia?.nome }}</strong></td>
+        <td>{{ data.assunto?.nome }}</td>
+        <td><nz-tag nzColor="blue">{{ data.materialTipo?.nome }}</nz-tag></td>
+        <td>{{ data.tempoEstudado }}</td>
+        <td>
+          <nz-tag nzColor="green">{{ data.questoesAcertadas }}/{{ data.questoesFeitas }}</nz-tag>
+        </td>
+        <td>
+          <span *ngIf="data.revisaoAssunto; else semRevisao">
+            🔄 {{ data.revisaoAssunto?.nome }} 
+            <nz-tag nzColor="orange" *ngIf="data.questoesRevisaoFeitas > 0">
+              Q: {{ data.questoesRevisaoAcertadas }}/{{ data.questoesRevisaoFeitas }}
+            </nz-tag>
+          </span>
+          <ng-template #semRevisao><span style="color: #bfbfbf;">Não revisado</span></ng-template>
+        </td>
+      </tr>
+    </tbody>
+  </nz-table>
+</nz-card>

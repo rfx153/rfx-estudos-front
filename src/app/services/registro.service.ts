@@ -59,4 +59,8 @@ export class RegistroService {
       return this.http.get<MaterialTipo[]>('http://localhost:8080/api/material-tipos');
     }
 
+  listarTodosRegistros(): Observable<any[]> {
+  return this.http.get<any[]>('http://localhost:8080/api/registros');
+    }
+
 }

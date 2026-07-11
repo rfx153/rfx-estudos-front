@@ -1,5 +1,13 @@
-<div style="background-color: #f0f2f5; min-height: 100vh; padding: 30px;">
-
-<app-registro-lista></app-registro-lista>
-
+<div style="background: #001529; padding: 16px; display: flex; gap: 20px; align-items: center;">
+  <span style="color: white; font-weight: bold; font-size: 18px; margin-right: 20px;">RFX Estudos</span>
+  
+  <a href="/novo-registro" style="color: rgba(255,255,255,0.85); text-decoration: none; font-size: 15px;">
+    ➕ Novo Registro
+  </a>
+  
+  <a href="/visualizar-registros" style="color: rgba(255,255,255,0.85); text-decoration: none; font-size: 15px;">
+    📊 Histórico & Filtros
+  </a>
 </div>
+
+<router-outlet></router-outlet>
