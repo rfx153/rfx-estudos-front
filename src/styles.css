@@ -1,1 +1,10 @@
-/* You can add global styles to this file, and also import other style files */
+/* Importação dos temas base do NG-ZORRO */
+@import "ng-zorro-antd/ng-zorro-antd.css";
+
+/* Reset básico para melhorar o aspecto do dashboard */
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f0f2f5;
+}

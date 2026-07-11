@@ -1,0 +1,56 @@
+<div style="padding: 24px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+  
+  <h2>📚 Gerenciador de Matérias de Estudo</h2>
+  <p style="color: #666;">Cadastre suas disciplinas e organize seus blocos de revisão.</p>
+  
+  <hr style="border: 0; border-top: 1px solid #f0f0f0; margin: 20px 0;">
+
+  <form nz-form [nzLayout]="'inline'" [formGroup]="validateForm" (ngSubmit)="submitForm()" style="margin-bottom: 30px; gap: 16px;">
+    
+    <nz-form-item style="flex: 1; min-width: 250px;">
+      <nz-form-control nzErrorTip="Por favor, digite o nome da matéria!">
+        <nz-input-group nzPrefixIcon="book">
+          <input type="text" nz-input formControlName="nome" placeholder="Ex: Direito Constitucional, Java, Francês" />
+        </nz-input-group>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item style="flex: 1; min-width: 250px;">
+      <nz-form-control nzErrorTip="Digite ao menos uma categoria separada por vírgula!">
+        <nz-input-group nzPrefixIcon="tags">
+          <input type="text" nz-input formControlName="categorias" placeholder="Categorias (Ex: Exames, Provas, Sintaxe)" />
+        </nz-input-group>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-control>
+        <button nz-button nzType="primary" [nzLoading]="salvando">
+          ⚡ Adicionar Matéria
+        </button>
+      </nz-form-control>
+    </nz-form-item>
+  </form>
+
+  <nz-table #basicTable [nzData]="listaMaterias" [nzLoading]="carregando" nzBordered>
+    <thead>
+      <tr>
+        <th width="80px">ID</th>
+        <th>Nome da Matéria</th>
+        <th>Categorias de Estudo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let data of basicTable.data">
+        <td>{{ data.id }}</td>
+        <td><strong>{{ data.nome }}</strong></td>
+        <td>
+          <nz-tag *ngFor="let tag of converterCategorias(data.categorias)" nzColor="blue">
+            {{ tag }}
+          </nz-tag>
+          <span *ngIf="!data.categorias" style="color: #999; font-style: italic;">Nenhuma</span>
+        </td>
+      </tr>
+    </tbody>
+  </nz-table>
+</div>

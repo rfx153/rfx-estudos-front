@@ -1,0 +1,47 @@
+.registro-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.form-footer {
+  text-align: right;
+  margin-top: 10px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+nz-form-label {
+  font-weight: 600;
+}
+
+.ant-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.dropdown-wrapper {
+  display: flex;
+  flex-wrap: nowrap;
+  padding: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.dropdown-wrapper input {
+  flex: 1;
+  margin-right: 8px;
+  height: 32px;
+}
+
+.add-item-btn {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: #1890ff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add-item-btn:hover {
+  color: #40a9ff;
+}

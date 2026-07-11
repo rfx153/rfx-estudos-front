@@ -1,0 +1,170 @@
+<div class="registro-container">
+  <nz-card nzTitle="⚡ Novo Registro de Estudo" [nzExtra]="extraTemplate">
+    <form nz-form [formGroup]="validateForm" (ngSubmit)="submitForm()" nzLayout="vertical">
+      
+      <div nz-row [nzGutter]="24">
+        <div nz-col [nzSpan]="8">
+          <nz-form-item>
+            <nz-form-label nzRequired>Matéria</nz-form-label>
+            <nz-form-control nzErrorTip="Selecione a matéria">
+              <nz-select formControlName="materia" nzShowSearch nzAllowClear nzPlaceHolder="Selecione">
+                <nz-option *ngFor="let m of listaMaterias" [nzLabel]="m.nome" [nzValue]="m"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col [nzSpan]="8">
+        <nz-form-item>
+          <nz-form-label nzRequired>Assunto Estudado</nz-form-label>
+          <nz-form-control nzErrorTip="Selecione ou cadastre o assunto">
+            <nz-select 
+              formControlName="assunto" 
+              nzShowSearch 
+              nzAllowClear 
+              nzPlaceHolder="Assunto"
+              [nzDropdownRender]="renderTemplate"
+            >
+              <nz-option *ngFor="let a of listaAssuntos" [nzLabel]="a.nome" [nzValue]="a"></nz-option>
+            </nz-select>
+
+            <ng-template #renderTemplate>
+              <div class="dropdown-wrapper">
+                <input type="text" nz-input #inputElement placeholder="Novo assunto..." />
+                <a class="add-item-btn" (click)="cadastrarAssuntoRapido(inputElement)">
+                  <i nz-icon nzType="plus"></i> Criar
+                </a>
+              </div>
+            </ng-template>
+
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+        <div nz-col [nzSpan]="8">
+          <nz-form-item>
+            <nz-form-label nzRequired>Data do Estudo</nz-form-label>
+            <nz-form-control>
+              <nz-date-picker formControlName="dataEstudo" style="width: 100%"></nz-date-picker>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+      </div>
+
+      <div nz-row [nzGutter]="24">
+        <div nz-col [nzSpan]="8">
+          <nz-form-item>
+            <nz-form-label nzRequired>Tipo de Material</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="materialTipo" nzPlaceHolder="Ex: PDF, Vídeo...">
+                <nz-option *ngFor="let t of listaTiposMaterial" [nzLabel]="t.nome" [nzValue]="t"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col [nzSpan]="10">
+          <nz-form-item>
+            <nz-form-label>Nome do Material / Aula</nz-form-label>
+            <nz-form-control>
+              <input nz-input formControlName="materialNome" placeholder="Ex: Aula 02 - Princípios Fundamentais" />
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col [nzSpan]="6">
+          <nz-form-item>
+            <nz-form-label nzRequired>Tempo Estudado</nz-form-label>
+            <nz-form-control nzErrorTip="Informe o tempo">
+              <nz-time-picker formControlName="tempoEstudado" nzFormat="HH:mm" style="width: 100%"></nz-time-picker>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+      </div>
+
+      <div nz-row [nzGutter]="24">
+        <div nz-col [nzSpan]="4">
+          <nz-form-item>
+            <nz-form-label>Questões Feitas</nz-form-label>
+            <nz-form-control>
+              <nz-input-number formControlName="questoesFeitas" [nzMin]="0" style="width: 100%"></nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col [nzSpan]="4">
+          <nz-form-item>
+            <nz-form-label>Acertos</nz-form-label>
+            <nz-form-control>
+              <nz-input-number formControlName="questoesAcertadas" [nzMin]="0" style="width: 100%"></nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col [nzSpan]="16">
+          <nz-form-item>
+            <nz-form-label>Ponto de Parada (Onde parei?)</nz-form-label>
+            <nz-form-control>
+              <input nz-input formControlName="puntoParada" placeholder="Ex: Página 45 ou Minuto 12:30" />
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+      </div>
+
+      <div nz-row [nzGutter]="24">
+        <div nz-col [nzSpan]="12">
+          <nz-form-item>
+            <nz-form-label>Link do Documento / Drive</nz-form-label>
+            <nz-form-control>
+              <input nz-input formControlName="linkDocumento" placeholder="https://..." />
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col [nzSpan]="12">
+          <nz-form-item>
+            <nz-form-label>Observações Gerais</nz-form-label>
+            <nz-form-control>
+              <textarea nz-input formControlName="observacoes" [nzAutosize]="{ minRows: 1, maxRows: 3 }"></textarea>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <button nz-button nzType="primary" [nzLoading]="salvando">
+          <i nz-icon nzType="plus"></i> Salvar Sessão de Estudo
+        </button>
+      </div>
+    </form>
+  </nz-card>
+
+  <nz-table #basicTable [nzData]="listaRegistros" [nzLoading]="carregando" style="margin-top: 30px;">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Matéria</th>
+        <th>Assunto</th>
+        <th>Tempo</th>
+        <th>Performance</th>
+        <th>Material</th>
+        <th>Obs</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let data of basicTable.data">
+        <td>{{ data.dataEstudo | date: 'dd/MM/yyyy' }}</td>
+        <td><b>{{ data.materia.nome }}</b></td>
+        <td>{{ data.assunto.nome }}</td>
+        <td><i nz-icon nzType="clock-circle"></i> {{ data.tempoEstudado }}</td>
+        <td>
+          <span [style.color]="data.questoesAcertadas / data.questoesFeitas >= 0.7 ? '#52c41a' : '#f5222d'">
+            {{ data.questoesAcertadas }}/{{ data.questoesFeitas }} 
+            ({{ calcularAproveitamento(data.questoesFeitas, data.questoesAcertadas) }})
+          </span>
+        </td>
+        <td>{{ data.materialTipo.nome }}</td>
+        <td>
+          <i nz-icon nzType="info-circle" nz-tooltip [nzTooltipTitle]="data.observacoes" *ngIf="data.observacoes"></i>
+        </td>
+      </tr>
+    </tbody>
+  </nz-table>
+</div>
+
+<ng-template #extraTemplate>
+  <span style="color: #1890ff; font-weight: bold;">Total de Registros: {{ listaRegistros.length }}</span>
+</ng-template>
