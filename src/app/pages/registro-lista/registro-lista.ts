@@ -78,6 +78,8 @@ listaTiposMaterial: MaterialTipo[] = [];
       questoesAcertadas: [0],
       revisaoAssunto: [null],
       revisaoComplemento: [null],
+      questoesRevisaoFeitas: [0],
+      questoesRevisaoAcertadas: [0],
       dataEstudo: [new Date(), [Validators.required]],
       tempoEstudado: [null, [Validators.required]],
       linkDocumento: [null],
