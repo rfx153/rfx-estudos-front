@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Materia } from './materia.service';
+import { environment } from '../../environments/environment.development';
 
 // Interfaces espelhando o seu modelo Java
 export interface Assunto {
@@ -36,31 +37,50 @@ export interface Registro {
 })
 export class RegistroService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api/registros';
+
+  // 🌍 1. Centralizando as URLs base dinâmicas
+  private apiUrl = `${environment.apiUrl}/registros`;
+  private materialTiposUrl = `${environment.apiUrl}/material-tipos`;
+  private assuntosUrl = `${environment.apiUrl}/assuntos`; // Ajuste se o endpoint de assuntos no seu Java for diferente
+
+  // ==========================================
+  // 📝 MÉTODOS DE REGISTROS
+  // ==========================================
 
   listarTodos(): Observable<Registro[]> {
     return this.http.get<Registro[]>(this.apiUrl);
+  }
+
+  listarTodosRegistros(): Observable<any[]> {
+    return this.http.get<any[]>(this.apiUrl);
   }
 
   criar(registro: Partial<Registro>): Observable<Registro> {
     return this.http.post<Registro>(this.apiUrl, registro);
   }
 
-  // Adicione esse método dentro da classe RegistroService
+  // ==========================================
+  // 📚 MÉTODOS DE ASSUNTOS
+  // ==========================================
+
   listarAssuntosPorMateria(materiaId: number): Observable<Assunto[]> {
-    return this.http.get<Assunto[]>(`http://localhost:8080/api/assuntos/materia/${materiaId}`);
+    // 🔥 Corrigido: adicionado o "$" antes de {this.apiUrl} para interpolar a variável corretamente
+    return this.http.get<Assunto[]>(`${this.apiUrl}/${materiaId}`);
   }
 
   criarAssunto(assunto: { nome: string; materiaId: number }): Observable<Assunto> {
-    return this.http.post<Assunto>('http://localhost:8080/api/assuntos', assunto);
+    // Usando a rota dinâmica de assuntos
+    return this.http.post<Assunto>(this.assuntosUrl, assunto);
   }
-    // Adicione esse método dentro da classe RegistroService
-  listarTiposMaterial(): Observable<MaterialTipo[]> {
-      return this.http.get<MaterialTipo[]>('http://localhost:8080/api/material-tipos');
-    }
 
-  listarTodosRegistros(): Observable<any[]> {
-  return this.http.get<any[]>('http://localhost:8080/api/registros');
-    }
+  // ==========================================
+  // 🛠️ MÉTODOS DE TIPOS DE MATERIAL
+  // ==========================================
+
+  listarTiposMaterial(): Observable<MaterialTipo[]> {
+    // 🔥 Mudou de localhost para a variável que lê do environment
+    return this.http.get<MaterialTipo[]>(this.materialTiposUrl);
+  }
+
 
 }

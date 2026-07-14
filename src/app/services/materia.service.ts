@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment.development';
 
 // Interface para tipar os dados que vêm do Java
 export interface Materia {
@@ -14,8 +15,8 @@ export interface Materia {
 })
 export class MateriaService {
 
-  // URL do seu back-end Java
-  private apiUrl = 'http://localhost:8080/api/materias';
+// 🌍 URL dinâmica baseada no ambiente (Local ou Produção)
+  private apiUrl = `${environment.apiUrl}/materias`;
 
   constructor(private http: HttpClient) { }
 
