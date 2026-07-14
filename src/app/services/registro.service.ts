@@ -65,7 +65,7 @@ export class RegistroService {
 
   listarAssuntosPorMateria(materiaId: number): Observable<Assunto[]> {
     // 🔥 Corrigido: adicionado o "$" antes de {this.apiUrl} para interpolar a variável corretamente
-    return this.http.get<Assunto[]>(`${this.apiUrl}/${materiaId}`);
+    return this.http.get<Assunto[]>(`${this.assuntosUrl}/materia/${materiaId}`);
   }
 
   criarAssunto(assunto: { nome: string; materiaId: number }): Observable<Assunto> {
