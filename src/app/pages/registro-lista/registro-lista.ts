@@ -161,40 +161,45 @@ listaTiposMaterial: MaterialTipo[] = [];
   }
   
 
-  escutarMudancaDeMateria(): void {
-  this.validateForm.get('materia')?.valueChanges.subscribe((materiaSelecionada: Materia | null) => {
+ escutarMudancaDeMateria(): void {
+  this.validateForm.get('materia')?.valueChanges.subscribe((materiaId: number | null) => {
     const campoAssunto = this.validateForm.get('assunto');
-    
-    // Reseta o valor do assunto sempre que mudar a matéria
-    campoAssunto?.reset();
+    const campoRevisao = this.validateForm.get('revisaoAssunto');
 
-    if (materiaSelecionada && materiaSelecionada.id) {
-      // Busca no Java os assuntos daquela matéria específica
-      this.registroService.listarAssuntosPorMateria(materiaSelecionada.id).subscribe({
+    // Reseta os assuntos quando troca a matéria
+    campoAssunto?.reset();
+    campoRevisao?.reset();
+
+    if (materiaId) {
+      // 🔥 LIBERA OS CAMPOS IMEDIATAMENTE
+      campoAssunto?.enable();
+      campoRevisao?.enable();
+      
+      this.listaAssuntos = [];
+      this.cdr.detectChanges();
+
+      // Busca os assuntos da matéria no Spring Boot
+      this.registroService.listarAssuntosPorMateria(materiaId).subscribe({
         next: (assuntos) => {
           this.listaAssuntos = assuntos;
-          campoAssunto?.enable(); // 🔥 Libera o campo para seleção
           this.cdr.detectChanges();
         },
         error: (err) => {
           console.error('Erro ao buscar assuntos:', err);
           this.listaAssuntos = [];
-          campoAssunto?.disable();
           this.cdr.detectChanges();
         }
       });
     } else {
-      // Se limpar a matéria, limpa os assuntos e bloqueia o campo
+      // Se não houver matéria selecionada, bloqueia
       this.listaAssuntos = [];
       campoAssunto?.disable();
+      campoRevisao?.disable();
       this.cdr.detectChanges();
     }
   });
- 
-  
-
-  
 }
+ 
 // Adicione este método dentro da classe RegistroListaComponent
 cadastrarAssuntoRapido(inputElement: HTMLInputElement): void {
   const nomeAssunto = inputElement.value.trim();

@@ -101,7 +101,7 @@ export class MateriaListaComponent implements OnInit {
     }
   }
 
-  converterCategorias(categorias: string): string[] {
+  converterCategorias(categorias?: string): string[] {
     if (!categorias) return [];
     return categorias.split(',').map(c => c.trim());
   }

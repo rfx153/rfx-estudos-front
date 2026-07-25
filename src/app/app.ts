@@ -5,7 +5,7 @@ import { RegistroListaComponent } from "./pages/registro-lista/registro-lista";
 
 @Component({
   selector: 'app-root',
-  imports: [ RegistroListaComponent, RouterOutlet, RouterLink],
+  imports: [ RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.css',
   encapsulation: ViewEncapsulation.None
