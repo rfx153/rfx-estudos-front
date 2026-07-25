@@ -236,4 +236,31 @@ cadastrarAssuntoRapido(inputElement: HTMLInputElement): void {
   });
 }
 
+cadastrarMateriaRapida(inputElement: HTMLInputElement): void {
+  const nomeMateria = inputElement.value.trim();
+
+  if (!nomeMateria) {
+    return; // Se estiver em branco, não faz nada
+  }
+
+  this.materiaService.criar({ nome: nomeMateria }).subscribe({
+    next: (materiaSalva) => {
+      // 1. Adiciona a nova matéria retornada do Java na lista da tela
+      this.listaMaterias = [...this.listaMaterias, materiaSalva];
+      
+      // 2. Já seleciona ela automaticamente no formulário usando o ID
+      this.validateForm.get('materia')?.setValue(materiaSalva.id);
+      
+      // 3. Limpa o campo de texto do dropdown
+      inputElement.value = '';
+      
+      // 4. Força o Angular a renderizar a alteração na tela
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error('Erro ao cadastrar matéria rápida:', err);
+    }
+  });
+}
+
 }

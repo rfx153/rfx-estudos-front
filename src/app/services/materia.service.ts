@@ -7,7 +7,7 @@ import { environment } from '../../environments/environment.development';
 export interface Materia {
   id?: number;
   nome: string;
-  categorias: string;
+  categorias?: string;
 }
 
 @Injectable({

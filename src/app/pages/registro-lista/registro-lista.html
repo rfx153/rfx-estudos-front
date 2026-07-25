@@ -4,15 +4,30 @@
       
       <div nz-row [nzGutter]="24">
         <div nz-col [nzSpan]="8">
-          <nz-form-item>
-            <nz-form-label nzRequired>Matéria</nz-form-label>
-            <nz-form-control nzErrorTip="Selecione a matéria">
-              <nz-select formControlName="materia" nzShowSearch nzAllowClear nzPlaceHolder="Selecione">
-                <nz-option *ngFor="let m of listaMaterias" [nzLabel]="m.nome" [nzValue]="m"></nz-option>
-              </nz-select>
-            </nz-form-control>
-          </nz-form-item>
+  <nz-form-item>
+    <nz-form-label nzRequired>Matéria</nz-form-label>
+    <nz-form-control nzErrorTip="Selecione ou cadastre a matéria">
+      <nz-select 
+        formControlName="materia" 
+        nzShowSearch 
+        nzAllowClear 
+        nzPlaceHolder="Selecione"
+        [nzDropdownRender]="renderMateriaTemplate"
+      >
+        <nz-option *ngFor="let m of listaMaterias" [nzLabel]="m.nome" [nzValue]="m.id"></nz-option>
+      </nz-select>
+
+      <ng-template #renderMateriaTemplate>
+        <div class="dropdown-wrapper" style="display: flex; flex-wrap: nowrap; padding: 8px;">
+          <input type="text" nz-input #inputMateria placeholder="Nova matéria..." style="flex: auto;" />
+          <a class="add-item-btn" (click)="cadastrarMateriaRapida(inputMateria)" style="flex: none; padding: 8px; display: block; cursor: pointer;">
+            <i nz-icon nzType="plus"></i> Criar
+          </a>
         </div>
+      </ng-template>
+    </nz-form-control>
+  </nz-form-item>
+</div>
         <div nz-col [nzSpan]="8">
         <nz-form-item>
           <nz-form-label nzRequired>Assunto Estudado</nz-form-label>
