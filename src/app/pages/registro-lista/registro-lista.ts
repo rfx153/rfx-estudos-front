@@ -121,38 +121,47 @@ listaTiposMaterial: MaterialTipo[] = [];
   }
 
   submitForm(): void {
-    if (this.validateForm.valid) {
-      this.salvando = true;
-      const formValue = this.validateForm.value;
+  if (this.validateForm.valid) {
+    this.salvando = true;
+    const formValue = this.validateForm.value;
 
-      // Tratamento de formatação de datas e horas antes de enviar para o Spring Boot
-      const payload: Partial<Registro> = {
-        ...formValue,
-        dataEstudo: formValue.dataEstudo ? formValue.dataEstudo.toISOString().split('T')[0] : null,
-        tempoEstudado: formValue.tempoEstudado ? formValue.tempoEstudado.toTimeString().split(' ')[0] : null
-      };
+    // Converte os IDs numéricos em objetos com a chave { id: X } para o Jackson/Spring aceitar
+    const payload: Partial<Registro> = {
+      ...formValue,
+      materia: formValue.materia ? { id: formValue.materia } as any : null,
+      assunto: formValue.assunto ? { id: formValue.assunto } as any : null,
+      revisaoAssunto: formValue.revisaoAssunto ? { id: formValue.revisaoAssunto } as any : null,
+      // Se materialTipo também for apenas ID no formulário, converta aqui também:
+      materialTipo: formValue.materialTipo && typeof formValue.materialTipo !== 'object' 
+        ? { id: formValue.materialTipo } as any 
+        : formValue.materialTipo,
+      
+      // Formatação de datas e horas
+      dataEstudo: formValue.dataEstudo ? formValue.dataEstudo.toISOString().split('T')[0] : null,
+      tempoEstudado: formValue.tempoEstudado ? formValue.tempoEstudado.toTimeString().split(' ')[0] : null
+    };
 
-      this.registroService.criar(payload).subscribe({
-        next: () => {
-          this.salvando = false;
-          this.validateForm.reset({ dataEstudo: new Date(), questoesFeitas: 0, questoesAcertadas: 0 });
-          this.carregarDadosIniciais();
-        },
-        error: (err) => {
-          console.error('Erro ao salvar registro:', err);
-          this.salvando = false;
-          this.cdr.detectChanges();
-        }
-      });
-    } else {
-      Object.values(this.validateForm.controls).forEach(control => {
-        if (control.invalid) {
-          control.markAsDirty();
-          control.updateValueAndValidity({ onlySelf: true });
-        }
-      });
-    }
+    this.registroService.criar(payload).subscribe({
+      next: () => {
+        this.salvando = false;
+        this.validateForm.reset({ dataEstudo: new Date(), questoesFeitas: 0, questoesAcertadas: 0 });
+        this.carregarDadosIniciais();
+      },
+      error: (err) => {
+        console.error('Erro ao salvar registro:', err);
+        this.salvando = false;
+        this.cdr.detectChanges();
+      }
+    });
+  } else {
+    Object.values(this.validateForm.controls).forEach(control => {
+      if (control.invalid) {
+        control.markAsDirty();
+        control.updateValueAndValidity({ onlySelf: true });
+      }
+    });
   }
+}
 
   calcularAproveitamento(feitas: number, acertadas: number): string {
     if (!feitas || feitas === 0) return '0%';
@@ -203,39 +212,43 @@ listaTiposMaterial: MaterialTipo[] = [];
 // Adicione este método dentro da classe RegistroListaComponent
 cadastrarAssuntoRapido(inputElement: HTMLInputElement): void {
   const nomeAssunto = inputElement.value.trim();
-  const materiaSelecionada = this.validateForm.get('materia')?.value as Materia;
+  const materiaFormValue = this.validateForm.get('materia')?.value;
 
   if (!nomeAssunto) {
-    return; // Se estiver em branco, não faz nada
+    return; // Se estiver em branco, ignora
   }
 
-  if (!materiaSelecionada || !materiaSelecionada.id) {
+  // Garante que pegamos o ID correto da matéria
+  const materiaId = materiaFormValue && typeof materiaFormValue === 'object'
+    ? materiaFormValue.id
+    : materiaFormValue;
+
+  if (!materiaId) {
     console.warn('Selecione uma matéria antes de cadastrar um assunto.');
     return;
   }
 
-  // Objeto preparado para o Spring Boot receber (Nome + FK da matéria)
+  // DTO esperado pelo Spring Boot (nome + materiaId)
   const novoAssuntoPayload = {
     nome: nomeAssunto,
-    materiaId: materiaSelecionada.id
+    materiaId: materiaId
   };
 
-  // Dispara o salvamento no banco Neon
   this.registroService.criarAssunto(novoAssuntoPayload).subscribe({
-    next: (assuntoSalvo) => { // 🔥 Corrigido de -> para =>
-      // 1. Adiciona o novo assunto vindo do Java na lista da tela
+    next: (assuntoSalvo) => {
+      // 1. Adiciona o novo assunto retornado do Java na lista da tela
       this.listaAssuntos = [...this.listaAssuntos, assuntoSalvo];
       
-      // 2. Já deixa ele selecionado automaticamente no formulário
-      this.validateForm.get('assunto')?.setValue(assuntoSalvo);
+      // 2. 🔥 CORREÇÃO: Passamos apenas o ID 'assuntoSalvo.id' para bater com o [nzValue]="a.id" do HTML
+      this.validateForm.get('assunto')?.setValue(assuntoSalvo.id);
       
-      // 3. Limpa o input do dropdown
+      // 3. Limpa o input de texto do dropdown
       inputElement.value = '';
       
-      // 4. Avisa o Angular para atualizar os elementos visuais
+      // 4. Força o Angular a renderizar a alteração e selecionar o item
       this.cdr.detectChanges();
     },
-    error: (err) => { // 🔥 Corrigido de -> para =>
+    error: (err) => {
       console.error('Erro ao cadastrar assunto rápido:', err);
     }
   });
