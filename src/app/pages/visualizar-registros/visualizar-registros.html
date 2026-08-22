@@ -48,7 +48,7 @@
             <div nz-col [nzSpan]="12">
               <h4 style="color: #1890ff;">📝 Detalhes do Conteúdo</h4>
               <p><strong>Nome do Material:</strong> {{ data.materialNome || 'Não informado' }}</p>
-              <p><strong>Ponto de Parada:</strong> {{ data.pontoParada || 'Não informado' }}</p>
+              <p><strong>Ponto de Parada:</strong> {{ data.puntoParada || 'Não informado' }}</p>
               <p><strong>Link do Documento:</strong> 
                 <a *ngIf="data.linkDocumento; else semLink" [href]="data.linkDocumento" target="_blank">Acessar material</a>
                 <ng-template #semLink><span>Nenhum link salvo</span></ng-template>
