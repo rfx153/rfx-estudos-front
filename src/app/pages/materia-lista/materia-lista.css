@@ -1,6 +1,6 @@
 .materias-page {
   padding: clamp(18px, 3vw, 28px);
-  background: #fff;
+  background: var(--surface, #fff);
 }
 
 .page-heading {
@@ -13,47 +13,111 @@
 
 .page-heading h2 {
   margin: 0;
-  color: #0f172a;
+  color: var(--text, #0f172a);
   font-size: 24px;
   font-weight: 850;
 }
 
 .page-heading p {
   margin: 6px 0 0;
-  color: #64748b;
+  color: var(--text-muted, #64748b);
 }
 
-.categorias-topo {
+.categorias-topo,
+.planejamentos-section {
   margin: 20px 0 24px;
   padding: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border, #e5e7eb);
   border-radius: 8px;
-  background: #f8fafc;
-}
-
-.categorias-topo h3 {
-  margin-bottom: 12px;
+  background: var(--surface-soft, #f8fafc);
 }
 
 .categorias-abas {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-bottom: 14px;
 }
 
 .materias-page hr {
   margin: 20px 0;
   border: 0;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border, #e5e7eb);
+}
+
+.section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.section-heading h3 {
+  margin: 0;
+}
+
+.section-heading p {
+  margin: 4px 0 0;
+  color: var(--text-muted, #64748b);
+}
+
+.data-manager-form {
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.data-manager-form .form-field {
+  flex: 1;
+  min-width: 280px;
+}
+
+.manager-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.manager-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--surface, #fff);
+  color: var(--text, #0f172a);
+  font-weight: 750;
+}
+
+.manager-item input {
+  min-width: 0;
+}
+
+.manager-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.planejamentos-empty {
+  padding: 14px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: var(--text-muted, #64748b);
+  background: var(--surface, #fff);
 }
 
 .materia-form {
   gap: 16px;
   margin-bottom: 30px;
   padding: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border, #e5e7eb);
   border-radius: 8px;
-  background: #fbfdff;
+  background: var(--surface-muted, #fbfdff);
 }
 
 .materia-form .form-field {
@@ -66,7 +130,7 @@
 }
 
 .materia-row-active td {
-  background: #f8fbff;
+  background: var(--surface-muted, #f8fbff);
 }
 
 .materia-open-button {
@@ -78,21 +142,21 @@
 }
 
 .materia-open-button span {
-  color: #64748b;
+  color: var(--text-muted, #64748b);
   font-size: 12px;
   font-weight: 700;
 }
 
 .assuntos-row > td {
   padding: 0 !important;
-  background: #f8fbff;
+  background: var(--surface-muted, #f8fbff);
 }
 
 .assuntos-panel {
   margin: 0;
   padding: 18px 22px 22px;
   border-top: 1px solid #dbeafe;
-  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  background: var(--surface-muted, #fbfdff);
 }
 
 .assuntos-header {
@@ -105,7 +169,7 @@
 
 .assuntos-header h4 {
   margin: 2px 0 0;
-  color: #0f172a;
+  color: var(--text, #0f172a);
   font-size: 17px;
   font-weight: 850;
 }
@@ -122,17 +186,17 @@
   padding: 16px;
   border: 1px dashed #cbd5e1;
   border-radius: 8px;
-  color: #64748b;
-  background: #fff;
+  color: var(--text-muted, #64748b);
+  background: var(--surface, #fff);
 }
 
 .assuntos-list {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border, #e5e7eb);
   border-radius: 8px;
-  background: #fff;
+  background: var(--surface, #fff);
 }
 
 .assunto-item {
@@ -142,18 +206,18 @@
   gap: 12px;
   min-height: 50px;
   padding: 12px 16px;
-  background: #fff;
+  background: var(--surface, #fff);
 }
 
 .assunto-item + .assunto-item {
-  border-top: 1px solid #eef2f7;
+  border-top: 1px solid var(--border, #eef2f7);
 }
 
 .assunto-info {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: #334155;
+  color: var(--text, #334155);
   font-weight: 700;
 }
 
@@ -181,9 +245,27 @@
     display: block;
   }
 
+  .data-manager-form {
+    display: block;
+  }
+
   .materia-form .form-field,
+  .data-manager-form .form-field,
   .materia-form nz-select {
     width: 100%;
     min-width: 0;
+  }
+
+  .manager-list {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .manager-actions {
+    justify-content: flex-end;
   }
 }

@@ -3,7 +3,7 @@
     <form nz-form [formGroup]="validateForm" (ngSubmit)="submitForm()" nzLayout="vertical">
       
       <div nz-row [nzGutter]="24">
-        <div nz-col [nzSpan]="8">
+        <div nz-col [nzSpan]="6">
   <nz-form-item>
     <nz-form-label nzRequired>Matéria</nz-form-label>
     <nz-form-control nzErrorTip="Selecione ou cadastre a matéria">
@@ -28,7 +28,7 @@
     </nz-form-control>
   </nz-form-item>
 </div>
-        <div nz-col [nzSpan]="8">
+        <div nz-col [nzSpan]="6">
         <nz-form-item>
           <nz-form-label nzRequired>Assunto Estudado</nz-form-label>
           <nz-form-control nzErrorTip="Selecione ou cadastre o assunto">
@@ -55,7 +55,31 @@
           </nz-form-control>
         </nz-form-item>
       </div>
-        <div nz-col [nzSpan]="8">
+        <div nz-col [nzSpan]="6">
+          <nz-form-item>
+            <nz-form-label>Nome do Planejamento</nz-form-label>
+            <nz-form-control>
+              <nz-select
+                formControlName="planejamento"
+                nzShowSearch
+                nzAllowClear
+                nzPlaceHolder="Planejamento"
+                [nzDropdownRender]="renderPlanejamentoTemplate">
+                <nz-option *ngFor="let p of listaPlanejamentos" [nzLabel]="p.nome" [nzValue]="p.id"></nz-option>
+              </nz-select>
+
+              <ng-template #renderPlanejamentoTemplate>
+                <div class="dropdown-wrapper">
+                  <input type="text" nz-input #inputPlanejamento placeholder="Novo planejamento..." />
+                  <a class="add-item-btn" (click)="cadastrarPlanejamentoRapido(inputPlanejamento)">
+                    <i nz-icon nzType="plus"></i> Criar
+                  </a>
+                </div>
+              </ng-template>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col [nzSpan]="6">
           <nz-form-item>
             <nz-form-label nzRequired>Data do Estudo</nz-form-label>
             <nz-form-control>
@@ -66,7 +90,17 @@
       </div>
 
       <div nz-row [nzGutter]="24">
-        <div nz-col [nzSpan]="8">
+        <div nz-col [nzSpan]="6">
+          <nz-form-item>
+            <nz-form-label nzRequired>Tipo do Registro</nz-form-label>
+            <nz-form-control nzErrorTip="Selecione o tipo do registro">
+              <nz-select formControlName="tipoRegistro" nzPlaceHolder="Ex: Assunto, Questões...">
+                <nz-option *ngFor="let t of listaTiposRegistro" [nzLabel]="t.nome" [nzValue]="t.id"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col [nzSpan]="6">
           <nz-form-item>
             <nz-form-label nzRequired>Tipo de Material</nz-form-label>
             <nz-form-control>
@@ -76,7 +110,7 @@
             </nz-form-control>
           </nz-form-item>
         </div>
-        <div nz-col [nzSpan]="10">
+        <div nz-col [nzSpan]="8">
           <nz-form-item>
             <nz-form-label>Nome do Material / Aula</nz-form-label>
             <nz-form-control>
@@ -84,7 +118,7 @@
             </nz-form-control>
           </nz-form-item>
         </div>
-        <div nz-col [nzSpan]="6">
+        <div nz-col [nzSpan]="4">
           <nz-form-item>
             <nz-form-label nzRequired>Tempo Estudado</nz-form-label>
             <nz-form-control nzErrorTip="Informe o tempo">
@@ -250,5 +284,5 @@
 </div> -->
 
 <ng-template #extraTemplate>
-  <span class="record-count">{{ listaRegistros.length }} registros</span>
+  <span class="record-count">{{ totalRegistros }} registros</span>
 </ng-template>

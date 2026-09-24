@@ -2,13 +2,36 @@
   
   <header class="page-heading">
     <div>
-      <h2>Matérias e disciplinas</h2>
-      <p>Cadastre, revise e edite os nomes das matérias usadas nos seus registros.</p>
+      <h2>Gerenciador de dados</h2>
+      <p>Cadastre e edite planejamentos, categorias, disciplinas, assuntos e tipos de registro.</p>
     </div>
   </header>
 
   <section class="categorias-topo">
-    <h3>Categorias</h3>
+    <div class="section-heading">
+      <div>
+        <h3>Categorias</h3>
+        <p>Organize disciplinas por grupos de estudo.</p>
+      </div>
+      <nz-tag nzColor="blue">{{ listaCategorias.length }} categoria(s)</nz-tag>
+    </div>
+
+    <form class="data-manager-form" nz-form [nzLayout]="'inline'" [formGroup]="categoriaForm" (ngSubmit)="submitCategoria()">
+      <nz-form-item class="form-field">
+        <nz-form-control nzErrorTip="Por favor, digite o nome da categoria!">
+          <input type="text" nz-input formControlName="nome" placeholder="Ex: Tribunais, Fiscal, Tecnologia" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-control>
+          <button nz-button nzType="primary" [nzLoading]="salvandoCategoria">
+            Adicionar Categoria
+          </button>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+
     <div class="categorias-abas">
       <button
         nz-button
@@ -23,6 +46,110 @@
         (click)="selecionarCategoria(categoria.id)">
         {{ categoria.nome }}
       </button>
+    </div>
+
+    <div class="manager-list">
+      <article class="manager-item" *ngFor="let categoria of listaCategorias">
+        <ng-container *ngIf="categoriaEditandoId !== categoria.id; else editarCategoria">
+          <span>{{ categoria.nome }}</span>
+          <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoCategoria(categoria)">Editar</button>
+        </ng-container>
+        <ng-template #editarCategoria>
+          <input nz-input [(ngModel)]="nomeCategoriaEdicao" [ngModelOptions]="{standalone: true}" />
+          <div class="manager-actions">
+            <button nz-button nzType="primary" nzSize="small" (click)="salvarEdicaoCategoria(categoria)">Salvar</button>
+            <button nz-button nzType="link" nzSize="small" (click)="cancelarEdicaoGerenciador()">Cancelar</button>
+          </div>
+        </ng-template>
+      </article>
+    </div>
+  </section>
+
+  <section class="planejamentos-section">
+    <div class="section-heading">
+      <div>
+        <h3>Planejamentos</h3>
+        <p>Cadastre os nomes dos planejamentos usados nos registros de estudo.</p>
+      </div>
+      <nz-tag nzColor="blue">{{ listaPlanejamentos.length }} planejamento(s)</nz-tag>
+    </div>
+
+    <form class="data-manager-form" nz-form [nzLayout]="'inline'" [formGroup]="planejamentoForm" (ngSubmit)="submitPlanejamento()">
+      <nz-form-item class="form-field">
+        <nz-form-control nzErrorTip="Por favor, digite o nome do planejamento!">
+          <input type="text" nz-input formControlName="nome" placeholder="Ex: Receita Federal 2026, Ciclo base, Revisão final" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-control>
+          <button nz-button nzType="primary" [nzLoading]="salvandoPlanejamento">
+            Adicionar Planejamento
+          </button>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+
+    <div class="manager-list" *ngIf="listaPlanejamentos.length; else semPlanejamentos">
+      <article class="manager-item" *ngFor="let planejamento of listaPlanejamentos">
+        <ng-container *ngIf="planejamentoEditandoId !== planejamento.id; else editarPlanejamento">
+          <span>{{ planejamento.nome }}</span>
+          <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoPlanejamento(planejamento)">Editar</button>
+        </ng-container>
+        <ng-template #editarPlanejamento>
+          <input nz-input [(ngModel)]="nomePlanejamentoEdicao" [ngModelOptions]="{standalone: true}" />
+          <div class="manager-actions">
+            <button nz-button nzType="primary" nzSize="small" (click)="salvarEdicaoPlanejamento(planejamento)">Salvar</button>
+            <button nz-button nzType="link" nzSize="small" (click)="cancelarEdicaoGerenciador()">Cancelar</button>
+          </div>
+        </ng-template>
+      </article>
+    </div>
+
+    <ng-template #semPlanejamentos>
+      <div class="planejamentos-empty" *ngIf="!planejamentosCarregando">Nenhum planejamento cadastrado.</div>
+    </ng-template>
+  </section>
+
+  <section class="planejamentos-section">
+    <div class="section-heading">
+      <div>
+        <h3>Tipos de registro</h3>
+        <p>Defina os tipos usados ao registrar estudo: assunto, questões, resumo, simulado ou prova.</p>
+      </div>
+      <nz-tag nzColor="purple">{{ listaTiposRegistro.length }} tipo(s)</nz-tag>
+    </div>
+
+    <form class="data-manager-form" nz-form [nzLayout]="'inline'" [formGroup]="tipoRegistroForm" (ngSubmit)="submitTipoRegistro()">
+      <nz-form-item class="form-field">
+        <nz-form-control nzErrorTip="Por favor, digite o nome do tipo de registro!">
+          <input type="text" nz-input formControlName="nome" placeholder="Ex: Assunto, Questões, Simulado" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-control>
+          <button nz-button nzType="primary" [nzLoading]="salvandoTipoRegistro">
+            Adicionar Tipo
+          </button>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+
+    <div class="manager-list">
+      <article class="manager-item" *ngFor="let tipo of listaTiposRegistro">
+        <ng-container *ngIf="tipoRegistroEditandoId !== tipo.id; else editarTipoRegistro">
+          <span>{{ tipo.nome }}</span>
+          <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoTipoRegistro(tipo)">Editar</button>
+        </ng-container>
+        <ng-template #editarTipoRegistro>
+          <input nz-input [(ngModel)]="nomeTipoRegistroEdicao" [ngModelOptions]="{standalone: true}" />
+          <div class="manager-actions">
+            <button nz-button nzType="primary" nzSize="small" (click)="salvarEdicaoTipoRegistro(tipo)">Salvar</button>
+            <button nz-button nzType="link" nzSize="small" (click)="cancelarEdicaoGerenciador()">Cancelar</button>
+          </div>
+        </ng-template>
+      </article>
     </div>
   </section>
 

@@ -1,0 +1,74 @@
+<nz-modal
+  [nzVisible]="visivel"
+  [nzTitle]="titulo"
+  [nzFooter]="null"
+  [nzWidth]="860"
+  (nzOnCancel)="fechar()">
+  <ng-container *nzModalContent>
+    <div class="modal-empty" *ngIf="!registros.length">
+      Nenhum registro para exibir.
+    </div>
+
+    <div class="registro-detail-list" *ngIf="registros.length">
+      <article class="registro-detail" *ngFor="let registro of registros">
+        <header>
+          <div>
+            <strong>{{ registro.materia?.nome }}</strong>
+            <span>{{ registro.assunto?.nome }}</span>
+          </div>
+          <nz-tag nzColor="blue">{{ registro.dataEstudo | date: 'dd/MM/yyyy' }}</nz-tag>
+        </header>
+
+        <div class="detail-grid">
+          <div>
+            <small>Tipo do registro</small>
+            <span>{{ registro.tipoRegistro?.nome || 'Não informado' }}</span>
+          </div>
+          <div>
+            <small>Planejamento</small>
+            <span>{{ registro.planejamento?.nome || 'Não informado' }}</span>
+          </div>
+          <div>
+            <small>Material</small>
+            <span>{{ registro.materialTipo?.nome || 'Não informado' }}</span>
+          </div>
+          <div>
+            <small>Tempo</small>
+            <span>{{ registro.tempoEstudado || 'Não informado' }}</span>
+          </div>
+          <div>
+            <small>Questões</small>
+            <span>{{ registro.questoesAcertadas || 0 }}/{{ registro.questoesFeitas || 0 }} ({{ aproveitamento(registro.questoesFeitas, registro.questoesAcertadas) }})</span>
+          </div>
+        </div>
+
+        <div class="detail-notes">
+          <p><strong>Nome do material:</strong> {{ registro.materialNome || 'Não informado' }}</p>
+          <p><strong>Ponto de parada:</strong> {{ registro.puntoParada || 'Não informado' }}</p>
+          <p>
+            <strong>Link:</strong>
+            <a *ngIf="registro.linkDocumento; else semLink" [href]="registro.linkDocumento" target="_blank" rel="noopener noreferrer">Acessar material</a>
+            <ng-template #semLink>Não informado</ng-template>
+          </p>
+          <p><strong>Observações:</strong> {{ registro.observacoes || 'Sem observações.' }}</p>
+        </div>
+
+        <section class="review-box">
+          <h4>Revisão</h4>
+          <ng-container *ngIf="registro.revisaoAssunto; else semRevisao">
+            <p><strong>Assunto:</strong> {{ registro.revisaoAssunto.nome }}</p>
+            <p><strong>Complemento:</strong> {{ registro.revisaoComplemento || 'Sem detalhes' }}</p>
+            <p>
+              <strong>Questões:</strong>
+              {{ registro.questoesRevisaoAcertadas || 0 }}/{{ registro.questoesRevisaoFeitas || 0 }}
+              ({{ aproveitamento(registro.questoesRevisaoFeitas, registro.questoesRevisaoAcertadas) }})
+            </p>
+          </ng-container>
+          <ng-template #semRevisao>
+            <p class="muted-state">Nenhuma revisão realizada neste registro.</p>
+          </ng-template>
+        </section>
+      </article>
+    </div>
+  </ng-container>
+</nz-modal>

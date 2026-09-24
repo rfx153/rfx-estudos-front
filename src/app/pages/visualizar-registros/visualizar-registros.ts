@@ -6,21 +6,27 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzTagModule } from 'ng-zorro-antd/tag';
-import { RegistroService } from '../../services/registro.service';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { Registro, RegistroService } from '../../services/registro.service';
 import { MateriaService } from '../../services/materia.service';
+import { RegistroDetalhesModalComponent } from '../../shared/registro-detalhes-modal/registro-detalhes-modal';
 
 @Component({
   selector: 'app-visualizar-registros',
   standalone: true,
-  imports: [CommonModule, FormsModule, NzTableModule, NzSelectModule, NzGridModule, NzCardModule, NzTagModule],
+  imports: [CommonModule, FormsModule, NzTableModule, NzSelectModule, NzGridModule, NzCardModule, NzTagModule, NzButtonModule, RegistroDetalhesModalComponent],
   templateUrl: 'visualizar-registros.html',
   styleUrl: 'visualizar-registros.css'
 })
 export class VisualizarRegistrosComponent implements OnInit {
-  listaRegistros: any[] = [];
-  registrosFiltrados: any[] = [];
+  listaRegistros: Registro[] = [];
+  registrosFiltrados: Registro[] = [];
   listaMaterias: any[] = [];
   materiaSelecionadaId: number | null = null;
+  carregando = true;
+  detalhesVisiveis = false;
+  registrosSelecionados: Registro[] = [];
+  detalhesTitulo = 'Detalhes do estudo';
 
   constructor(
     private registroService: RegistroService,
@@ -30,7 +36,7 @@ export class VisualizarRegistrosComponent implements OnInit {
 
   ngOnInit(): void {
     this.carregarMaterias();
-    this.carregarTodosRegistros();
+    this.carregarRegistrosRecentes();
   }
 
   carregarMaterias(): void {
@@ -40,45 +46,32 @@ export class VisualizarRegistrosComponent implements OnInit {
     });
   }
 
-  carregarTodosRegistros(): void {
-    // Vamos criar esse método GET no service na sequência
-    this.registroService.listarTodos().subscribe(registros => {
-      this.listaRegistros = registros;
-      this.registrosFiltrados = registros; // Inicialmente mostra tudo
-      this.cdr.detectChanges();
+  carregarRegistrosRecentes(materiaId: number | null = this.materiaSelecionadaId): void {
+    this.carregando = true;
+    this.registroService.listarRecentes(100, materiaId).subscribe({
+      next: registros => {
+        this.listaRegistros = registros;
+        this.registrosFiltrados = registros;
+        this.carregando = false;
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao carregar histórico:', erro);
+        this.carregando = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
   // 🔥 LÓGICA DO FILTRO POR MATÉRIA
   filtrarPorMateria(materiaId: number | null): void {
     this.materiaSelecionadaId = materiaId;
-    if (!materiaId) {
-      this.registrosFiltrados = this.listaRegistros; // Filtro limpo = mostra todos
-    } else {
-      this.registrosFiltrados = this.listaRegistros.filter(
-        reg => reg.materia && reg.materia.id === materiaId
-      );
-    }
-    this.cdr.detectChanges();
-  }
-  private aplicarFiltroEAutoExpansao(materiaId: number | null): void {
-  // 1. Filtra a lista
-  if (!materiaId) {
-    this.registrosFiltrados = [...this.listaRegistros];
-  } else {
-    this.registrosFiltrados = this.listaRegistros.filter(
-      reg => reg.materia && reg.materia.id === materiaId
-    );
+    this.carregarRegistrosRecentes(materiaId);
   }
 
-  // 2. Reseta o estado de expansão de todos para não misturar
-  this.registrosFiltrados.forEach(reg => reg.expandido = false);
-
-  // 3. PRIORIDADE: Abre o último registro do topo automaticamente se a lista não estiver vazia
-  if (this.registrosFiltrados.length > 0) {
-    this.registrosFiltrados[0].expandido = true;
+  abrirDetalhes(registro: Registro): void {
+    this.detalhesTitulo = `${registro.materia?.nome || 'Estudo'} - ${registro.assunto?.nome || 'Detalhes'}`;
+    this.registrosSelecionados = [registro];
+    this.detalhesVisiveis = true;
   }
-
-  this.cdr.detectChanges();
-}
 }

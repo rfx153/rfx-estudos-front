@@ -1,8 +1,9 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { RegistroService, Registro, Assunto, MaterialTipo } from '../../services/registro.service';
+import { RegistroService, Registro, Assunto, MaterialTipo, TipoRegistro } from '../../services/registro.service';
 import { MateriaService, Materia } from '../../services/materia.service';
+import { PlanejamentoService, Planejamento } from '../../services/planejamento.service';
 
 // Módulos do NG-ZORRO necessários para o formulário denso de registros
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -43,17 +44,21 @@ export class RegistroListaComponent implements OnInit {
   
   private registroService = inject(RegistroService);
   private materiaService = inject(MateriaService);
+  private planejamentoService = inject(PlanejamentoService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
   private iconService = inject(NzIconService);
   private message = inject(NzMessageService);
 
   listaRegistros: Registro[] = [];
+  totalRegistros = 0;
   listaMaterias: Materia[] = [];
+  listaPlanejamentos: Planejamento[] = [];
   
   // Listas fictícias iniciais (ajuste conforme criar os services delas depois)
   listaAssuntos: Assunto[] = [] 
 listaTiposMaterial: MaterialTipo[] = [];
+listaTiposRegistro: TipoRegistro[] = [];
 
   carregando = true;
   salvando = false;
@@ -74,6 +79,8 @@ listaTiposMaterial: MaterialTipo[] = [];
     this.validateForm = this.fb.group({
       materia: [null, [Validators.required]],
       assunto: [null, [Validators.required]],
+      planejamento: [null],
+      tipoRegistro: [null, [Validators.required]],
       materialTipo: [null, [Validators.required]],
       materialNome: [null],
       puntoParada: [null],
@@ -98,6 +105,15 @@ listaTiposMaterial: MaterialTipo[] = [];
       this.listaMaterias = materias;
       this.cdr.detectChanges();
     });
+    this.planejamentoService.listarTodos().subscribe({
+      next: planejamentos => {
+        this.listaPlanejamentos = planejamentos;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erro ao carregar planejamentos:', err);
+      }
+    });
     //listar os tipos de materias
     this.registroService.listarTiposMaterial().subscribe({
     next: (tipos) => {
@@ -108,15 +124,24 @@ listaTiposMaterial: MaterialTipo[] = [];
       console.error('Erro ao carregar tipos de material:', err);
     }
     });
+    this.registroService.listarTiposRegistro().subscribe({
+    next: (tipos) => {
+      this.listaTiposRegistro = tipos;
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error('Erro ao carregar tipos de registro:', err);
+    }
+    });
 
-    this.registroService.listarTodos().subscribe({
-      next: (dados) => {
-        this.listaRegistros = [...dados];
+    this.registroService.contarTodos().subscribe({
+      next: (total) => {
+        this.totalRegistros = total;
         this.carregando = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Erro ao buscar registros:', err);
+        console.error('Erro ao contar registros:', err);
         this.carregando = false;
         this.cdr.detectChanges();
       }
@@ -133,6 +158,8 @@ listaTiposMaterial: MaterialTipo[] = [];
       ...formValue,
       materia: formValue.materia ? { id: formValue.materia } as any : null,
       assunto: formValue.assunto ? { id: formValue.assunto } as any : null,
+      planejamento: formValue.planejamento ? { id: formValue.planejamento } as any : null,
+      tipoRegistro: formValue.tipoRegistro ? { id: formValue.tipoRegistro } as any : null,
       revisaoAssunto: formValue.revisaoAssunto ? { id: formValue.revisaoAssunto } as any : null,
       // Se materialTipo também for apenas ID no formulário, converta aqui também:
       materialTipo: formValue.materialTipo && typeof formValue.materialTipo !== 'object' 
@@ -289,6 +316,28 @@ cadastrarMateriaRapida(inputElement: HTMLInputElement): void {
     error: (err) => {
       console.error('Erro ao cadastrar matéria rápida:', err);
       this.message.error('Não foi possível criar a matéria.');
+    }
+  });
+}
+
+cadastrarPlanejamentoRapido(inputElement: HTMLInputElement): void {
+  const nomePlanejamento = inputElement.value.trim();
+
+  if (!nomePlanejamento) {
+    return;
+  }
+
+  this.planejamentoService.criar({ nome: nomePlanejamento }).subscribe({
+    next: (planejamentoSalvo) => {
+      this.listaPlanejamentos = [...this.listaPlanejamentos, planejamentoSalvo];
+      this.validateForm.get('planejamento')?.setValue(planejamentoSalvo.id);
+      inputElement.value = '';
+      this.message.success('Planejamento criado com sucesso.');
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error('Erro ao cadastrar planejamento rápido:', err);
+      this.message.error('Não foi possível criar o planejamento.');
     }
   });
 }

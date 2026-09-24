@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'; 
 import { MateriaService, Materia } from '../../services/materia.service';
 import { Categoria, CategoriaService } from '../../services/categoria.service';
-import { Assunto, RegistroService } from '../../services/registro.service';
+import { Assunto, RegistroService, TipoRegistro } from '../../services/registro.service';
+import { Planejamento, PlanejamentoService } from '../../services/planejamento.service';
+import { TipoRegistroService } from '../../services/tipo-registro.service';
 
 // Módulos do NG-ZORRO
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -41,12 +43,16 @@ export class MateriaListaComponent implements OnInit {
   private materiaService = inject(MateriaService);
   private categoriaService = inject(CategoriaService);
   private registroService = inject(RegistroService);
+  private planejamentoService = inject(PlanejamentoService);
+  private tipoRegistroService = inject(TipoRegistroService);
   private fb = inject(FormBuilder); 
   private iconService = inject(NzIconService); // 🔥 Injetamos o serviço de ícones aqui
   private message = inject(NzMessageService);
  private cdr = inject(ChangeDetectorRef); // 🔥 Injetamos o detector de mudanças aqui
   listaMaterias: Materia[] = [];
   listaCategorias: Categoria[] = [];
+  listaPlanejamentos: Planejamento[] = [];
+  listaTiposRegistro: TipoRegistro[] = [];
   categoriaSelecionadaId: number | null = null;
   materiaSelecionadaId: number | null = null;
   assuntosDaMateria: Assunto[] = [];
@@ -55,10 +61,23 @@ export class MateriaListaComponent implements OnInit {
   assuntoEditandoId: number | null = null;
   nomeAssuntoEdicao = '';
   carregando = true;
+  planejamentosCarregando = true;
   salvando = false;
+  salvandoPlanejamento = false;
+  salvandoCategoria = false;
+  salvandoTipoRegistro = false;
   editandoId: number | null = null;
+  categoriaEditandoId: number | null = null;
+  planejamentoEditandoId: number | null = null;
+  tipoRegistroEditandoId: number | null = null;
+  nomeCategoriaEdicao = '';
+  nomePlanejamentoEdicao = '';
+  nomeTipoRegistroEdicao = '';
   formularioEdicao = { nome: '', categorias: [] as number[] };
   validateForm!: FormGroup;
+  planejamentoForm!: FormGroup;
+  categoriaForm!: FormGroup;
+  tipoRegistroForm!: FormGroup;
 
   constructor() {
     // 🔥 FORÇA O REGISTRO DOS ÍCONES DIRETO NO MOTOR DO NG-ZORRO
@@ -72,18 +91,218 @@ export class MateriaListaComponent implements OnInit {
       nome: [null, [Validators.required]],
       categorias: [[], [Validators.required]]
     });
+    this.planejamentoForm = this.fb.group({
+      nome: [null, [Validators.required]]
+    });
+    this.categoriaForm = this.fb.group({
+      nome: [null, [Validators.required]]
+    });
+    this.tipoRegistroForm = this.fb.group({
+      nome: [null, [Validators.required]]
+    });
     this.obterCategorias();
+    this.obterPlanejamentos();
+    this.obterTiposRegistro();
   }
 
   obterCategorias(): void {
     this.categoriaService.listarTodas().subscribe({
-      next: (categorias) => this.listaCategorias = categorias,
+      next: (categorias) => {
+        this.listaCategorias = categorias;
+        this.cdr.detectChanges();
+      },
       error: (erro) => console.error('Erro ao buscar categorias:', erro)
+    });
+  }
+
+  submitCategoria(): void {
+    if (this.categoriaForm.invalid) {
+      this.categoriaForm.markAllAsTouched();
+      this.message.warning('Informe o nome da categoria antes de salvar.');
+      return;
+    }
+
+    this.salvandoCategoria = true;
+    const nome = this.categoriaForm.value.nome.trim();
+
+    this.categoriaService.criar({ nome }).subscribe({
+      next: categoria => {
+        this.listaCategorias = [...this.listaCategorias, categoria].sort((a, b) => a.nome.localeCompare(b.nome));
+        this.categoriaForm.reset();
+        this.salvandoCategoria = false;
+        this.message.success('Categoria salva com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao salvar categoria:', erro);
+        this.salvandoCategoria = false;
+        this.message.error('Não foi possível salvar a categoria.');
+        this.cdr.detectChanges();
+      }
     });
   }
 
   selecionarCategoria(id: number | null): void {
     this.categoriaSelecionadaId = id;
+  }
+
+  obterPlanejamentos(): void {
+    this.planejamentosCarregando = true;
+    this.planejamentoService.listarTodos().subscribe({
+      next: planejamentos => {
+        this.listaPlanejamentos = planejamentos;
+        this.planejamentosCarregando = false;
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao buscar planejamentos:', erro);
+        this.planejamentosCarregando = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  obterTiposRegistro(): void {
+    this.tipoRegistroService.listarTodos().subscribe({
+      next: tipos => {
+        this.listaTiposRegistro = tipos;
+        this.cdr.detectChanges();
+      },
+      error: erro => console.error('Erro ao buscar tipos de registro:', erro)
+    });
+  }
+
+  submitPlanejamento(): void {
+    if (this.planejamentoForm.invalid) {
+      this.planejamentoForm.markAllAsTouched();
+      this.message.warning('Informe o nome do planejamento antes de salvar.');
+      return;
+    }
+
+    this.salvandoPlanejamento = true;
+    const nome = this.planejamentoForm.value.nome.trim();
+
+    this.planejamentoService.criar({ nome }).subscribe({
+      next: planejamento => {
+        this.listaPlanejamentos = [...this.listaPlanejamentos, planejamento].sort((a, b) =>
+          a.nome.localeCompare(b.nome)
+        );
+        this.planejamentoForm.reset();
+        this.salvandoPlanejamento = false;
+        this.message.success('Planejamento salvo com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao salvar planejamento:', erro);
+        this.salvandoPlanejamento = false;
+        this.message.error('Não foi possível salvar o planejamento.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  submitTipoRegistro(): void {
+    if (this.tipoRegistroForm.invalid) {
+      this.tipoRegistroForm.markAllAsTouched();
+      this.message.warning('Informe o nome do tipo de registro antes de salvar.');
+      return;
+    }
+
+    this.salvandoTipoRegistro = true;
+    const nome = this.tipoRegistroForm.value.nome.trim();
+
+    this.tipoRegistroService.criar({ nome }).subscribe({
+      next: tipo => {
+        this.listaTiposRegistro = [...this.listaTiposRegistro, tipo].sort((a, b) => a.nome.localeCompare(b.nome));
+        this.tipoRegistroForm.reset();
+        this.salvandoTipoRegistro = false;
+        this.message.success('Tipo de registro salvo com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao salvar tipo de registro:', erro);
+        this.salvandoTipoRegistro = false;
+        this.message.error('Não foi possível salvar o tipo de registro.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  iniciarEdicaoCategoria(categoria: Categoria): void {
+    this.categoriaEditandoId = categoria.id;
+    this.nomeCategoriaEdicao = categoria.nome;
+  }
+
+  salvarEdicaoCategoria(categoria: Categoria): void {
+    const nome = this.nomeCategoriaEdicao.trim();
+    if (!nome) return;
+
+    this.categoriaService.atualizar(categoria.id, { nome }).subscribe({
+      next: atualizada => {
+        this.listaCategorias = this.listaCategorias.map(item => item.id === atualizada.id ? atualizada : item);
+        this.categoriaEditandoId = null;
+        this.message.success('Categoria editada com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao editar categoria:', erro);
+        this.message.error('Não foi possível editar a categoria.');
+      }
+    });
+  }
+
+  iniciarEdicaoPlanejamento(planejamento: Planejamento): void {
+    if (!planejamento.id) return;
+    this.planejamentoEditandoId = planejamento.id;
+    this.nomePlanejamentoEdicao = planejamento.nome;
+  }
+
+  salvarEdicaoPlanejamento(planejamento: Planejamento): void {
+    if (!planejamento.id) return;
+    const nome = this.nomePlanejamentoEdicao.trim();
+    if (!nome) return;
+
+    this.planejamentoService.atualizar(planejamento.id, { nome }).subscribe({
+      next: atualizado => {
+        this.listaPlanejamentos = this.listaPlanejamentos.map(item => item.id === atualizado.id ? atualizado : item);
+        this.planejamentoEditandoId = null;
+        this.message.success('Planejamento editado com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao editar planejamento:', erro);
+        this.message.error('Não foi possível editar o planejamento.');
+      }
+    });
+  }
+
+  iniciarEdicaoTipoRegistro(tipo: TipoRegistro): void {
+    this.tipoRegistroEditandoId = tipo.id;
+    this.nomeTipoRegistroEdicao = tipo.nome;
+  }
+
+  salvarEdicaoTipoRegistro(tipo: TipoRegistro): void {
+    const nome = this.nomeTipoRegistroEdicao.trim();
+    if (!nome) return;
+
+    this.tipoRegistroService.atualizar(tipo.id, { nome }).subscribe({
+      next: atualizado => {
+        this.listaTiposRegistro = this.listaTiposRegistro.map(item => item.id === atualizado.id ? atualizado : item);
+        this.tipoRegistroEditandoId = null;
+        this.message.success('Tipo de registro editado com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao editar tipo de registro:', erro);
+        this.message.error('Não foi possível editar o tipo de registro.');
+      }
+    });
+  }
+
+  cancelarEdicaoGerenciador(): void {
+    this.categoriaEditandoId = null;
+    this.planejamentoEditandoId = null;
+    this.tipoRegistroEditandoId = null;
   }
 
   selecionarMateria(materia: Materia): void {

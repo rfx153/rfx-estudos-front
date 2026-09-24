@@ -1,17 +1,32 @@
 <header class="app-header">
-  <a class="brand" routerLink="/novo-registro" aria-label="RFX Estudos">
-    <span class="brand-mark">R</span>
+  <a class="brand" routerLink="/" aria-label="RFX Estudos">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" role="img">
+        <path d="M13.6 2 5 14.7h5.8L9.4 22 19 9.3h-6.1L13.6 2Z" />
+      </svg>
+    </span>
     <span>
       <strong>RFX Estudos</strong>
       <small>Painel de acompanhamento</small>
     </span>
   </a>
 
-  <nav class="main-nav" aria-label="Navegação principal">
-    <a routerLink="/novo-registro" routerLinkActive="active-link">Novo registro</a>
-    <a routerLink="/visualizar-registros" routerLinkActive="active-link">Histórico</a>
-    <a routerLink="/materias" routerLinkActive="active-link">Matérias</a>
-  </nav>
+  <div class="header-actions">
+    <nav class="main-nav" aria-label="Navegação principal">
+      <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">Início</a>
+      <a routerLink="/novo-registro" routerLinkActive="active-link">Novo registro</a>
+      <a routerLink="/visualizar-registros" routerLinkActive="active-link">Histórico</a>
+      <a routerLink="/materias" routerLinkActive="active-link">Gerenciador de dados</a>
+    </nav>
+
+    <button
+      type="button"
+      class="theme-toggle"
+      (click)="alternarTema()"
+      [attr.aria-label]="modoEscuro ? 'Ativar modo claro' : 'Ativar modo escuro'">
+      <span aria-hidden="true">{{ modoEscuro ? '☀' : '☾' }}</span>
+    </button>
+  </div>
 </header>
 
 <main class="app-shell">

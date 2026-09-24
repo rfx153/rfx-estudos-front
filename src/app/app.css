@@ -13,6 +13,12 @@
   backdrop-filter: blur(14px);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .brand {
   display: inline-flex;
   align-items: center;
@@ -28,9 +34,13 @@
   place-items: center;
   border-radius: 8px;
   background: #1677ff;
-  color: #fff;
-  font-weight: 800;
   box-shadow: 0 10px 24px rgba(22, 119, 255, 0.25);
+}
+
+.brand-mark svg {
+  width: 25px;
+  height: 25px;
+  fill: #fff;
 }
 
 .brand strong,
@@ -79,6 +89,21 @@
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 }
 
+.theme-toggle {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 19px;
+  font-weight: 850;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
 .app-shell {
   width: min(1240px, calc(100% - 32px));
   margin: 0 auto;
@@ -93,7 +118,12 @@
     gap: 14px;
   }
 
+  .header-actions {
+    align-items: stretch;
+  }
+
   .main-nav {
+    flex: 1;
     overflow-x: auto;
   }
 
