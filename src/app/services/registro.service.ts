@@ -73,6 +73,10 @@ export class RegistroService {
     return this.http.post<Assunto>(this.assuntosUrl, assunto);
   }
 
+  atualizarAssunto(id: number, nome: string): Observable<Assunto> {
+    return this.http.put<Assunto>(`${this.assuntosUrl}/${id}`, { nome });
+  }
+
   // ==========================================
   // 🛠️ MÉTODOS DE TIPOS DE MATERIAL
   // ==========================================

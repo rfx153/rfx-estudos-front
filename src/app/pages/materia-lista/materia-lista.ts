@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'; 
 import { MateriaService, Materia } from '../../services/materia.service';
 import { Categoria, CategoriaService } from '../../services/categoria.service';
+import { Assunto, RegistroService } from '../../services/registro.service';
 
 // Módulos do NG-ZORRO
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -38,11 +39,19 @@ export class MateriaListaComponent implements OnInit {
   
   private materiaService = inject(MateriaService);
   private categoriaService = inject(CategoriaService);
+  private registroService = inject(RegistroService);
   private fb = inject(FormBuilder); 
   private iconService = inject(NzIconService); // 🔥 Injetamos o serviço de ícones aqui
  private cdr = inject(ChangeDetectorRef); // 🔥 Injetamos o detector de mudanças aqui
   listaMaterias: Materia[] = [];
   listaCategorias: Categoria[] = [];
+  categoriaSelecionadaId: number | null = null;
+  materiaSelecionadaId: number | null = null;
+  assuntosDaMateria: Assunto[] = [];
+  assuntosCarregando = false;
+  private assuntosCache = new Map<number, Assunto[]>();
+  assuntoEditandoId: number | null = null;
+  nomeAssuntoEdicao = '';
   carregando = true;
   salvando = false;
   editandoId: number | null = null;
@@ -69,6 +78,89 @@ export class MateriaListaComponent implements OnInit {
       next: (categorias) => this.listaCategorias = categorias,
       error: (erro) => console.error('Erro ao buscar categorias:', erro)
     });
+  }
+
+  selecionarCategoria(id: number | null): void {
+    this.categoriaSelecionadaId = id;
+  }
+
+  selecionarMateria(materia: Materia): void {
+    if (!materia.id) return;
+    const materiaId = materia.id;
+    if (this.materiaSelecionadaId === materia.id) {
+      this.materiaSelecionadaId = null;
+      this.assuntosDaMateria = [];
+      return;
+    }
+    this.materiaSelecionadaId = materiaId;
+
+    const assuntosEmCache = this.assuntosCache.get(materiaId);
+    if (assuntosEmCache) {
+      this.assuntosDaMateria = assuntosEmCache;
+      this.assuntosCarregando = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.assuntosDaMateria = [];
+    this.assuntosCarregando = true;
+    this.registroService.listarAssuntosPorMateria(materiaId).subscribe({
+      next: assuntos => {
+        // Ignora a resposta se o usuário já selecionou outra matéria.
+        this.assuntosCache.set(materiaId, assuntos);
+        if (this.materiaSelecionadaId === materiaId) {
+          this.assuntosDaMateria = assuntos;
+          this.assuntosCarregando = false;
+          this.cdr.detectChanges();
+        }
+      },
+      error: erro => {
+        console.error('Erro ao buscar assuntos:', erro);
+        if (this.materiaSelecionadaId === materiaId) {
+          this.assuntosCarregando = false;
+          this.cdr.detectChanges();
+        }
+      }
+    });
+  }
+
+  iniciarEdicaoAssunto(assunto: Assunto): void {
+    this.assuntoEditandoId = assunto.id;
+    this.nomeAssuntoEdicao = assunto.nome;
+  }
+
+  cancelarEdicaoAssunto(): void {
+    this.assuntoEditandoId = null;
+    this.nomeAssuntoEdicao = '';
+  }
+
+  salvarEdicaoAssunto(assunto: Assunto): void {
+    const nome = this.nomeAssuntoEdicao.trim();
+    if (!nome) return;
+    this.registroService.atualizarAssunto(assunto.id, nome).subscribe({
+      next: atualizado => {
+        this.assuntosDaMateria = this.assuntosDaMateria.map(item =>
+          item.id === atualizado.id ? atualizado : item
+        );
+        if (this.materiaSelecionadaId !== null) {
+          this.assuntosCache.set(this.materiaSelecionadaId, this.assuntosDaMateria);
+        }
+        this.cancelarEdicaoAssunto();
+      },
+      error: erro => console.error('Erro ao atualizar assunto:', erro)
+    });
+  }
+
+  trackByAssuntoId(_: number, assunto: Assunto): number {
+    return assunto.id;
+  }
+
+  materiasExibidas(): Materia[] {
+    if (this.categoriaSelecionadaId === null) return this.listaMaterias;
+
+    return this.listaMaterias.filter(materia =>
+      materia.categorias?.some(categoria => categoria.id === this.categoriaSelecionadaId)
+    );
   }
 
   obterMaterias(): void {
