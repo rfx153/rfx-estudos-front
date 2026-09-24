@@ -1,11 +1,9 @@
 import { Component, signal, ViewEncapsulation } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
-import { MateriaListaComponent } from './pages/materia-lista/materia-lista';
-import { RegistroListaComponent } from "./pages/registro-lista/registro-lista";
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [ RouterOutlet],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './app.html',
   styleUrl: './app.css',
   encapsulation: ViewEncapsulation.None

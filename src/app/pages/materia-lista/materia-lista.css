@@ -1,5 +1,34 @@
+.materias-page {
+  padding: clamp(18px, 3vw, 28px);
+  background: #fff;
+}
+
+.page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.page-heading h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 850;
+}
+
+.page-heading p {
+  margin: 6px 0 0;
+  color: #64748b;
+}
+
 .categorias-topo {
   margin: 20px 0 24px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
 }
 
 .categorias-topo h3 {
@@ -12,16 +41,149 @@
   gap: 8px;
 }
 
-.assuntos {
-  margin: 8px 0 0 12px;
-  padding: 8px 12px;
-  border-left: 3px solid #1890ff;
-  background: #fafafa;
+.materias-page hr {
+  margin: 20px 0;
+  border: 0;
+  border-top: 1px solid #e5e7eb;
 }
 
-.assunto {
+.materia-form {
+  gap: 16px;
+  margin-bottom: 30px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fbfdff;
+}
+
+.materia-form .form-field {
+  flex: 1;
+  min-width: 250px;
+}
+
+.materia-form nz-select {
+  min-width: 250px;
+}
+
+.materia-row-active td {
+  background: #f8fbff;
+}
+
+.materia-open-button {
+  height: auto;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.materia-open-button span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.assuntos-row > td {
+  padding: 0 !important;
+  background: #f8fbff;
+}
+
+.assuntos-panel {
+  margin: 0;
+  padding: 18px 22px 22px;
+  border-top: 1px solid #dbeafe;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+}
+
+.assuntos-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.assuntos-header h4 {
+  margin: 2px 0 0;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 850;
+}
+
+.eyebrow {
+  color: #1677ff;
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.assuntos-loading,
+.assuntos-empty {
+  padding: 16px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+  background: #fff;
+}
+
+.assuntos-list {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.assunto-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 50px;
+  padding: 12px 16px;
+  background: #fff;
+}
+
+.assunto-item + .assunto-item {
+  border-top: 1px solid #eef2f7;
+}
+
+.assunto-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #334155;
+  font-weight: 700;
+}
+
+.assunto-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #1677ff;
+  box-shadow: 0 0 0 4px #eff6ff;
+}
+
+.assunto-actions {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 4px 0;
+}
+
+.empty-value {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+@media (max-width: 760px) {
+  .materia-form {
+    display: block;
+  }
+
+  .materia-form .form-field,
+  .materia-form nz-select {
+    width: 100%;
+    min-width: 0;
+  }
 }

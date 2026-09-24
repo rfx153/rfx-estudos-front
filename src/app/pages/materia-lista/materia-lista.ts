@@ -12,6 +12,7 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzFormModule } from 'ng-zorro-antd/form'; 
 import { NzInputModule } from 'ng-zorro-antd/input'; 
 import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzMessageService } from 'ng-zorro-antd/message';
 
 // Importações de Ícone do Zorro
 import { NzIconModule, NzIconService } from 'ng-zorro-antd/icon'; // 🔥 Injetamos o NzIconService aqui
@@ -42,6 +43,7 @@ export class MateriaListaComponent implements OnInit {
   private registroService = inject(RegistroService);
   private fb = inject(FormBuilder); 
   private iconService = inject(NzIconService); // 🔥 Injetamos o serviço de ícones aqui
+  private message = inject(NzMessageService);
  private cdr = inject(ChangeDetectorRef); // 🔥 Injetamos o detector de mudanças aqui
   listaMaterias: Materia[] = [];
   listaCategorias: Categoria[] = [];
@@ -136,7 +138,10 @@ export class MateriaListaComponent implements OnInit {
 
   salvarEdicaoAssunto(assunto: Assunto): void {
     const nome = this.nomeAssuntoEdicao.trim();
-    if (!nome) return;
+    if (!nome) {
+      this.message.warning('Informe o nome do assunto antes de salvar.');
+      return;
+    }
     this.registroService.atualizarAssunto(assunto.id, nome).subscribe({
       next: atualizado => {
         this.assuntosDaMateria = this.assuntosDaMateria.map(item =>
@@ -145,9 +150,13 @@ export class MateriaListaComponent implements OnInit {
         if (this.materiaSelecionadaId !== null) {
           this.assuntosCache.set(this.materiaSelecionadaId, this.assuntosDaMateria);
         }
+        this.message.success('Assunto editado com sucesso.');
         this.cancelarEdicaoAssunto();
       },
-      error: erro => console.error('Erro ao atualizar assunto:', erro)
+      error: erro => {
+        console.error('Erro ao atualizar assunto:', erro);
+        this.message.error('Não foi possível editar o assunto.');
+      }
     });
   }
 
@@ -196,11 +205,13 @@ export class MateriaListaComponent implements OnInit {
         next: () => {
           this.salvando = false;
           this.validateForm.reset(); 
+          this.message.success('Matéria salva com sucesso.');
           this.obterMaterias();     
         },
         error: (erro) => {
           console.error('Erro ao salvar matéria:', erro);
           this.salvando = false;
+          this.message.error('Não foi possível salvar a matéria.');
         }
       });
     } else {
@@ -210,6 +221,7 @@ export class MateriaListaComponent implements OnInit {
           control.updateValueAndValidity({ onlySelf: true });
         }
       });
+      this.message.warning('Preencha os campos obrigatórios antes de salvar.');
     }
   }
 
@@ -227,7 +239,10 @@ export class MateriaListaComponent implements OnInit {
   }
 
   salvarEdicao(materia: Materia): void {
-    if (!materia.id || !this.formularioEdicao.nome.trim()) return;
+    if (!materia.id || !this.formularioEdicao.nome.trim()) {
+      this.message.warning('Informe o nome da matéria antes de salvar.');
+      return;
+    }
 
     this.salvando = true;
     this.materiaService.atualizar(materia.id, {
@@ -244,11 +259,13 @@ export class MateriaListaComponent implements OnInit {
         }
         this.editandoId = null;
         this.salvando = false;
+        this.message.success('Matéria editada com sucesso.');
         this.cdr.detectChanges();
       },
       error: (erro) => {
         console.error('Erro ao atualizar matéria:', erro);
         this.salvando = false;
+        this.message.error('Não foi possível editar a matéria.');
         this.cdr.detectChanges();
       }
     });

@@ -1,15 +1,15 @@
-
-<nz-card nzTitle="📊 Histórico de Estudos" style="margin: 24px;">
+<nz-card class="page-card history-card" nzTitle="Histórico de estudos">
   
-  <div nz-row [nzGutter]="24" style="margin-bottom: 24px;">
+  <div nz-row [nzGutter]="24" class="filters-row">
     <div nz-col [nzSpan]="8">
-      <label style="font-weight: bold; display: block; margin-bottom: 8px;">Filtrar por Matéria</label>
+      <label class="filter-label">Filtrar por matéria</label>
       <nz-select 
         [ngModel]="materiaSelecionadaId" 
         (ngModelChange)="filtrarPorMateria($event)" 
         nzAllowClear 
         nzPlaceHolder="Todas as matérias" 
         style="width: 100%;">
+        <nz-option nzLabel="Todas as matérias" [nzValue]="null"></nz-option>
         <nz-option *ngFor="let m of listaMaterias" [nzLabel]="m.nome" [nzValue]="m.id"></nz-option>
       </nz-select>
     </div>
@@ -42,11 +42,11 @@
       </tr>
 
       <tr [nzExpand]="data.expandido">
-        <div style="padding: 16px; background: #fafafa; border-radius: 4px;">
+        <div class="expanded-details">
           <div nz-row [nzGutter]="16">
             
             <div nz-col [nzSpan]="12">
-              <h4 style="color: #1890ff;">📝 Detalhes do Conteúdo</h4>
+              <h4>Detalhes do conteúdo</h4>
               <p><strong>Nome do Material:</strong> {{ data.materialNome || 'Não informado' }}</p>
               <p><strong>Ponto de Parada:</strong> {{ data.puntoParada || 'Não informado' }}</p>
               <p><strong>Link do Documento:</strong> 
@@ -56,8 +56,8 @@
               <p><strong>Observações:</strong> {{ data.observacoes || 'Sem observações.' }}</p>
             </div>
 
-            <div nz-col [nzSpan]="12" style="border-left: 1px solid #e8e8e8; padding-left: 16px;">
-              <h4 style="color: #fa8c16;">🔄 Dados da Revisão</h4>
+            <div nz-col [nzSpan]="12" class="review-column">
+              <h4>Dados da revisão</h4>
               <div *ngIf="data.revisaoAssunto; else blocoSemRevisao">
                 <p><strong>Assunto Revisado:</strong> {{ data.revisaoAssunto?.nome }}</p>
                 <p><strong>Complemento:</strong> {{ data.revisaoComplemento || 'Sem detalhes' }}</p>
@@ -69,7 +69,7 @@
                 </p>
               </div>
               <ng-template #blocoSemRevisao>
-                <p style="color: #bfbfbf; font-style: italic;">Nenhuma revisão realizada nesta sessão.</p>
+                <p class="muted-state">Nenhuma revisão realizada nesta sessão.</p>
               </ng-template>
             </div>
 

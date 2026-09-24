@@ -17,6 +17,7 @@ import { NzIconModule, NzIconService } from 'ng-zorro-antd/icon';
 import { PlusOutline, CalendarOutline, ClockCircleOutline, InfoCircleOutline } from '@ant-design/icons-angular/icons';
 import { NzCardModule } from 'ng-zorro-antd/card';       // <-- INSTALE ESTE IMPORT
 import { NzTooltipModule } from 'ng-zorro-antd/tooltip'; // <-- INSTALE ESTE IMPORT
+import { NzMessageService } from 'ng-zorro-antd/message';
 @Component({
   selector: 'app-registro-lista',
   standalone: true,
@@ -45,6 +46,7 @@ export class RegistroListaComponent implements OnInit {
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
   private iconService = inject(NzIconService);
+  private message = inject(NzMessageService);
 
   listaRegistros: Registro[] = [];
   listaMaterias: Materia[] = [];
@@ -55,6 +57,7 @@ listaTiposMaterial: MaterialTipo[] = [];
 
   carregando = true;
   salvando = false;
+  revisaoAberta = false;
   validateForm!: FormGroup;
 
   constructor() {
@@ -145,11 +148,14 @@ listaTiposMaterial: MaterialTipo[] = [];
       next: () => {
         this.salvando = false;
         this.validateForm.reset({ dataEstudo: new Date(), questoesFeitas: 0, questoesAcertadas: 0 });
+        this.revisaoAberta = false;
+        this.message.success('Registro salvo com sucesso.');
         this.carregarDadosIniciais();
       },
       error: (err) => {
         console.error('Erro ao salvar registro:', err);
         this.salvando = false;
+        this.message.error('Não foi possível salvar o registro.');
         this.cdr.detectChanges();
       }
     });
@@ -160,6 +166,7 @@ listaTiposMaterial: MaterialTipo[] = [];
         control.updateValueAndValidity({ onlySelf: true });
       }
     });
+    this.message.warning('Preencha os campos obrigatórios antes de salvar.');
   }
 }
 
@@ -225,6 +232,7 @@ cadastrarAssuntoRapido(inputElement: HTMLInputElement): void {
 
   if (!materiaId) {
     console.warn('Selecione uma matéria antes de cadastrar um assunto.');
+    this.message.warning('Selecione uma matéria antes de criar o assunto.');
     return;
   }
 
@@ -246,10 +254,12 @@ cadastrarAssuntoRapido(inputElement: HTMLInputElement): void {
       inputElement.value = '';
       
       // 4. Força o Angular a renderizar a alteração e selecionar o item
+      this.message.success('Assunto criado com sucesso.');
       this.cdr.detectChanges();
     },
     error: (err) => {
       console.error('Erro ao cadastrar assunto rápido:', err);
+      this.message.error('Não foi possível criar o assunto.');
     }
   });
 }
@@ -273,10 +283,12 @@ cadastrarMateriaRapida(inputElement: HTMLInputElement): void {
       inputElement.value = '';
       
       // 4. Força o Angular a renderizar a alteração na tela
+      this.message.success('Matéria criada com sucesso.');
       this.cdr.detectChanges();
     },
     error: (err) => {
       console.error('Erro ao cadastrar matéria rápida:', err);
+      this.message.error('Não foi possível criar a matéria.');
     }
   });
 }

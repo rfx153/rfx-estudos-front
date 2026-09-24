@@ -1,17 +1,19 @@
-<div style="background: #001529; padding: 16px; display: flex; gap: 20px; align-items: center;">
-  <span style="color: white; font-weight: bold; font-size: 18px; margin-right: 20px;">RFX Estudos</span>
-  
-  <a href="/novo-registro" style="color: rgba(255,255,255,0.85); text-decoration: none; font-size: 15px;">
-    ➕ Novo Registro
-  </a>
-  
-  <a href="/visualizar-registros" style="color: rgba(255,255,255,0.85); text-decoration: none; font-size: 15px;">
-    📊 Histórico & Filtros
+<header class="app-header">
+  <a class="brand" routerLink="/novo-registro" aria-label="RFX Estudos">
+    <span class="brand-mark">R</span>
+    <span>
+      <strong>RFX Estudos</strong>
+      <small>Painel de acompanhamento</small>
+    </span>
   </a>
 
-  <a href="/materias" style="color: rgba(255,255,255,0.85); text-decoration: none; font-size: 15px;">
-    📚 Matérias e Disciplinas
-  </a>
-</div>
+  <nav class="main-nav" aria-label="Navegação principal">
+    <a routerLink="/novo-registro" routerLinkActive="active-link">Novo registro</a>
+    <a routerLink="/visualizar-registros" routerLinkActive="active-link">Histórico</a>
+    <a routerLink="/materias" routerLinkActive="active-link">Matérias</a>
+  </nav>
+</header>
 
-<router-outlet></router-outlet>
+<main class="app-shell">
+  <router-outlet></router-outlet>
+</main>

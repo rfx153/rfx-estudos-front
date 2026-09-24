@@ -13,7 +13,8 @@ import { MateriaService } from '../../services/materia.service';
   selector: 'app-visualizar-registros',
   standalone: true,
   imports: [CommonModule, FormsModule, NzTableModule, NzSelectModule, NzGridModule, NzCardModule, NzTagModule],
-  templateUrl: 'visualizar-registros.html'
+  templateUrl: 'visualizar-registros.html',
+  styleUrl: 'visualizar-registros.css'
 })
 export class VisualizarRegistrosComponent implements OnInit {
   listaRegistros: any[] = [];

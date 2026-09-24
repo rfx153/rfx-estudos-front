@@ -1,7 +1,11 @@
-<div style="padding: 24px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+<div class="materias-page page-card">
   
-  <h2>📚 Matérias e disciplinas</h2>
-  <p style="color: #666;">Cadastre, revise e edite os nomes das matérias usadas nos seus registros.</p>
+  <header class="page-heading">
+    <div>
+      <h2>Matérias e disciplinas</h2>
+      <p>Cadastre, revise e edite os nomes das matérias usadas nos seus registros.</p>
+    </div>
+  </header>
 
   <section class="categorias-topo">
     <h3>Categorias</h3>
@@ -24,11 +28,11 @@
 
   <h3>Disciplinas</h3>
 
-  <hr style="border: 0; border-top: 1px solid #f0f0f0; margin: 20px 0;">
+  <hr>
 
-  <form nz-form [nzLayout]="'inline'" [formGroup]="validateForm" (ngSubmit)="submitForm()" style="margin-bottom: 30px; gap: 16px;">
+  <form class="materia-form" nz-form [nzLayout]="'inline'" [formGroup]="validateForm" (ngSubmit)="submitForm()">
     
-    <nz-form-item style="flex: 1; min-width: 250px;">
+    <nz-form-item class="form-field">
       <nz-form-control nzErrorTip="Por favor, digite o nome da matéria!">
         <nz-input-group nzPrefixIcon="book">
           <input type="text" nz-input formControlName="nome" placeholder="Ex: Direito Constitucional, Java, Francês" />
@@ -36,9 +40,9 @@
       </nz-form-control>
     </nz-form-item>
 
-    <nz-form-item style="flex: 1; min-width: 250px;">
+    <nz-form-item class="form-field">
       <nz-form-control nzErrorTip="Selecione ao menos uma categoria!">
-        <nz-select formControlName="categorias" nzMode="multiple" nzPlaceHolder="Selecione as categorias" style="min-width: 250px;">
+        <nz-select formControlName="categorias" nzMode="multiple" nzPlaceHolder="Selecione as categorias">
           <nz-option *ngFor="let categoria of listaCategorias" [nzValue]="categoria.id" [nzLabel]="categoria.nome"></nz-option>
         </nz-select>
       </nz-form-control>
@@ -63,54 +67,83 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let data of basicTable.data">
-        <td>{{ data.id }}</td>
-        <td>
-          <ng-container *ngIf="editandoId !== data.id; else editarNome">
-            <button nz-button nzType="link" (click)="selecionarMateria(data)">
-              <strong>{{ data.nome }}</strong>
-            </button>
-            <div class="assuntos" *ngIf="materiaSelecionadaId === data.id">
-              <span *ngIf="assuntosCarregando">Carregando assuntos...</span>
-              <span *ngIf="!assuntosCarregando && !assuntosDaMateria.length">Nenhum assunto cadastrado.</span>
-              <div class="assunto" *ngFor="let assunto of assuntosDaMateria; trackBy: trackByAssuntoId" [hidden]="assuntosCarregando">
-                <ng-container *ngIf="assuntoEditandoId !== assunto.id; else editarAssunto">
-                  <span>{{ assunto.nome }}</span>
-                  <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoAssunto(assunto)">Editar</button>
-                </ng-container>
-                <ng-template #editarAssunto>
-                  <input nz-input [(ngModel)]="nomeAssuntoEdicao" [ngModelOptions]="{standalone: true}" />
-                  <button nz-button nzType="primary" nzSize="small" (click)="salvarEdicaoAssunto(assunto)">Salvar</button>
-                  <button nz-button nzType="link" nzSize="small" (click)="cancelarEdicaoAssunto()">Cancelar</button>
-                </ng-template>
+      <ng-container *ngFor="let data of basicTable.data">
+        <tr [class.materia-row-active]="materiaSelecionadaId === data.id">
+          <td>{{ data.id }}</td>
+          <td>
+            <ng-container *ngIf="editandoId !== data.id; else editarNome">
+              <button
+                nz-button
+                nzType="link"
+                class="materia-open-button"
+                (click)="selecionarMateria(data)">
+                <strong>{{ data.nome }}</strong>
+                <span>{{ materiaSelecionadaId === data.id ? 'Ocultar assuntos' : 'Ver assuntos' }}</span>
+              </button>
+            </ng-container>
+            <ng-template #editarNome>
+              <input nz-input [(ngModel)]="formularioEdicao.nome" placeholder="Nome da matéria" />
+            </ng-template>
+          </td>
+          <td>
+            <ng-container *ngIf="editandoId !== data.id; else editarCategorias">
+              <nz-tag *ngFor="let tag of converterCategorias(data.categorias)" nzColor="blue">{{ tag }}</nz-tag>
+              <span *ngIf="!data.categorias" class="empty-value">Nenhuma</span>
+            </ng-container>
+            <ng-template #editarCategorias>
+              <nz-select [(ngModel)]="formularioEdicao.categorias" [ngModelOptions]="{standalone: true}" nzMode="multiple" nzPlaceHolder="Selecione as categorias" style="min-width: 250px;">
+                <nz-option *ngFor="let categoria of listaCategorias" [nzValue]="categoria.id" [nzLabel]="categoria.nome"></nz-option>
+              </nz-select>
+            </ng-template>
+          </td>
+          <td>
+            <ng-container *ngIf="editandoId !== data.id; else botoesEdicao">
+              <button nz-button nzType="link" (click)="iniciarEdicao(data)">✏️ Editar</button>
+            </ng-container>
+            <ng-template #botoesEdicao>
+              <button nz-button nzType="primary" nzSize="small" [nzLoading]="salvando" (click)="salvarEdicao(data)">Salvar</button>
+              <button nz-button nzType="link" (click)="cancelarEdicao()">Cancelar</button>
+            </ng-template>
+          </td>
+        </tr>
+
+        <tr class="assuntos-row" *ngIf="materiaSelecionadaId === data.id">
+          <td colspan="4">
+            <section class="assuntos-panel">
+              <header class="assuntos-header">
+                <div>
+                  <span class="eyebrow">Assuntos cadastrados</span>
+                  <h4>{{ data.nome }}</h4>
+                </div>
+                <nz-tag nzColor="blue" *ngIf="!assuntosCarregando">{{ assuntosDaMateria.length }} assunto(s)</nz-tag>
+              </header>
+
+              <div class="assuntos-loading" *ngIf="assuntosCarregando">Carregando assuntos...</div>
+              <div class="assuntos-empty" *ngIf="!assuntosCarregando && !assuntosDaMateria.length">Nenhum assunto cadastrado para esta matéria.</div>
+
+              <div class="assuntos-list" *ngIf="!assuntosCarregando && assuntosDaMateria.length">
+                <article class="assunto-item" *ngFor="let assunto of assuntosDaMateria; trackBy: trackByAssuntoId">
+                  <ng-container *ngIf="assuntoEditandoId !== assunto.id; else editarAssunto">
+                    <div class="assunto-info">
+                      <span class="assunto-dot"></span>
+                      <span>{{ assunto.nome }}</span>
+                    </div>
+                    <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoAssunto(assunto)">Editar</button>
+                  </ng-container>
+
+                  <ng-template #editarAssunto>
+                    <input nz-input [(ngModel)]="nomeAssuntoEdicao" [ngModelOptions]="{standalone: true}" />
+                    <div class="assunto-actions">
+                      <button nz-button nzType="primary" nzSize="small" (click)="salvarEdicaoAssunto(assunto)">Salvar</button>
+                      <button nz-button nzType="link" nzSize="small" (click)="cancelarEdicaoAssunto()">Cancelar</button>
+                    </div>
+                  </ng-template>
+                </article>
               </div>
-            </div>
-          </ng-container>
-          <ng-template #editarNome>
-            <input nz-input [(ngModel)]="formularioEdicao.nome" placeholder="Nome da matéria" />
-          </ng-template>
-        </td>
-        <td>
-          <ng-container *ngIf="editandoId !== data.id; else editarCategorias">
-            <nz-tag *ngFor="let tag of converterCategorias(data.categorias)" nzColor="blue">{{ tag }}</nz-tag>
-            <span *ngIf="!data.categorias" style="color: #999; font-style: italic;">Nenhuma</span>
-          </ng-container>
-          <ng-template #editarCategorias>
-            <nz-select [(ngModel)]="formularioEdicao.categorias" [ngModelOptions]="{standalone: true}" nzMode="multiple" nzPlaceHolder="Selecione as categorias" style="min-width: 250px;">
-              <nz-option *ngFor="let categoria of listaCategorias" [nzValue]="categoria.id" [nzLabel]="categoria.nome"></nz-option>
-            </nz-select>
-          </ng-template>
-        </td>
-        <td>
-          <ng-container *ngIf="editandoId !== data.id; else botoesEdicao">
-            <button nz-button nzType="link" (click)="iniciarEdicao(data)">✏️ Editar</button>
-          </ng-container>
-          <ng-template #botoesEdicao>
-            <button nz-button nzType="primary" nzSize="small" [nzLoading]="salvando" (click)="salvarEdicao(data)">Salvar</button>
-            <button nz-button nzType="link" (click)="cancelarEdicao()">Cancelar</button>
-          </ng-template>
-        </td>
-      </tr>
+            </section>
+          </td>
+        </tr>
+      </ng-container>
     </tbody>
   </nz-table>
 </div>

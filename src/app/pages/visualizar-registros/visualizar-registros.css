@@ -1,0 +1,58 @@
+.filters-row {
+  margin-bottom: 24px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.filter-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #334155;
+  font-weight: 800;
+}
+
+.expanded-details {
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fbfdff;
+}
+
+.expanded-details h4 {
+  margin: 0 0 12px;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.expanded-details p {
+  margin-bottom: 8px;
+  color: #475569;
+}
+
+.review-column {
+  border-left: 1px solid #e5e7eb;
+  padding-left: 16px;
+}
+
+.muted-state {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+@media (max-width: 900px) {
+  [nz-col] {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+
+  .review-column {
+    margin-top: 16px;
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 16px;
+  }
+}

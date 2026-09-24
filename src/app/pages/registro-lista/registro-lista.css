@@ -1,5 +1,4 @@
 .registro-container {
-  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -7,16 +6,102 @@
   text-align: right;
   margin-top: 10px;
   padding-top: 20px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid #e5e7eb;
 }
 
 nz-form-label {
   font-weight: 600;
 }
 
-.ant-card {
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+.registro-card .ant-card-body {
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 28px 0 22px;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.record-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1677ff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.review-toggle-card {
+  margin-top: 28px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fbfdff;
+  overflow: hidden;
+}
+
+.review-toggle-card.review-open {
+  background: #fff;
+}
+
+.review-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  width: 100%;
+  padding: 16px 18px;
+  border: 0;
+  background: transparent;
+  color: #0f172a;
+  text-align: left;
+  cursor: pointer;
+}
+
+.review-toggle strong,
+.review-toggle small {
+  display: block;
+}
+
+.review-toggle strong {
+  font-size: 16px;
+  font-weight: 850;
+}
+
+.review-toggle small {
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.toggle-indicator {
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1677ff;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.review-fields {
+  padding: 18px 18px 4px;
+  border-top: 1px solid #e5e7eb;
 }
 
 .dropdown-wrapper {
@@ -44,4 +129,16 @@ nz-form-label {
 
 .add-item-btn:hover {
   color: #40a9ff;
+}
+
+@media (max-width: 900px) {
+  [nz-col] {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+
+  .form-footer {
+    text-align: left;
+  }
 }
