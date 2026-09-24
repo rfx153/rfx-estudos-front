@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'; 
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'; 
 import { MateriaService, Materia } from '../../services/materia.service';
 
 // Módulos do NG-ZORRO
@@ -19,6 +19,7 @@ import { BookOutline, TagsOutline } from '@ant-design/icons-angular/icons';
   standalone: true,
   imports: [
     CommonModule, 
+    FormsModule,
     ReactiveFormsModule, 
     NzTableModule, 
     NzTagModule, 
@@ -39,6 +40,8 @@ export class MateriaListaComponent implements OnInit {
   listaMaterias: Materia[] = [];
   carregando = true;
   salvando = false;
+  editandoId: number | null = null;
+  formularioEdicao = { nome: '', categorias: '' };
   validateForm!: FormGroup;
 
   constructor() {
@@ -99,6 +102,47 @@ export class MateriaListaComponent implements OnInit {
         }
       });
     }
+  }
+
+  iniciarEdicao(materia: Materia): void {
+    if (!materia.id) return;
+    this.editandoId = materia.id;
+    this.formularioEdicao = {
+      nome: materia.nome,
+      categorias: materia.categorias ?? ''
+    };
+  }
+
+  cancelarEdicao(): void {
+    this.editandoId = null;
+  }
+
+  salvarEdicao(materia: Materia): void {
+    if (!materia.id || !this.formularioEdicao.nome.trim()) return;
+
+    this.salvando = true;
+    this.materiaService.atualizar(materia.id, {
+      ...materia,
+      nome: this.formularioEdicao.nome.trim(),
+      categorias: this.formularioEdicao.categorias.trim()
+    }).subscribe({
+      next: (atualizada) => {
+        const indice = this.listaMaterias.findIndex(item => item.id === materia.id);
+        if (indice >= 0) {
+          this.listaMaterias = this.listaMaterias.map((item, i) =>
+            i === indice ? atualizada : item
+          );
+        }
+        this.editandoId = null;
+        this.salvando = false;
+        this.cdr.detectChanges();
+      },
+      error: (erro) => {
+        console.error('Erro ao atualizar matéria:', erro);
+        this.salvando = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   converterCategorias(categorias?: string): string[] {

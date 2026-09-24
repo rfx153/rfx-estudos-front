@@ -29,4 +29,8 @@ export class MateriaService {
   criar(materia: Materia): Observable<Materia> {
     return this.http.post<Materia>(this.apiUrl, materia);
   }
+
+  atualizar(id: number, materia: Materia): Observable<Materia> {
+    return this.http.put<Materia>(`${this.apiUrl}/${id}`, materia);
+  }
 }
