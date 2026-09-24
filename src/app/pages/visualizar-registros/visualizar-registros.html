@@ -15,41 +15,72 @@
     </div>
   </div>
 
-<nz-table #basicTable [nzData]="registrosFiltrados" [nzLoading]="carregando" nzBordered>
-  <thead>
-    <tr>
-      <th>Data</th>
-      <th>Matéria</th>
-      <th>Assunto</th>
-      <th>Ciclo</th>
-      <th>Registro</th>
-      <th>Tipo</th>
-      <th>Tempo</th>
-      <th>Questões (Acertos/Feitas)</th>
-      <th nzWidth="110px">Ações</th>
-    </tr>
-  </thead>
-  <tbody>
-    <ng-container *ngFor="let data of basicTable.data">
-      <tr>
-        <td>{{ data.dataEstudo | date: 'dd/MM/yyyy' }}</td>
-        <td><strong>{{ data.materia?.nome }}</strong></td>
-        <td>{{ data.assunto?.nome }}</td>
-        <td>{{ data.planejamento?.nome || 'Sem ciclo' }}</td>
-        <td><nz-tag nzColor="purple">{{ data.tipoRegistro?.nome || 'Não informado' }}</nz-tag></td>
-        <td><nz-tag nzColor="blue">{{ data.materialTipo?.nome }}</nz-tag></td>
-        <td>{{ data.tempoEstudado }}</td>
-        <td>
-          <nz-tag nzColor="green">{{ data.questoesAcertadas }}/{{ data.questoesFeitas }}</nz-tag>
-        </td>
-        <td>
-          <button nz-button nzType="link" nzSize="small" (click)="abrirDetalhes(data)">Ver</button>
-          <button nz-button nzDanger nzType="link" nzSize="small" (click)="excluirRegistro(data)">Apagar</button>
-        </td>
-      </tr>
-    </ng-container>
-  </tbody>
-</nz-table>
+  <div class="history-loading" *ngIf="carregando">Carregando histórico...</div>
+
+  <div class="history-empty" *ngIf="!carregando && !registrosFiltrados.length">
+    Nenhum registro encontrado.
+  </div>
+
+  <section class="history-list" *ngIf="!carregando && registrosFiltrados.length">
+    <article class="history-item" *ngFor="let registro of registrosPaginados; trackBy: trackByRegistroId">
+      <div class="date-block">
+        <strong>{{ registro.dataEstudo | date: 'dd' }}</strong>
+        <span>{{ registro.dataEstudo | date: 'MMM/yyyy' }}</span>
+      </div>
+
+      <div class="history-main">
+        <div class="history-title-row">
+          <div>
+            <h3>{{ registro.materia?.nome || 'Matéria não informada' }}</h3>
+            <p>{{ registro.assunto?.nome || 'Assunto não informado' }}</p>
+          </div>
+
+          <div class="history-actions">
+            <button nz-button nzType="default" nzSize="small" (click)="abrirDetalhes(registro)">Ver</button>
+            <button nz-button nzDanger nzType="link" nzSize="small" (click)="excluirRegistro(registro)">Apagar</button>
+          </div>
+        </div>
+
+        <div class="history-meta">
+          <nz-tag nzColor="purple">{{ registro.tipoRegistro?.nome || 'Registro' }}</nz-tag>
+          <nz-tag nzColor="blue">{{ registro.materialTipo?.nome || 'Material' }}</nz-tag>
+          <span class="meta-pill">{{ registro.planejamento?.nome || 'Sem ciclo' }}</span>
+        </div>
+
+        <div class="history-stats">
+          <div>
+            <small>Tempo</small>
+            <strong>{{ registro.tempoEstudado || '00:00' }}</strong>
+          </div>
+          <div>
+            <small>Questões</small>
+            <strong>{{ registro.questoesAcertadas || 0 }}/{{ registro.questoesFeitas || 0 }}</strong>
+          </div>
+          <div>
+            <small>Aproveitamento</small>
+            <strong>{{ calcularAproveitamento(registro.questoesFeitas, registro.questoesAcertadas) }}</strong>
+          </div>
+          <div class="material-summary">
+            <small>Material</small>
+            <strong>{{ registro.materialNome || 'Não informado' }}</strong>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <div class="history-pagination">
+      <span>
+        Mostrando {{ primeiroRegistroDaPagina }}-{{ ultimoRegistroDaPagina }} de {{ totalRegistrosHistorico }} registro(s)
+      </span>
+      <nz-pagination
+        [nzPageIndex]="paginaAtual"
+        (nzPageIndexChange)="trocarPagina($event)"
+        [nzPageSize]="itensPorPagina"
+        [nzTotal]="totalRegistrosHistorico"
+        [nzShowSizeChanger]="false">
+      </nz-pagination>
+    </div>
+  </section>
 
 <app-registro-detalhes-modal
   [(visivel)]="detalhesVisiveis"

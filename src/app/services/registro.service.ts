@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { shareReplay, tap } from 'rxjs/operators';
+import { map, shareReplay, tap } from 'rxjs/operators';
 import { Materia } from './materia.service';
 import { Planejamento } from './planejamento.service';
 import { environment } from '../../environments/environment.development';
@@ -43,6 +43,14 @@ export interface Registro {
   observacoes?: string;
 }
 
+export interface PaginaRegistros {
+  content: Registro[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -81,7 +89,21 @@ export class RegistroService {
       params = params.set('materiaId', materiaId);
     }
 
-    return this.http.get<Registro[]>(`${this.apiUrl}/recentes`, { params });
+    return this.http.get<PaginaRegistros>(`${this.apiUrl}/recentes`, { params }).pipe(
+      map(pagina => pagina.content)
+    );
+  }
+
+  listarRecentesPaginado(page = 0, size = 10, materiaId?: number | null): Observable<PaginaRegistros> {
+    let params = new HttpParams()
+      .set('page', page)
+      .set('size', size);
+
+    if (materiaId) {
+      params = params.set('materiaId', materiaId);
+    }
+
+    return this.http.get<PaginaRegistros>(`${this.apiUrl}/recentes`, { params });
   }
 
   listarTodosRegistros(): Observable<any[]> {

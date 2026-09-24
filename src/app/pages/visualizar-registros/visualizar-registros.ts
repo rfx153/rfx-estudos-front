@@ -1,12 +1,12 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzPaginationModule } from 'ng-zorro-antd/pagination';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { Registro, RegistroService } from '../../services/registro.service';
 import { MateriaService } from '../../services/materia.service';
@@ -15,7 +15,7 @@ import { RegistroDetalhesModalComponent } from '../../shared/registro-detalhes-m
 @Component({
   selector: 'app-visualizar-registros',
   standalone: true,
-  imports: [CommonModule, FormsModule, NzTableModule, NzSelectModule, NzGridModule, NzCardModule, NzTagModule, NzButtonModule, RegistroDetalhesModalComponent],
+  imports: [CommonModule, FormsModule, NzSelectModule, NzGridModule, NzCardModule, NzTagModule, NzButtonModule, NzPaginationModule, RegistroDetalhesModalComponent],
   templateUrl: 'visualizar-registros.html',
   styleUrl: 'visualizar-registros.css'
 })
@@ -28,6 +28,9 @@ export class VisualizarRegistrosComponent implements OnInit {
   detalhesVisiveis = false;
   registrosSelecionados: Registro[] = [];
   detalhesTitulo = 'Detalhes do estudo';
+  paginaAtual = 1;
+  itensPorPagina = 10;
+  totalRegistrosHistorico = 0;
 
   constructor(
     private registroService: RegistroService,
@@ -50,10 +53,11 @@ export class VisualizarRegistrosComponent implements OnInit {
 
   carregarRegistrosRecentes(materiaId: number | null = this.materiaSelecionadaId): void {
     this.carregando = true;
-    this.registroService.listarRecentes(100, materiaId).subscribe({
-      next: registros => {
-        this.listaRegistros = registros;
-        this.registrosFiltrados = registros;
+    this.registroService.listarRecentesPaginado(this.paginaAtual - 1, this.itensPorPagina, materiaId).subscribe({
+      next: pagina => {
+        this.listaRegistros = pagina.content;
+        this.registrosFiltrados = pagina.content;
+        this.totalRegistrosHistorico = pagina.totalElements;
         this.carregando = false;
         this.cdr.detectChanges();
       },
@@ -68,13 +72,41 @@ export class VisualizarRegistrosComponent implements OnInit {
   // 🔥 LÓGICA DO FILTRO POR MATÉRIA
   filtrarPorMateria(materiaId: number | null): void {
     this.materiaSelecionadaId = materiaId;
+    this.paginaAtual = 1;
     this.carregarRegistrosRecentes(materiaId);
+  }
+
+  get registrosPaginados(): Registro[] {
+    return this.registrosFiltrados;
+  }
+
+  get primeiroRegistroDaPagina(): number {
+    if (!this.totalRegistrosHistorico) return 0;
+    return (this.paginaAtual - 1) * this.itensPorPagina + 1;
+  }
+
+  get ultimoRegistroDaPagina(): number {
+    return Math.min(this.paginaAtual * this.itensPorPagina, this.totalRegistrosHistorico);
+  }
+
+  trocarPagina(pagina: number): void {
+    this.paginaAtual = pagina;
+    this.carregarRegistrosRecentes();
   }
 
   abrirDetalhes(registro: Registro): void {
     this.detalhesTitulo = `${registro.materia?.nome || 'Estudo'} - ${registro.assunto?.nome || 'Detalhes'}`;
     this.registrosSelecionados = [registro];
     this.detalhesVisiveis = true;
+  }
+
+  calcularAproveitamento(feitas = 0, acertadas = 0): string {
+    if (!feitas) return '0%';
+    return `${((acertadas / feitas) * 100).toFixed(0)}%`;
+  }
+
+  trackByRegistroId(index: number, registro: Registro): number {
+    return registro.id ?? index;
   }
 
   excluirRegistro(registro: Registro): void {
@@ -84,6 +116,8 @@ export class VisualizarRegistrosComponent implements OnInit {
       next: () => {
         this.listaRegistros = this.listaRegistros.filter(item => item.id !== registro.id);
         this.registrosFiltrados = this.registrosFiltrados.filter(item => item.id !== registro.id);
+        this.totalRegistrosHistorico = Math.max(0, this.totalRegistrosHistorico - 1);
+        this.ajustarPaginaDepoisDeExcluir();
         if (this.registrosSelecionados.some(item => item.id === registro.id)) {
           this.detalhesVisiveis = false;
           this.registrosSelecionados = [];
@@ -96,5 +130,18 @@ export class VisualizarRegistrosComponent implements OnInit {
         this.message.error('Não foi possível apagar o registro.');
       }
     });
+  }
+
+  private ajustarPaginaDepoisDeExcluir(): void {
+    const totalPaginas = Math.max(1, Math.ceil(this.totalRegistrosHistorico / this.itensPorPagina));
+    if (this.paginaAtual > totalPaginas) {
+      this.paginaAtual = totalPaginas;
+      this.carregarRegistrosRecentes();
+      return;
+    }
+
+    if (!this.registrosFiltrados.length && this.totalRegistrosHistorico > 0) {
+      this.carregarRegistrosRecentes();
+    }
   }
 }
