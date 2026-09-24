@@ -162,128 +162,135 @@
     </div>
   </section>
 
-  <h3>Disciplinas</h3>
+  <section class="disciplinas-section">
+    <div class="section-heading">
+      <div>
+        <h3>Disciplinas</h3>
+        <p>Gerencie matérias e abra seus assuntos sem depender de tabela.</p>
+      </div>
+      <nz-tag nzColor="blue">{{ materiasExibidas().length }} disciplina(s)</nz-tag>
+    </div>
 
-  <hr>
+    <form class="materia-form" nz-form [nzLayout]="'inline'" [formGroup]="validateForm" (ngSubmit)="submitForm()">
+      <nz-form-item class="form-field">
+        <nz-form-control nzErrorTip="Por favor, digite o nome da matéria!">
+          <nz-input-group nzPrefixIcon="book">
+            <input type="text" nz-input formControlName="nome" placeholder="Ex: Direito Constitucional, Java, Francês" />
+          </nz-input-group>
+        </nz-form-control>
+      </nz-form-item>
 
-  <form class="materia-form" nz-form [nzLayout]="'inline'" [formGroup]="validateForm" (ngSubmit)="submitForm()">
-    
-    <nz-form-item class="form-field">
-      <nz-form-control nzErrorTip="Por favor, digite o nome da matéria!">
-        <nz-input-group nzPrefixIcon="book">
-          <input type="text" nz-input formControlName="nome" placeholder="Ex: Direito Constitucional, Java, Francês" />
-        </nz-input-group>
-      </nz-form-control>
-    </nz-form-item>
+      <nz-form-item class="form-field">
+        <nz-form-control nzErrorTip="Selecione ao menos uma categoria!">
+          <nz-select formControlName="categorias" nzMode="multiple" nzPlaceHolder="Selecione as categorias">
+            <nz-option *ngFor="let categoria of listaCategorias" [nzValue]="categoria.id" [nzLabel]="categoria.nome"></nz-option>
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
 
-    <nz-form-item class="form-field">
-      <nz-form-control nzErrorTip="Selecione ao menos uma categoria!">
-        <nz-select formControlName="categorias" nzMode="multiple" nzPlaceHolder="Selecione as categorias">
-          <nz-option *ngFor="let categoria of listaCategorias" [nzValue]="categoria.id" [nzLabel]="categoria.nome"></nz-option>
-        </nz-select>
-      </nz-form-control>
-    </nz-form-item>
+      <nz-form-item>
+        <nz-form-control>
+          <button nz-button nzType="primary" [nzLoading]="salvando">
+            Adicionar Disciplina
+          </button>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
 
-    <nz-form-item>
-      <nz-form-control>
-        <button nz-button nzType="primary" [nzLoading]="salvando">
-          ⚡ Adicionar Matéria
-        </button>
-      </nz-form-control>
-    </nz-form-item>
-  </form>
+    <div class="disciplinas-loading" *ngIf="carregando">Carregando disciplinas...</div>
+    <div class="disciplinas-empty" *ngIf="!carregando && !materiasExibidas().length">Nenhuma disciplina encontrada.</div>
 
-  <nz-table #basicTable [nzData]="materiasExibidas()" [nzLoading]="carregando" nzBordered>
-    <thead>
-      <tr>
-        <th width="80px">ID</th>
-        <th>Nome da Matéria</th>
-        <th>Categorias de Estudo</th>
-        <th nzWidth="180px">Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      <ng-container *ngFor="let data of basicTable.data">
-        <tr [class.materia-row-active]="materiaSelecionadaId === data.id">
-          <td>{{ data.id }}</td>
-          <td>
+    <div class="disciplinas-list" *ngIf="!carregando && materiasExibidas().length">
+      <article
+        class="disciplina-item"
+        *ngFor="let data of materiasPaginadas(); trackBy: trackByMateriaId"
+        [class.disciplina-item-active]="materiaSelecionadaId === data.id">
+        <div class="disciplina-main">
+          <div class="disciplina-info">
+            <span class="disciplina-id">#{{ data.id }}</span>
+
             <ng-container *ngIf="editandoId !== data.id; else editarNome">
-              <button
-                nz-button
-                nzType="link"
-                class="materia-open-button"
-                (click)="selecionarMateria(data)">
-                <strong>{{ data.nome }}</strong>
-                <span>{{ materiaSelecionadaId === data.id ? 'Ocultar assuntos' : 'Ver assuntos' }}</span>
-              </button>
+              <h4>{{ data.nome }}</h4>
             </ng-container>
             <ng-template #editarNome>
-              <input nz-input [(ngModel)]="formularioEdicao.nome" placeholder="Nome da matéria" />
+              <input nz-input [(ngModel)]="formularioEdicao.nome" placeholder="Nome da disciplina" />
             </ng-template>
-          </td>
-          <td>
-            <ng-container *ngIf="editandoId !== data.id; else editarCategorias">
+
+            <div class="disciplina-tags" *ngIf="editandoId !== data.id; else editarCategorias">
               <nz-tag *ngFor="let tag of converterCategorias(data.categorias)" nzColor="blue">{{ tag }}</nz-tag>
-              <span *ngIf="!data.categorias" class="empty-value">Nenhuma</span>
-            </ng-container>
+              <span *ngIf="!data.categorias?.length" class="empty-value">Sem categorias</span>
+            </div>
             <ng-template #editarCategorias>
               <nz-select class="categoria-edit-select" [(ngModel)]="formularioEdicao.categorias" [ngModelOptions]="{standalone: true}" nzMode="multiple" nzPlaceHolder="Selecione as categorias">
                 <nz-option *ngFor="let categoria of listaCategorias" [nzValue]="categoria.id" [nzLabel]="categoria.nome"></nz-option>
               </nz-select>
             </ng-template>
-          </td>
-          <td>
+          </div>
+
+          <div class="disciplina-actions">
             <ng-container *ngIf="editandoId !== data.id; else botoesEdicao">
-              <button nz-button nzType="link" (click)="iniciarEdicao(data)">✏️ Editar</button>
-              <button nz-button nzDanger nzType="link" [disabled]="excluindo" (click)="excluirMateria(data)">Apagar</button>
+              <button nz-button nzType="default" nzSize="small" (click)="selecionarMateria(data)">
+                {{ materiaSelecionadaId === data.id ? 'Ocultar assuntos' : 'Ver assuntos' }}
+              </button>
+              <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicao(data)">Editar</button>
+              <button nz-button nzDanger nzType="link" nzSize="small" [disabled]="excluindo" (click)="excluirMateria(data)">Apagar</button>
             </ng-container>
             <ng-template #botoesEdicao>
               <button nz-button nzType="primary" nzSize="small" [nzLoading]="salvando" (click)="salvarEdicao(data)">Salvar</button>
-              <button nz-button nzType="link" (click)="cancelarEdicao()">Cancelar</button>
+              <button nz-button nzType="link" nzSize="small" (click)="cancelarEdicao()">Cancelar</button>
             </ng-template>
-          </td>
-        </tr>
+          </div>
+        </div>
 
-        <tr class="assuntos-row" *ngIf="materiaSelecionadaId === data.id">
-          <td colspan="4">
-            <section class="assuntos-panel">
-              <header class="assuntos-header">
-                <div>
-                  <span class="eyebrow">Assuntos cadastrados</span>
-                  <h4>{{ data.nome }}</h4>
+        <section class="assuntos-panel" *ngIf="materiaSelecionadaId === data.id">
+          <header class="assuntos-header">
+            <div>
+              <span class="eyebrow">Assuntos cadastrados</span>
+              <h4>{{ data.nome }}</h4>
+            </div>
+            <nz-tag nzColor="blue" *ngIf="!assuntosCarregando">{{ assuntosDaMateria.length }} assunto(s)</nz-tag>
+          </header>
+
+          <div class="assuntos-loading" *ngIf="assuntosCarregando">Carregando assuntos...</div>
+          <div class="assuntos-empty" *ngIf="!assuntosCarregando && !assuntosDaMateria.length">Nenhum assunto cadastrado para esta disciplina.</div>
+
+          <div class="assuntos-list" *ngIf="!assuntosCarregando && assuntosDaMateria.length">
+            <article class="assunto-item" *ngFor="let assunto of assuntosDaMateria; trackBy: trackByAssuntoId">
+              <ng-container *ngIf="assuntoEditandoId !== assunto.id; else editarAssunto">
+                <div class="assunto-info">
+                  <span class="assunto-dot"></span>
+                  <span>{{ assunto.nome }}</span>
                 </div>
-                <nz-tag nzColor="blue" *ngIf="!assuntosCarregando">{{ assuntosDaMateria.length }} assunto(s)</nz-tag>
-              </header>
+                <div class="assunto-actions">
+                  <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoAssunto(assunto)">Editar</button>
+                  <button nz-button nzDanger nzType="link" nzSize="small" [disabled]="excluindo" (click)="excluirAssunto(assunto)">Apagar</button>
+                </div>
+              </ng-container>
 
-              <div class="assuntos-loading" *ngIf="assuntosCarregando">Carregando assuntos...</div>
-              <div class="assuntos-empty" *ngIf="!assuntosCarregando && !assuntosDaMateria.length">Nenhum assunto cadastrado para esta matéria.</div>
+              <ng-template #editarAssunto>
+                <input nz-input [(ngModel)]="nomeAssuntoEdicao" [ngModelOptions]="{standalone: true}" />
+                <div class="assunto-actions">
+                  <button nz-button nzType="primary" nzSize="small" (click)="salvarEdicaoAssunto(assunto)">Salvar</button>
+                  <button nz-button nzType="link" nzSize="small" (click)="cancelarEdicaoAssunto()">Cancelar</button>
+                </div>
+              </ng-template>
+            </article>
+          </div>
+        </section>
+      </article>
 
-              <div class="assuntos-list" *ngIf="!assuntosCarregando && assuntosDaMateria.length">
-                <article class="assunto-item" *ngFor="let assunto of assuntosDaMateria; trackBy: trackByAssuntoId">
-                  <ng-container *ngIf="assuntoEditandoId !== assunto.id; else editarAssunto">
-                    <div class="assunto-info">
-                      <span class="assunto-dot"></span>
-                      <span>{{ assunto.nome }}</span>
-                    </div>
-                    <div class="assunto-actions">
-                      <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoAssunto(assunto)">Editar</button>
-                      <button nz-button nzDanger nzType="link" nzSize="small" [disabled]="excluindo" (click)="excluirAssunto(assunto)">Apagar</button>
-                    </div>
-                  </ng-container>
-
-                  <ng-template #editarAssunto>
-                    <input nz-input [(ngModel)]="nomeAssuntoEdicao" [ngModelOptions]="{standalone: true}" />
-                    <div class="assunto-actions">
-                      <button nz-button nzType="primary" nzSize="small" (click)="salvarEdicaoAssunto(assunto)">Salvar</button>
-                      <button nz-button nzType="link" nzSize="small" (click)="cancelarEdicaoAssunto()">Cancelar</button>
-                    </div>
-                  </ng-template>
-                </article>
-              </div>
-            </section>
-          </td>
-        </tr>
-      </ng-container>
-    </tbody>
-  </nz-table>
+      <div class="disciplinas-pagination">
+        <span>
+          Mostrando {{ primeiroItemMateria() }}-{{ ultimoItemMateria() }} de {{ materiasExibidas().length }} disciplina(s)
+        </span>
+        <nz-pagination
+          [nzPageIndex]="paginaMateriasAtual"
+          (nzPageIndexChange)="trocarPaginaMaterias($event)"
+          [nzPageSize]="materiasPorPagina"
+          [nzTotal]="materiasExibidas().length"
+          [nzShowSizeChanger]="false">
+        </nz-pagination>
+      </div>
+    </div>
+  </section>
 </div>

@@ -45,7 +45,8 @@
   align-items: center;
   min-height: 82px;
   border-radius: 8px;
-  background: #f1f5f9;
+  border: 1px solid var(--border, #e5e7eb);
+  background: var(--surface-soft, #f1f5f9);
   color: var(--text, #0f172a);
 }
 
@@ -104,10 +105,10 @@
 .meta-pill {
   max-width: 100%;
   padding: 1px 8px;
-  border: 1px solid #dbeafe;
+  border: 1px solid rgba(29, 78, 216, 0.2);
   border-radius: 6px;
   color: #1d4ed8;
-  background: #eff6ff;
+  background: rgba(37, 99, 235, 0.1);
   font-size: 12px;
   font-weight: 750;
 }
@@ -121,7 +122,7 @@
 .history-stats > div {
   min-width: 0;
   padding: 10px 12px;
-  border: 1px solid #eef2f7;
+  border: 1px solid var(--border, #eef2f7);
   border-radius: 8px;
   background: var(--surface-muted, #fbfdff);
 }
@@ -146,6 +147,36 @@
 
 .material-summary strong {
   font-weight: 750;
+}
+
+:host-context(.dark-theme) .history-item {
+  background: #111827;
+  border-color: rgba(148, 163, 184, 0.26);
+}
+
+:host-context(.dark-theme) .date-block,
+:host-context(.dark-theme) .history-stats > div {
+  background: #0f172a;
+  border-color: rgba(148, 163, 184, 0.34);
+}
+
+:host-context(.dark-theme) .date-block strong,
+:host-context(.dark-theme) .history-title-row h3,
+:host-context(.dark-theme) .history-stats strong {
+  color: #f8fafc;
+}
+
+:host-context(.dark-theme) .date-block span,
+:host-context(.dark-theme) .history-title-row p,
+:host-context(.dark-theme) .history-stats small,
+:host-context(.dark-theme) .history-pagination span {
+  color: #cbd5e1;
+}
+
+:host-context(.dark-theme) .meta-pill {
+  background: rgba(96, 165, 250, 0.18);
+  border-color: rgba(147, 197, 253, 0.42);
+  color: #dbeafe;
 }
 
 .history-pagination {

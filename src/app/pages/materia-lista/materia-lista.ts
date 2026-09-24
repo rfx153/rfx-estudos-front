@@ -8,12 +8,12 @@ import { Planejamento, PlanejamentoService } from '../../services/planejamento.s
 import { TipoRegistroService } from '../../services/tipo-registro.service';
 
 // Módulos do NG-ZORRO
-import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzFormModule } from 'ng-zorro-antd/form'; 
 import { NzInputModule } from 'ng-zorro-antd/input'; 
 import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzPaginationModule } from 'ng-zorro-antd/pagination';
 import { NzMessageService } from 'ng-zorro-antd/message';
 
 // Importações de Ícone do Zorro
@@ -27,12 +27,12 @@ import { BookOutline, TagsOutline } from '@ant-design/icons-angular/icons';
     CommonModule, 
     FormsModule,
     ReactiveFormsModule, 
-    NzTableModule, 
     NzTagModule, 
     NzButtonModule,
     NzFormModule,
     NzInputModule,
     NzSelectModule,
+    NzPaginationModule,
     NzIconModule // Mantemos o módulo aqui
   ], 
   templateUrl: './materia-lista.html',
@@ -79,6 +79,8 @@ export class MateriaListaComponent implements OnInit {
   planejamentoForm!: FormGroup;
   categoriaForm!: FormGroup;
   tipoRegistroForm!: FormGroup;
+  paginaMateriasAtual = 1;
+  materiasPorPagina = 10;
 
   constructor() {
     // 🔥 FORÇA O REGISTRO DOS ÍCONES DIRETO NO MOTOR DO NG-ZORRO
@@ -145,6 +147,8 @@ export class MateriaListaComponent implements OnInit {
 
   selecionarCategoria(id: number | null): void {
     this.categoriaSelecionadaId = id;
+    this.paginaMateriasAtual = 1;
+    this.fecharAssuntosSelecionados();
   }
 
   obterPlanejamentos(): void {
@@ -471,6 +475,10 @@ export class MateriaListaComponent implements OnInit {
     return assunto.id;
   }
 
+  trackByMateriaId(index: number, materia: Materia): number {
+    return materia.id ?? index;
+  }
+
   materiasExibidas(): Materia[] {
     if (this.categoriaSelecionadaId === null) return this.listaMaterias;
 
@@ -486,6 +494,7 @@ export class MateriaListaComponent implements OnInit {
       next: (dados) => {
         console.log('Dados que chegaram do Java:', dados); 
         this.listaMaterias = [...dados]; 
+        this.ajustarPaginaMaterias();
         this.carregando = false;
         
         // 🔥 FORÇA O ANGULAR A REDESENHAR A TABELA IMEDIATAMENTE
@@ -512,6 +521,7 @@ export class MateriaListaComponent implements OnInit {
         next: () => {
           this.salvando = false;
           this.validateForm.reset(); 
+          this.paginaMateriasAtual = 1;
           this.message.success('Matéria salva com sucesso.');
           this.obterMaterias();     
         },
@@ -592,6 +602,7 @@ export class MateriaListaComponent implements OnInit {
         }
         this.assuntosCache.delete(materiaId);
         this.editandoId = null;
+        this.ajustarPaginaMaterias();
         this.excluindo = false;
         this.message.success('Matéria apagada com sucesso.');
         this.cdr.detectChanges();
@@ -607,6 +618,38 @@ export class MateriaListaComponent implements OnInit {
 
   converterCategorias(categorias: Categoria[] = []): string[] {
     return categorias.map(categoria => categoria.nome);
+  }
+
+  materiasPaginadas(): Materia[] {
+    const inicio = (this.paginaMateriasAtual - 1) * this.materiasPorPagina;
+    return this.materiasExibidas().slice(inicio, inicio + this.materiasPorPagina);
+  }
+
+  primeiroItemMateria(): number {
+    if (!this.materiasExibidas().length) return 0;
+    return (this.paginaMateriasAtual - 1) * this.materiasPorPagina + 1;
+  }
+
+  ultimoItemMateria(): number {
+    return Math.min(this.paginaMateriasAtual * this.materiasPorPagina, this.materiasExibidas().length);
+  }
+
+  trocarPaginaMaterias(pagina: number): void {
+    this.paginaMateriasAtual = pagina;
+    this.fecharAssuntosSelecionados();
+  }
+
+  private ajustarPaginaMaterias(): void {
+    const totalPaginas = Math.max(1, Math.ceil(this.materiasExibidas().length / this.materiasPorPagina));
+    if (this.paginaMateriasAtual > totalPaginas) {
+      this.paginaMateriasAtual = totalPaginas;
+    }
+  }
+
+  private fecharAssuntosSelecionados(): void {
+    this.materiaSelecionadaId = null;
+    this.assuntosDaMateria = [];
+    this.assuntoEditandoId = null;
   }
 
   private categoriasPorIds(ids: number[]): Categoria[] {
