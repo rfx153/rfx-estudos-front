@@ -92,6 +92,10 @@ export class RegistroService {
     return this.http.post<Registro>(this.apiUrl, registro);
   }
 
+  excluir(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
   // ==========================================
   // 📚 MÉTODOS DE ASSUNTOS
   // ==========================================
@@ -117,6 +121,12 @@ export class RegistroService {
 
   atualizarAssunto(id: number, nome: string): Observable<Assunto> {
     return this.http.put<Assunto>(`${this.assuntosUrl}/${id}`, { nome }).pipe(
+      tap(() => this.assuntosCache.clear())
+    );
+  }
+
+  excluirAssunto(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.assuntosUrl}/${id}`).pipe(
       tap(() => this.assuntosCache.clear())
     );
   }

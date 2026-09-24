@@ -33,6 +33,10 @@ export class PlanejamentoService {
     return this.http.put<Planejamento>(`${this.apiUrl}/${id}`, planejamento).pipe(tap(() => this.limparCache()));
   }
 
+  excluir(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(tap(() => this.limparCache()));
+  }
+
   private limparCache(): void {
     this.planejamentosCache$ = undefined;
   }

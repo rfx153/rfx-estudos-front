@@ -52,7 +52,10 @@
       <article class="manager-item" *ngFor="let categoria of listaCategorias">
         <ng-container *ngIf="categoriaEditandoId !== categoria.id; else editarCategoria">
           <span>{{ categoria.nome }}</span>
-          <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoCategoria(categoria)">Editar</button>
+          <div class="manager-actions">
+            <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoCategoria(categoria)">Editar</button>
+            <button nz-button nzDanger nzType="link" nzSize="small" [disabled]="excluindo" (click)="excluirCategoria(categoria)">Apagar</button>
+          </div>
         </ng-container>
         <ng-template #editarCategoria>
           <input nz-input [(ngModel)]="nomeCategoriaEdicao" [ngModelOptions]="{standalone: true}" />
@@ -94,7 +97,10 @@
       <article class="manager-item" *ngFor="let planejamento of listaPlanejamentos">
         <ng-container *ngIf="planejamentoEditandoId !== planejamento.id; else editarPlanejamento">
           <span>{{ planejamento.nome }}</span>
-          <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoPlanejamento(planejamento)">Editar</button>
+          <div class="manager-actions">
+            <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoPlanejamento(planejamento)">Editar</button>
+            <button nz-button nzDanger nzType="link" nzSize="small" [disabled]="excluindo" (click)="excluirPlanejamento(planejamento)">Apagar</button>
+          </div>
         </ng-container>
         <ng-template #editarPlanejamento>
           <input nz-input [(ngModel)]="nomePlanejamentoEdicao" [ngModelOptions]="{standalone: true}" />
@@ -140,7 +146,10 @@
       <article class="manager-item" *ngFor="let tipo of listaTiposRegistro">
         <ng-container *ngIf="tipoRegistroEditandoId !== tipo.id; else editarTipoRegistro">
           <span>{{ tipo.nome }}</span>
-          <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoTipoRegistro(tipo)">Editar</button>
+          <div class="manager-actions">
+            <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoTipoRegistro(tipo)">Editar</button>
+            <button nz-button nzDanger nzType="link" nzSize="small" [disabled]="excluindo" (click)="excluirTipoRegistro(tipo)">Apagar</button>
+          </div>
         </ng-container>
         <ng-template #editarTipoRegistro>
           <input nz-input [(ngModel)]="nomeTipoRegistroEdicao" [ngModelOptions]="{standalone: true}" />
@@ -226,6 +235,7 @@
           <td>
             <ng-container *ngIf="editandoId !== data.id; else botoesEdicao">
               <button nz-button nzType="link" (click)="iniciarEdicao(data)">✏️ Editar</button>
+              <button nz-button nzDanger nzType="link" [disabled]="excluindo" (click)="excluirMateria(data)">Apagar</button>
             </ng-container>
             <ng-template #botoesEdicao>
               <button nz-button nzType="primary" nzSize="small" [nzLoading]="salvando" (click)="salvarEdicao(data)">Salvar</button>
@@ -255,7 +265,10 @@
                       <span class="assunto-dot"></span>
                       <span>{{ assunto.nome }}</span>
                     </div>
-                    <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoAssunto(assunto)">Editar</button>
+                    <div class="assunto-actions">
+                      <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoAssunto(assunto)">Editar</button>
+                      <button nz-button nzDanger nzType="link" nzSize="small" [disabled]="excluindo" (click)="excluirAssunto(assunto)">Apagar</button>
+                    </div>
                   </ng-container>
 
                   <ng-template #editarAssunto>

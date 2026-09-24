@@ -73,6 +73,7 @@ export class MateriaListaComponent implements OnInit {
   nomeCategoriaEdicao = '';
   nomePlanejamentoEdicao = '';
   nomeTipoRegistroEdicao = '';
+  excluindo = false;
   formularioEdicao = { nome: '', categorias: [] as number[] };
   validateForm!: FormGroup;
   planejamentoForm!: FormGroup;
@@ -251,6 +252,29 @@ export class MateriaListaComponent implements OnInit {
     });
   }
 
+  excluirCategoria(categoria: Categoria): void {
+    if (!window.confirm(`Apagar a categoria "${categoria.nome}"?`)) return;
+
+    this.excluindo = true;
+    this.categoriaService.excluir(categoria.id).subscribe({
+      next: () => {
+        this.listaCategorias = this.listaCategorias.filter(item => item.id !== categoria.id);
+        if (this.categoriaSelecionadaId === categoria.id) {
+          this.categoriaSelecionadaId = null;
+        }
+        this.excluindo = false;
+        this.message.success('Categoria apagada com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao apagar categoria:', erro);
+        this.excluindo = false;
+        this.message.error('Não foi possível apagar a categoria. Ela pode estar em uso.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   iniciarEdicaoPlanejamento(planejamento: Planejamento): void {
     if (!planejamento.id) return;
     this.planejamentoEditandoId = planejamento.id;
@@ -276,6 +300,26 @@ export class MateriaListaComponent implements OnInit {
     });
   }
 
+  excluirPlanejamento(planejamento: Planejamento): void {
+    if (!planejamento.id || !window.confirm(`Apagar o planejamento "${planejamento.nome}"?`)) return;
+
+    this.excluindo = true;
+    this.planejamentoService.excluir(planejamento.id).subscribe({
+      next: () => {
+        this.listaPlanejamentos = this.listaPlanejamentos.filter(item => item.id !== planejamento.id);
+        this.excluindo = false;
+        this.message.success('Planejamento apagado com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao apagar planejamento:', erro);
+        this.excluindo = false;
+        this.message.error('Não foi possível apagar o planejamento. Ele pode estar em uso.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   iniciarEdicaoTipoRegistro(tipo: TipoRegistro): void {
     this.tipoRegistroEditandoId = tipo.id;
     this.nomeTipoRegistroEdicao = tipo.nome;
@@ -295,6 +339,26 @@ export class MateriaListaComponent implements OnInit {
       error: erro => {
         console.error('Erro ao editar tipo de registro:', erro);
         this.message.error('Não foi possível editar o tipo de registro.');
+      }
+    });
+  }
+
+  excluirTipoRegistro(tipo: TipoRegistro): void {
+    if (!window.confirm(`Apagar o tipo de registro "${tipo.nome}"?`)) return;
+
+    this.excluindo = true;
+    this.tipoRegistroService.excluir(tipo.id).subscribe({
+      next: () => {
+        this.listaTiposRegistro = this.listaTiposRegistro.filter(item => item.id !== tipo.id);
+        this.excluindo = false;
+        this.message.success('Tipo de registro apagado com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao apagar tipo de registro:', erro);
+        this.excluindo = false;
+        this.message.error('Não foi possível apagar o tipo de registro. Ele pode estar em uso.');
+        this.cdr.detectChanges();
       }
     });
   }
@@ -375,6 +439,30 @@ export class MateriaListaComponent implements OnInit {
       error: erro => {
         console.error('Erro ao atualizar assunto:', erro);
         this.message.error('Não foi possível editar o assunto.');
+      }
+    });
+  }
+
+  excluirAssunto(assunto: Assunto): void {
+    if (!window.confirm(`Apagar o assunto "${assunto.nome}"?`)) return;
+
+    this.excluindo = true;
+    this.registroService.excluirAssunto(assunto.id).subscribe({
+      next: () => {
+        this.assuntosDaMateria = this.assuntosDaMateria.filter(item => item.id !== assunto.id);
+        if (this.materiaSelecionadaId !== null) {
+          this.assuntosCache.set(this.materiaSelecionadaId, this.assuntosDaMateria);
+        }
+        this.cancelarEdicaoAssunto();
+        this.excluindo = false;
+        this.message.success('Assunto apagado com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao apagar assunto:', erro);
+        this.excluindo = false;
+        this.message.error('Não foi possível apagar o assunto. Ele pode estar em uso.');
+        this.cdr.detectChanges();
       }
     });
   }
@@ -485,6 +573,33 @@ export class MateriaListaComponent implements OnInit {
         console.error('Erro ao atualizar matéria:', erro);
         this.salvando = false;
         this.message.error('Não foi possível editar a matéria.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  excluirMateria(materia: Materia): void {
+    if (!materia.id || !window.confirm(`Apagar a matéria "${materia.nome}"?`)) return;
+
+    const materiaId = materia.id;
+    this.excluindo = true;
+    this.materiaService.excluir(materiaId).subscribe({
+      next: () => {
+        this.listaMaterias = this.listaMaterias.filter(item => item.id !== materiaId);
+        if (this.materiaSelecionadaId === materiaId) {
+          this.materiaSelecionadaId = null;
+          this.assuntosDaMateria = [];
+        }
+        this.assuntosCache.delete(materiaId);
+        this.editandoId = null;
+        this.excluindo = false;
+        this.message.success('Matéria apagada com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao apagar matéria:', erro);
+        this.excluindo = false;
+        this.message.error('Não foi possível apagar a matéria. Ela pode ter assuntos ou registros vinculados.');
         this.cdr.detectChanges();
       }
     });

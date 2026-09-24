@@ -7,6 +7,7 @@ import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzMessageService } from 'ng-zorro-antd/message';
 import { Registro, RegistroService } from '../../services/registro.service';
 import { MateriaService } from '../../services/materia.service';
 import { RegistroDetalhesModalComponent } from '../../shared/registro-detalhes-modal/registro-detalhes-modal';
@@ -31,7 +32,8 @@ export class VisualizarRegistrosComponent implements OnInit {
   constructor(
     private registroService: RegistroService,
     private materiaService: MateriaService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private message: NzMessageService
   ) {}
 
   ngOnInit(): void {
@@ -73,5 +75,26 @@ export class VisualizarRegistrosComponent implements OnInit {
     this.detalhesTitulo = `${registro.materia?.nome || 'Estudo'} - ${registro.assunto?.nome || 'Detalhes'}`;
     this.registrosSelecionados = [registro];
     this.detalhesVisiveis = true;
+  }
+
+  excluirRegistro(registro: Registro): void {
+    if (!registro.id || !window.confirm('Apagar este registro de estudo?')) return;
+
+    this.registroService.excluir(registro.id).subscribe({
+      next: () => {
+        this.listaRegistros = this.listaRegistros.filter(item => item.id !== registro.id);
+        this.registrosFiltrados = this.registrosFiltrados.filter(item => item.id !== registro.id);
+        if (this.registrosSelecionados.some(item => item.id === registro.id)) {
+          this.detalhesVisiveis = false;
+          this.registrosSelecionados = [];
+        }
+        this.message.success('Registro apagado com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao apagar registro:', erro);
+        this.message.error('Não foi possível apagar o registro.');
+      }
+    });
   }
 }

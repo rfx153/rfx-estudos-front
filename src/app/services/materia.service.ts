@@ -41,6 +41,10 @@ export class MateriaService {
     return this.http.put<Materia>(`${this.apiUrl}/${id}`, materia).pipe(tap(() => this.limparCache()));
   }
 
+  excluir(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(tap(() => this.limparCache()));
+  }
+
   private limparCache(): void {
     this.materiasCache$ = undefined;
   }

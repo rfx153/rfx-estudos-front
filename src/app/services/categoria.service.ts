@@ -31,6 +31,10 @@ export class CategoriaService {
     return this.http.put<Categoria>(`${this.apiUrl}/${id}`, categoria).pipe(tap(() => this.limparCache()));
   }
 
+  excluir(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(tap(() => this.limparCache()));
+  }
+
   private limparCache(): void {
     this.categoriasCache$ = undefined;
   }

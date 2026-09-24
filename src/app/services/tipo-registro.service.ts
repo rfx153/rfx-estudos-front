@@ -29,6 +29,10 @@ export class TipoRegistroService {
     return this.http.put<TipoRegistro>(`${this.apiUrl}/${id}`, tipoRegistro).pipe(tap(() => this.limparCache()));
   }
 
+  excluir(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(tap(() => this.limparCache()));
+  }
+
   private limparCache(): void {
     this.tiposCache$ = undefined;
   }
