@@ -458,32 +458,83 @@
 }
 
 @media (max-width: 840px) {
+  .home-page {
+    gap: 16px;
+  }
+
   .home-heading {
+    flex-direction: column;
     align-items: flex-start;
+    padding: 18px;
   }
 
   .sound-button {
     position: static;
-    align-self: flex-end;
+    align-self: stretch;
   }
 
   .retro-widget {
+    order: -1;
+    align-self: center;
     width: 86px;
     height: 86px;
-    transform: scale(0.82);
-    transform-origin: top right;
+    transform: scale(0.78);
+    transform-origin: center;
+    margin-bottom: -8px;
+  }
+
+  .home-greeting {
+    font-size: 19px;
+  }
+
+  .home-heading h1 {
+    font-size: 28px;
+    line-height: 1.08;
+  }
+
+  .home-heading p,
+  .study-quote {
+    font-size: 14px;
   }
 
   .quick-links {
     grid-template-columns: 1fr;
   }
 
+  .quick-link {
+    justify-content: flex-start;
+    min-height: 64px;
+  }
+
   .stats-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .stat-card,
+  .stat-card .ant-card-body {
+    min-height: 112px;
+  }
+
+  .stat-card strong {
+    font-size: 36px;
   }
 
   .studied-item header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .detail-button {
+    width: 100%;
+  }
+
+  .studied-item li {
+    align-items: flex-start;
+  }
+
+  .studied-item li::before {
+    flex: 0 0 auto;
+    margin-top: 6px;
   }
 }

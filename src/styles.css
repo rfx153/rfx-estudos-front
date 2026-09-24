@@ -38,6 +38,14 @@ html.dark-theme body {
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  overflow-x: hidden;
+}
+
 .page-card.ant-card,
 .ant-card {
   border: 1px solid rgba(15, 23, 42, 0.08);
@@ -76,6 +84,63 @@ html.dark-theme body {
 .ant-picker,
 .ant-input-number {
   border-radius: 7px !important;
+}
+
+@media (max-width: 760px) {
+  .page-card.ant-card,
+  .ant-card {
+    border-radius: 8px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  }
+
+  .ant-card-body {
+    padding: 16px !important;
+  }
+
+  .ant-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ant-table {
+    min-width: 680px;
+  }
+
+  .ant-modal {
+    max-width: calc(100vw - 20px);
+    margin: 10px auto;
+  }
+
+  .ant-modal-body {
+    max-height: calc(100vh - 140px);
+    overflow: auto;
+    padding: 16px !important;
+  }
+
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .ant-form-inline .ant-form-item {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 12px;
+  }
+
+  .ant-form-inline .ant-form-item-control,
+  .ant-form-inline .ant-form-item-control-input,
+  .ant-form-inline .ant-form-item-control-input-content,
+  .ant-select,
+  .ant-picker,
+  .ant-input-number {
+    width: 100%;
+  }
+
+  .ant-btn {
+    min-height: 36px;
+  }
 }
 
 .dark-theme .app-header {

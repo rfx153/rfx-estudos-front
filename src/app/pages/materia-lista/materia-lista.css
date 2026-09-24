@@ -129,6 +129,10 @@
   min-width: 250px;
 }
 
+.categoria-edit-select {
+  min-width: 250px;
+}
+
 .materia-row-active td {
   background: var(--surface-muted, #f8fbff);
 }
@@ -241,6 +245,40 @@
 }
 
 @media (max-width: 760px) {
+  .materias-page {
+    padding: 14px;
+  }
+
+  .page-heading {
+    margin-bottom: 16px;
+  }
+
+  .page-heading h2 {
+    font-size: 21px;
+  }
+
+  .categorias-topo,
+  .planejamentos-section,
+  .materia-form {
+    margin: 14px 0;
+    padding: 14px;
+  }
+
+  .section-heading {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .categorias-abas {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .categorias-abas button {
+    flex: 0 0 auto;
+  }
+
   .materia-form {
     display: block;
   }
@@ -251,7 +289,8 @@
 
   .materia-form .form-field,
   .data-manager-form .form-field,
-  .materia-form nz-select {
+  .materia-form nz-select,
+  .categoria-edit-select {
     width: 100%;
     min-width: 0;
   }
@@ -267,5 +306,30 @@
 
   .manager-actions {
     justify-content: flex-end;
+  }
+
+  .assuntos-panel {
+    padding: 14px;
+  }
+
+  .assuntos-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .assunto-item {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .assunto-actions {
+    justify-content: flex-end;
+  }
+
+  .materia-open-button {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+    text-align: left;
   }
 }

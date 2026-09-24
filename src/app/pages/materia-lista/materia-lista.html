@@ -218,7 +218,7 @@
               <span *ngIf="!data.categorias" class="empty-value">Nenhuma</span>
             </ng-container>
             <ng-template #editarCategorias>
-              <nz-select [(ngModel)]="formularioEdicao.categorias" [ngModelOptions]="{standalone: true}" nzMode="multiple" nzPlaceHolder="Selecione as categorias" style="min-width: 250px;">
+              <nz-select class="categoria-edit-select" [(ngModel)]="formularioEdicao.categorias" [ngModelOptions]="{standalone: true}" nzMode="multiple" nzPlaceHolder="Selecione as categorias">
                 <nz-option *ngFor="let categoria of listaCategorias" [nzValue]="categoria.id" [nzLabel]="categoria.nome"></nz-option>
               </nz-select>
             </ng-template>

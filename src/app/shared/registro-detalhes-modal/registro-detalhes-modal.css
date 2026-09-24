@@ -95,6 +95,15 @@
 }
 
 @media (max-width: 760px) {
+  .registro-detail-list {
+    max-height: 68vh;
+    padding-right: 0;
+  }
+
+  .registro-detail {
+    padding: 14px;
+  }
+
   .detail-grid {
     grid-template-columns: 1fr;
   }

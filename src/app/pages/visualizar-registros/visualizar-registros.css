@@ -56,3 +56,14 @@
     padding-top: 16px;
   }
 }
+
+@media (max-width: 760px) {
+  .filters-row {
+    margin-bottom: 16px;
+    padding: 14px;
+  }
+
+  .expanded-details {
+    padding: 14px;
+  }
+}
