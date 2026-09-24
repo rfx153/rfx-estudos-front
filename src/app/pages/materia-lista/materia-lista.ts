@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'; 
 import { MateriaService, Materia } from '../../services/materia.service';
+import { Categoria, CategoriaService } from '../../services/categoria.service';
 
 // Módulos do NG-ZORRO
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -9,6 +10,7 @@ import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzFormModule } from 'ng-zorro-antd/form'; 
 import { NzInputModule } from 'ng-zorro-antd/input'; 
+import { NzSelectModule } from 'ng-zorro-antd/select';
 
 // Importações de Ícone do Zorro
 import { NzIconModule, NzIconService } from 'ng-zorro-antd/icon'; // 🔥 Injetamos o NzIconService aqui
@@ -26,6 +28,7 @@ import { BookOutline, TagsOutline } from '@ant-design/icons-angular/icons';
     NzButtonModule,
     NzFormModule,
     NzInputModule,
+    NzSelectModule,
     NzIconModule // Mantemos o módulo aqui
   ], 
   templateUrl: './materia-lista.html',
@@ -34,14 +37,16 @@ import { BookOutline, TagsOutline } from '@ant-design/icons-angular/icons';
 export class MateriaListaComponent implements OnInit {
   
   private materiaService = inject(MateriaService);
+  private categoriaService = inject(CategoriaService);
   private fb = inject(FormBuilder); 
   private iconService = inject(NzIconService); // 🔥 Injetamos o serviço de ícones aqui
  private cdr = inject(ChangeDetectorRef); // 🔥 Injetamos o detector de mudanças aqui
   listaMaterias: Materia[] = [];
+  listaCategorias: Categoria[] = [];
   carregando = true;
   salvando = false;
   editandoId: number | null = null;
-  formularioEdicao = { nome: '', categorias: '' };
+  formularioEdicao = { nome: '', categorias: [] as number[] };
   validateForm!: FormGroup;
 
   constructor() {
@@ -54,7 +59,15 @@ export class MateriaListaComponent implements OnInit {
     
     this.validateForm = this.fb.group({
       nome: [null, [Validators.required]],
-      categorias: [null, [Validators.required]]
+      categorias: [[], [Validators.required]]
+    });
+    this.obterCategorias();
+  }
+
+  obterCategorias(): void {
+    this.categoriaService.listarTodas().subscribe({
+      next: (categorias) => this.listaCategorias = categorias,
+      error: (erro) => console.error('Erro ao buscar categorias:', erro)
     });
   }
 
@@ -81,7 +94,11 @@ export class MateriaListaComponent implements OnInit {
   submitForm(): void {
     if (this.validateForm.valid) {
       this.salvando = true;
-      const novaMateria: Materia = this.validateForm.value;
+      const valores = this.validateForm.value;
+      const novaMateria: Materia = {
+        nome: valores.nome,
+        categorias: this.categoriasPorIds(valores.categorias ?? [])
+      };
 
       this.materiaService.criar(novaMateria).subscribe({
         next: () => {
@@ -109,7 +126,7 @@ export class MateriaListaComponent implements OnInit {
     this.editandoId = materia.id;
     this.formularioEdicao = {
       nome: materia.nome,
-      categorias: materia.categorias ?? ''
+      categorias: materia.categorias?.map(categoria => categoria.id) ?? []
     };
   }
 
@@ -124,7 +141,7 @@ export class MateriaListaComponent implements OnInit {
     this.materiaService.atualizar(materia.id, {
       ...materia,
       nome: this.formularioEdicao.nome.trim(),
-      categorias: this.formularioEdicao.categorias.trim()
+      categorias: this.categoriasPorIds(this.formularioEdicao.categorias)
     }).subscribe({
       next: (atualizada) => {
         const indice = this.listaMaterias.findIndex(item => item.id === materia.id);
@@ -145,8 +162,13 @@ export class MateriaListaComponent implements OnInit {
     });
   }
 
-  converterCategorias(categorias?: string): string[] {
-    if (!categorias) return [];
-    return categorias.split(',').map(c => c.trim());
+  converterCategorias(categorias: Categoria[] = []): string[] {
+    return categorias.map(categoria => categoria.nome);
+  }
+
+  private categoriasPorIds(ids: number[]): Categoria[] {
+    return ids
+      .map(id => this.listaCategorias.find(categoria => categoria.id === id))
+      .filter((categoria): categoria is Categoria => !!categoria);
   }
 }

@@ -16,10 +16,10 @@
     </nz-form-item>
 
     <nz-form-item style="flex: 1; min-width: 250px;">
-      <nz-form-control nzErrorTip="Digite ao menos uma categoria separada por vírgula!">
-        <nz-input-group nzPrefixIcon="tags">
-          <input type="text" nz-input formControlName="categorias" placeholder="Categorias (Ex: Exames, Provas, Sintaxe)" />
-        </nz-input-group>
+      <nz-form-control nzErrorTip="Selecione ao menos uma categoria!">
+        <nz-select formControlName="categorias" nzMode="multiple" nzPlaceHolder="Selecione as categorias" style="min-width: 250px;">
+          <nz-option *ngFor="let categoria of listaCategorias" [nzValue]="categoria.id" [nzLabel]="categoria.nome"></nz-option>
+        </nz-select>
       </nz-form-control>
     </nz-form-item>
 
@@ -58,7 +58,9 @@
             <span *ngIf="!data.categorias" style="color: #999; font-style: italic;">Nenhuma</span>
           </ng-container>
           <ng-template #editarCategorias>
-            <input nz-input [(ngModel)]="formularioEdicao.categorias" placeholder="Categorias separadas por vírgula" />
+            <nz-select [(ngModel)]="formularioEdicao.categorias" [ngModelOptions]="{standalone: true}" nzMode="multiple" nzPlaceHolder="Selecione as categorias" style="min-width: 250px;">
+              <nz-option *ngFor="let categoria of listaCategorias" [nzValue]="categoria.id" [nzLabel]="categoria.nome"></nz-option>
+            </nz-select>
           </ng-template>
         </td>
         <td>

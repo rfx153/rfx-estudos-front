@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment.development';
+import { Categoria } from './categoria.service';
 
 // Interface para tipar os dados que vêm do Java
 export interface Materia {
   id?: number;
   nome: string;
-  categorias?: string;
+  categorias?: Categoria[];
 }
 
 @Injectable({
