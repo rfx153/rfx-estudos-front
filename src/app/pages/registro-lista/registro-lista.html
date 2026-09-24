@@ -57,20 +57,20 @@
       </div>
         <div nz-col [nzSpan]="6">
           <nz-form-item>
-            <nz-form-label>Nome do Planejamento</nz-form-label>
+            <nz-form-label>Ciclo / material guia</nz-form-label>
             <nz-form-control>
               <nz-select
                 formControlName="planejamento"
                 nzShowSearch
                 nzAllowClear
-                nzPlaceHolder="Planejamento"
+                nzPlaceHolder="Ciclo"
                 [nzDropdownRender]="renderPlanejamentoTemplate">
                 <nz-option *ngFor="let p of listaPlanejamentos" [nzLabel]="p.nome" [nzValue]="p.id"></nz-option>
               </nz-select>
 
               <ng-template #renderPlanejamentoTemplate>
                 <div class="dropdown-wrapper">
-                  <input type="text" nz-input #inputPlanejamento placeholder="Novo planejamento..." />
+                  <input type="text" nz-input #inputPlanejamento placeholder="Novo ciclo..." />
                   <a class="add-item-btn" (click)="cadastrarPlanejamentoRapido(inputPlanejamento)">
                     <i nz-icon nzType="plus"></i> Criar
                   </a>

@@ -21,7 +21,7 @@
       <th>Data</th>
       <th>Matéria</th>
       <th>Assunto</th>
-      <th>Planejamento</th>
+      <th>Ciclo</th>
       <th>Registro</th>
       <th>Tipo</th>
       <th>Tempo</th>
@@ -35,7 +35,7 @@
         <td>{{ data.dataEstudo | date: 'dd/MM/yyyy' }}</td>
         <td><strong>{{ data.materia?.nome }}</strong></td>
         <td>{{ data.assunto?.nome }}</td>
-        <td>{{ data.planejamento?.nome || 'Sem planejamento' }}</td>
+        <td>{{ data.planejamento?.nome || 'Sem ciclo' }}</td>
         <td><nz-tag nzColor="purple">{{ data.tipoRegistro?.nome || 'Não informado' }}</nz-tag></td>
         <td><nz-tag nzColor="blue">{{ data.materialTipo?.nome }}</nz-tag></td>
         <td>{{ data.tempoEstudado }}</td>

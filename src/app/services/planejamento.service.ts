@@ -14,7 +14,7 @@ export interface Planejamento {
 })
 export class PlanejamentoService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/planejamentos`;
+  private apiUrl = `${environment.apiUrl}/ciclos`;
   private planejamentosCache$?: Observable<Planejamento[]>;
 
   listarTodos(): Observable<Planejamento[]> {

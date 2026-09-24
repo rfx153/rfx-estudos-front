@@ -3,7 +3,7 @@
   <header class="page-heading">
     <div>
       <h2>Gerenciador de dados</h2>
-      <p>Cadastre e edite planejamentos, categorias, disciplinas, assuntos e tipos de registro.</p>
+      <p>Cadastre e edite ciclos, categorias, disciplinas, assuntos e tipos de registro.</p>
     </div>
   </header>
 
@@ -71,23 +71,23 @@
   <section class="planejamentos-section">
     <div class="section-heading">
       <div>
-        <h3>Planejamentos</h3>
-        <p>Cadastre os nomes dos planejamentos usados nos registros de estudo.</p>
+        <h3>Ciclos de estudo</h3>
+        <p>Cadastre ciclos ou materiais-guia usados nos registros, como Pós SEFAZ SC.</p>
       </div>
-      <nz-tag nzColor="blue">{{ listaPlanejamentos.length }} planejamento(s)</nz-tag>
+      <nz-tag nzColor="blue">{{ listaPlanejamentos.length }} ciclo(s)</nz-tag>
     </div>
 
     <form class="data-manager-form" nz-form [nzLayout]="'inline'" [formGroup]="planejamentoForm" (ngSubmit)="submitPlanejamento()">
       <nz-form-item class="form-field">
-        <nz-form-control nzErrorTip="Por favor, digite o nome do planejamento!">
-          <input type="text" nz-input formControlName="nome" placeholder="Ex: Receita Federal 2026, Ciclo base, Revisão final" />
+        <nz-form-control nzErrorTip="Por favor, digite o nome do ciclo!">
+          <input type="text" nz-input formControlName="nome" placeholder="Ex: Pós SEFAZ SC, Ciclo base, Revisão final" />
         </nz-form-control>
       </nz-form-item>
 
       <nz-form-item>
         <nz-form-control>
           <button nz-button nzType="primary" [nzLoading]="salvandoPlanejamento">
-            Adicionar Planejamento
+            Adicionar Ciclo
           </button>
         </nz-form-control>
       </nz-form-item>
@@ -113,7 +113,7 @@
     </div>
 
     <ng-template #semPlanejamentos>
-      <div class="planejamentos-empty" *ngIf="!planejamentosCarregando">Nenhum planejamento cadastrado.</div>
+      <div class="planejamentos-empty" *ngIf="!planejamentosCarregando">Nenhum ciclo cadastrado.</div>
     </ng-template>
   </section>
 
