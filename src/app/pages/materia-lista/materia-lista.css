@@ -238,6 +238,20 @@
   font-weight: 850;
 }
 
+.assunto-form {
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--surface, #fff);
+}
+
+.assunto-form .form-field {
+  flex: 1;
+  min-width: 240px;
+}
+
 .eyebrow {
   color: #1677ff;
   font-size: 12px;

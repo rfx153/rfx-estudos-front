@@ -251,6 +251,25 @@
             <nz-tag nzColor="blue" *ngIf="!assuntosCarregando">{{ assuntosDaMateria.length }} assunto(s)</nz-tag>
           </header>
 
+          <form class="assunto-form" nz-form [nzLayout]="'inline'" (ngSubmit)="adicionarAssunto()">
+            <nz-form-item class="form-field">
+              <nz-form-control>
+                <input
+                  nz-input
+                  name="novoAssunto"
+                  [(ngModel)]="nomeAssuntoNovo"
+                  placeholder="Nome do novo assunto" />
+              </nz-form-control>
+            </nz-form-item>
+            <nz-form-item>
+              <nz-form-control>
+                <button nz-button nzType="primary" [nzLoading]="salvandoAssunto">
+                  Adicionar assunto
+                </button>
+              </nz-form-control>
+            </nz-form-item>
+          </form>
+
           <div class="assuntos-loading" *ngIf="assuntosCarregando">Carregando assuntos...</div>
           <div class="assuntos-empty" *ngIf="!assuntosCarregando && !assuntosDaMateria.length">Nenhum assunto cadastrado para esta disciplina.</div>
 

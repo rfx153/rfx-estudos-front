@@ -60,12 +60,14 @@ export class MateriaListaComponent implements OnInit {
   private assuntosCache = new Map<number, Assunto[]>();
   assuntoEditandoId: number | null = null;
   nomeAssuntoEdicao = '';
+  nomeAssuntoNovo = '';
   carregando = true;
   planejamentosCarregando = true;
   salvando = false;
   salvandoPlanejamento = false;
   salvandoCategoria = false;
   salvandoTipoRegistro = false;
+  salvandoAssunto = false;
   editandoId: number | null = null;
   categoriaEditandoId: number | null = null;
   planejamentoEditandoId: number | null = null;
@@ -421,6 +423,41 @@ export class MateriaListaComponent implements OnInit {
   cancelarEdicaoAssunto(): void {
     this.assuntoEditandoId = null;
     this.nomeAssuntoEdicao = '';
+  }
+
+  adicionarAssunto(): void {
+    const nome = this.nomeAssuntoNovo.trim();
+    const materiaId = this.materiaSelecionadaId;
+
+    if (!nome) {
+      this.message.warning('Informe o nome do assunto antes de adicionar.');
+      return;
+    }
+
+    if (materiaId === null) {
+      this.message.warning('Selecione uma disciplina antes de adicionar um assunto.');
+      return;
+    }
+
+    this.salvandoAssunto = true;
+    this.registroService.criarAssunto({ nome, materiaId }).subscribe({
+      next: assunto => {
+        this.assuntosDaMateria = [...this.assuntosDaMateria, assunto].sort((a, b) =>
+          a.nome.localeCompare(b.nome)
+        );
+        this.assuntosCache.set(materiaId, this.assuntosDaMateria);
+        this.nomeAssuntoNovo = '';
+        this.salvandoAssunto = false;
+        this.message.success('Assunto adicionado com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao adicionar assunto:', erro);
+        this.salvandoAssunto = false;
+        this.message.error('Não foi possível adicionar o assunto.');
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   salvarEdicaoAssunto(assunto: Assunto): void {
