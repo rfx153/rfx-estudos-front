@@ -27,7 +27,10 @@ export class CaminhoComponent {
       nome: 'Graduação / Pesquisa',
       descricao: 'Formação acadêmica, produção e aprofundamento científico.',
       marcos: [
-        { nome: 'Graduação', status: 'Feito' },
+        { nome: 'Engenharia elétrica', status: 'Feito' },
+        { nome: 'Computação', status: 'Feito' },
+        { nome: 'Análise de sistemas', status: 'Feito' },
+        { nome: 'Técnico em informática', status: 'Feito' },
         { nome: 'Pós-graduação', status: 'A fazer' },
         { nome: 'Mestrado', status: 'A fazer' },
         { nome: 'Artigos para congresso', status: 'Fazendo' }
