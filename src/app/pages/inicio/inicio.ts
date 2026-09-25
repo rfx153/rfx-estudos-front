@@ -157,6 +157,10 @@ export class InicioComponent implements OnInit {
     return `${horas}h ${String(minutos).padStart(2, '0')}min`;
   }
 
+  percentualMeta(valor: number, meta: number): number {
+    return Math.min(Math.round((valor / meta) * 100), 100);
+  }
+
   private calcularPercentualAcertos(acertos: number, feitas: number): string {
     if (!feitas) return '0%';
 

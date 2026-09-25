@@ -69,6 +69,36 @@
       </nz-card>
     </div>
 
+    <section class="goals-section" aria-label="Suas metas">
+      <div class="goals-heading">
+        <div>
+          <span class="eyebrow">Foco do dia</span>
+          <h2>Suas metas</h2>
+        </div>
+        <span class="goals-caption">Acompanhe seu progresso</span>
+      </div>
+
+      <div class="goals-grid">
+        <article class="goal-card">
+          <div class="goal-icon">Q</div>
+          <div class="goal-content">
+            <div class="goal-title"><strong>Fazer 100 questões</strong><span>{{ questoesFeitasHoje }}/100</span></div>
+            <div class="goal-track"><span [style.width.%]="percentualMeta(questoesFeitasHoje, 100)"></span></div>
+            <small>{{ percentualMeta(questoesFeitasHoje, 100) }}% concluído</small>
+          </div>
+        </article>
+
+        <article class="goal-card">
+          <div class="goal-icon">M</div>
+          <div class="goal-content">
+            <div class="goal-title"><strong>Estudar 4 matérias</strong><span>{{ materiasEstudadasHoje }}/4</span></div>
+            <div class="goal-track"><span [style.width.%]="percentualMeta(materiasEstudadasHoje, 4)"></span></div>
+            <small>{{ percentualMeta(materiasEstudadasHoje, 4) }}% concluído</small>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <nz-card class="studied-list-card" nzTitle="Matérias e assuntos estudados hoje">
       <div class="empty-state" *ngIf="!materiasComAssuntosHoje.length">
         Nenhum estudo registrado hoje.

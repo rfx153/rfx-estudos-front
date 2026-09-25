@@ -1,0 +1,42 @@
+.caminho-page { padding: clamp(20px, 4vw, 36px); }
+.caminho-heading, .section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.caminho-heading h1, .section-heading h2 { margin: 4px 0 0; color: var(--text, #0f172a); }
+.caminho-heading p { max-width: 660px; margin: 8px 0 0; color: var(--text-muted, #64748b); }
+.eyebrow { color: #1677ff; font-size: 12px; font-weight: 850; letter-spacing: .04em; text-transform: uppercase; }
+.caminho-summary { display: grid; min-width: 130px; padding: 14px 18px; border-radius: 12px; color: #fff; background: #1677ff; text-align: center; }
+.caminho-summary strong { font-size: 28px; }
+.caminho-summary span { font-size: 12px; opacity: .85; }
+.lembrete-section { position: relative; min-height: 230px; overflow: hidden; margin: 28px 0 20px; border-radius: 14px; background: #0f172a; }
+.lembrete-section img { display: block; width: 100%; height: 300px; object-fit: cover; opacity: .72; }
+.lembrete { position: absolute; z-index: 1; top: 22px; left: 26px; max-width: 520px; margin: 0; color: #fff; font-family: Georgia, serif; font-size: clamp(24px, 4vw, 42px); font-style: italic; font-weight: 700; line-height: 1.1; text-shadow: 0 2px 14px rgba(0,0,0,.55); }
+.destinos-section { margin: 20px 0 24px; padding: 20px; border: 1px solid var(--border, #e5e7eb); border-radius: 12px; background: var(--surface-soft, #f8fafc); }
+.destinos-list { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+.destinos-list span { padding: 14px 8px; border-radius: 8px; color: #fff; background: linear-gradient(135deg, #1e3a8a, #1677ff); font-size: 13px; font-weight: 850; text-align: center; }
+.status-resumo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 28px 0; }
+.status-resumo div { display: grid; gap: 4px; padding: 16px; border: 1px solid var(--border, #e5e7eb); border-radius: 10px; background: var(--surface-soft, #f8fafc); }
+.status-resumo strong { color: var(--text, #0f172a); font-size: 28px; }
+.status-resumo span { color: var(--text-muted, #64748b); font-size: 13px; font-weight: 750; }
+.caminho-section { margin: 20px 0 24px; padding: 20px; border: 1px solid var(--border, #e5e7eb); border-radius: 12px; background: var(--surface-soft, #f8fafc); }
+.areas-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 16px; }
+.area-section { margin: 0 0 16px; }
+.section-heading p { margin: 6px 0 0; color: var(--text-muted, #64748b); font-size: 13px; }
+.area-vazia { padding: 18px 0 4px; color: var(--text-muted, #64748b); font-size: 13px; font-style: italic; }
+.section-heading { margin-bottom: 20px; }
+.marcos-list { position: relative; }
+.marco { position: relative; display: flex; min-height: 76px; gap: 16px; }
+.marco-marker { z-index: 1; display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border: 3px solid var(--surface-soft, #f8fafc); border-radius: 50%; color: #fff; background: #94a3b8; font-weight: 900; }
+.marco-line { position: absolute; left: 16px; top: 34px; bottom: -4px; width: 2px; background: #cbd5e1; }
+.marco-content { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0 20px; border-bottom: 1px solid var(--border, #e5e7eb); }
+.marco:last-child .marco-content { border-bottom: 0; }
+.marco-content h3 { margin: 0; color: var(--text, #0f172a); font-size: 16px; }
+.status-pill { display: inline-flex; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 850; white-space: nowrap; }
+.status-feito { color: #166534; background: #dcfce7; }
+.status-fazendo { color: #92400e; background: #fef3c7; }
+.status-a-fazer { color: #475569; background: #e2e8f0; }
+.marcos-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.marco-card { padding: 18px; border: 1px solid var(--border, #e5e7eb); border-radius: 10px; background: var(--surface, #fff); }
+.marco-card-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.marco-card-icon { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 8px; color: #fff; background: #1677ff; font-size: 18px; font-weight: 900; }
+.marco-card h3 { margin: 18px 0 6px; color: var(--text, #0f172a); font-size: 16px; }
+.marco-card p { margin: 0; color: var(--text-muted, #64748b); font-size: 13px; }
+@media (max-width: 700px) { .caminho-heading, .section-heading { flex-direction: column; } .caminho-summary { width: 100%; } .status-resumo, .areas-grid, .destinos-list { grid-template-columns: 1fr 1fr; } }

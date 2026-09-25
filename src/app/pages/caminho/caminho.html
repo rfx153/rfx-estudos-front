@@ -1,0 +1,60 @@
+<section class="caminho-page page-card">
+  <header class="caminho-heading">
+    <div>
+      <span class="eyebrow">Planejamento macro</span>
+      <h1>Meu caminho</h1>
+      <p>Uma visão de longo prazo para acompanhar conquistas, próximos passos e a direção da sua jornada.</p>
+    </div>
+    <div class="caminho-summary">
+      <strong>{{ totalMarcos() }}</strong>
+      <span>marcos no caminho</span>
+    </div>
+  </header>
+
+  <section class="lembrete-section">
+    <p class="lembrete">Lembre-se onde você quer chegar....</p>
+    <img src="/imagens/caminho-motivacao.png" alt="Painel de inspiração com fotos pessoais e destinos para conhecer" />
+  </section>
+
+  <section class="destinos-section">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">Visão de futuro</span>
+        <h2>Lugares para conhecer</h2>
+      </div>
+    </div>
+    <div class="destinos-list">
+      <span *ngFor="let destino of ['Nova York', 'Tokyo', 'Alemanha', 'Paris', 'Rússia', 'América Latina']">{{ destino }}</span>
+    </div>
+  </section>
+
+  <section class="status-resumo" aria-label="Resumo do caminho">
+    <div><strong>{{ totalPorStatus('Feito') }}</strong><span>Feitos</span></div>
+    <div><strong>{{ totalPorStatus('Fazendo') }}</strong><span>Em andamento</span></div>
+    <div><strong>{{ totalPorStatus('A fazer') }}</strong><span>A fazer</span></div>
+  </section>
+
+  <section class="areas-grid">
+    <article class="caminho-section area-section" *ngFor="let area of areas">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Área do caminho</span>
+          <h2>{{ area.nome }}</h2>
+          <p>{{ area.descricao }}</p>
+        </div>
+      </div>
+
+      <div class="area-vazia" *ngIf="!area.marcos.length">Nenhum marco definido ainda.</div>
+      <div class="marcos-list" *ngIf="area.marcos.length">
+        <article class="marco" *ngFor="let marco of area.marcos; let ultimo = last">
+          <span class="marco-marker" [class]="'status-' + marco.status.toLowerCase().replace(' ', '-')">{{ marco.status === 'Feito' ? '✓' : '•' }}</span>
+          <div class="marco-line" *ngIf="!ultimo"></div>
+          <div class="marco-content">
+            <h3>{{ marco.nome }}</h3>
+            <span class="status-pill" [class]="'status-' + marco.status.toLowerCase().replace(' ', '-')">{{ marco.status }}</span>
+          </div>
+        </article>
+      </div>
+    </article>
+  </section>
+</section>
