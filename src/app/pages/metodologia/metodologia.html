@@ -1,0 +1,61 @@
+<section class="metodologia-page page-card">
+  <header class="metodologia-heading">
+    <div>
+      <span class="eyebrow">Método de estudo</span>
+      <h1>Metodologia de assunto</h1>
+      <p>Um ciclo de {{ totalMinutos }} minutos para estudar, revisar e testar a retenção do conteúdo.</p>
+    </div>
+    <div class="metodologia-total">
+      <strong>{{ totalMinutos }} min</strong>
+      <span>por assunto</span>
+    </div>
+  </header>
+
+  <section class="metodologia-intro">
+    <span class="sequence-label">Ciclo do bloco</span>
+    <div class="sequence" aria-label="Estudo de assunto novo seguido da revisão de assunto antigo">
+      <span *ngFor="let etapa of etapas; let ultimo = last">
+        <strong>{{ etapa.sigla }}</strong><small *ngIf="!ultimo">→</small>
+      </span>
+    </div>
+    <p><strong>Q–R–A–Q–R</strong> para estudar um assunto novo + <strong>R–Q</strong> no final para revisar um assunto antigo.</p>
+  </section>
+
+  <section class="etapas-section">
+    <div class="section-title">
+      <div>
+        <span class="eyebrow">Divisão do tempo</span>
+        <h2>50 minutos em etapas</h2>
+      </div>
+      <span class="time-badge">{{ totalMinutos }} minutos</span>
+    </div>
+
+    <h3 class="grupo-titulo">Assunto novo — Q–R–A–Q–R <span>50 min</span></h3>
+    <div class="etapas-grid">
+      <article class="etapa-card" *ngFor="let etapa of etapasNovas; let indice = index">
+        <div class="etapa-topo">
+          <span class="etapa-numero">{{ indice + 1 }}</span>
+          <span class="etapa-sigla">{{ etapa.sigla }}</span>
+          <span class="etapa-tempo">{{ etapa.minutos }} min</span>
+        </div>
+        <h3>{{ etapa.nome }}</h3>
+        <p>{{ etapa.descricao }}</p>
+        <div class="tempo-barra"><span [style.width.%]="etapa.minutos * 2"></span></div>
+      </article>
+    </div>
+
+    <h3 class="grupo-titulo">Assunto antigo — R–Q <span>8 min</span></h3>
+    <div class="etapas-grid etapas-antigas">
+      <article class="etapa-card" *ngFor="let etapa of etapasAntigas; let indice = index">
+        <div class="etapa-topo">
+          <span class="etapa-numero">{{ indice + 1 }}</span>
+          <span class="etapa-sigla">{{ etapa.sigla }}</span>
+          <span class="etapa-tempo">{{ etapa.minutos }} min</span>
+        </div>
+        <h3>{{ etapa.nome }}</h3>
+        <p>{{ etapa.descricao }}</p>
+        <div class="tempo-barra"><span [style.width.%]="etapa.minutos * 2"></span></div>
+      </article>
+    </div>
+  </section>
+</section>

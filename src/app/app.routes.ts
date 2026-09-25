@@ -5,12 +5,14 @@ import { VisualizarRegistrosComponent } from './pages/visualizar-registros/visua
 import { MateriaListaComponent } from './pages/materia-lista/materia-lista';
 import { InicioComponent } from './pages/inicio/inicio';
 import { PlanejamentosComponent } from './pages/planejamentos/planejamentos';
+import { MetodologiaComponent } from './pages/metodologia/metodologia';
 
 export const routes: Routes = [
   { path: '', component: InicioComponent },
   { path: 'novo-registro', component: RegistroListaComponent },
   { path: 'visualizar-registros', component: VisualizarRegistrosComponent },
   { path: 'planejamentos', component: PlanejamentosComponent },
+  { path: 'metodologia', component: MetodologiaComponent },
   { path: 'materias', component: MateriaListaComponent },
   { path: '**', redirectTo: '' } // Rota coringa para evitar erros 404
 ];
