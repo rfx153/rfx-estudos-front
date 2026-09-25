@@ -4,11 +4,13 @@ import { RegistroListaComponent } from './pages/registro-lista/registro-lista';
 import { VisualizarRegistrosComponent } from './pages/visualizar-registros/visualizar-registros';
 import { MateriaListaComponent } from './pages/materia-lista/materia-lista';
 import { InicioComponent } from './pages/inicio/inicio';
+import { PlanejamentosComponent } from './pages/planejamentos/planejamentos';
 
 export const routes: Routes = [
   { path: '', component: InicioComponent },
   { path: 'novo-registro', component: RegistroListaComponent },
   { path: 'visualizar-registros', component: VisualizarRegistrosComponent },
+  { path: 'planejamentos', component: PlanejamentosComponent },
   { path: 'materias', component: MateriaListaComponent },
   { path: '**', redirectTo: '' } // Rota coringa para evitar erros 404
 ];

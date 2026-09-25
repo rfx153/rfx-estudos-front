@@ -193,7 +193,13 @@ body {
 .dark-theme .page-card,
 .dark-theme .home-heading,
 .dark-theme .materias-page,
+.dark-theme .planejamentos-page,
 .dark-theme .categorias-topo,
+.dark-theme .planning-section,
+.dark-theme .summary-item,
+.dark-theme .planning-card,
+.dark-theme .planning-metrics div,
+.dark-theme .schedule-item,
 .dark-theme .materia-form,
 .dark-theme .filters-row,
 .dark-theme .review-toggle-card,
@@ -233,7 +239,14 @@ body {
 .dark-theme .review-toggle strong,
 .dark-theme .page-heading h2,
 .dark-theme .section-title,
-.dark-theme .assuntos-header h4 {
+.dark-theme .assuntos-header h4,
+.dark-theme .summary-item strong,
+.dark-theme .section-heading h3,
+.dark-theme .planning-card h4,
+.dark-theme .progress-label strong,
+.dark-theme .planning-metrics dd,
+.dark-theme .schedule-main h4,
+.dark-theme .schedule-time strong {
   color: #f8fafc;
 }
 

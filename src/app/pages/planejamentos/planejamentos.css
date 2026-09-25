@@ -1,0 +1,285 @@
+.planejamentos-page {
+  padding: clamp(18px, 3vw, 28px);
+  background: var(--surface, #fff);
+}
+
+.page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.page-heading h2 {
+  margin: 0;
+  color: var(--text, #0f172a);
+  font-size: 24px;
+  font-weight: 850;
+}
+
+.page-heading p {
+  max-width: 680px;
+  margin: 6px 0 0;
+  color: var(--text-muted, #64748b);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.summary-item {
+  min-height: 104px;
+  padding: 16px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--surface-soft, #f8fafc);
+}
+
+.summary-item span {
+  display: block;
+  color: var(--text-muted, #64748b);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.summary-item strong {
+  display: block;
+  margin-top: 10px;
+  color: var(--text, #0f172a);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.planning-section {
+  margin: 20px 0 24px;
+  padding: 16px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--surface-soft, #f8fafc);
+}
+
+.section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.section-heading h3 {
+  margin: 0;
+  color: var(--text, #0f172a);
+}
+
+.section-heading p {
+  margin: 4px 0 0;
+  color: var(--text-muted, #64748b);
+}
+
+.planning-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.planning-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--surface, #fff);
+}
+
+.planning-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.planning-id {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-muted, #64748b);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.planning-card h4,
+.schedule-main h4 {
+  margin: 0;
+  color: var(--text, #0f172a);
+  font-size: 17px;
+  font-weight: 850;
+}
+
+.planning-card p,
+.schedule-main p {
+  margin: 0;
+  color: var(--text-muted, #64748b);
+  line-height: 1.45;
+}
+
+.progress-block {
+  display: grid;
+  gap: 8px;
+}
+
+.progress-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-muted, #64748b);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.progress-label strong {
+  color: var(--text, #0f172a);
+}
+
+.progress-track {
+  overflow: hidden;
+  height: 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #1677ff;
+}
+
+.dark-theme .progress-track {
+  background: #1e293b;
+}
+
+.planning-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.planning-metrics div {
+  padding: 10px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--surface-muted, #fbfdff);
+}
+
+.planning-metrics dt {
+  color: var(--text-muted, #64748b);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.planning-metrics dd {
+  margin: 4px 0 0;
+  color: var(--text, #0f172a);
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.planning-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.schedule-list {
+  display: grid;
+  gap: 10px;
+}
+
+.schedule-item {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  min-height: 72px;
+  padding: 12px 14px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--surface, #fff);
+}
+
+.schedule-time strong,
+.schedule-time span,
+.schedule-meta span {
+  display: block;
+}
+
+.schedule-time strong {
+  color: var(--text, #0f172a);
+  font-weight: 850;
+}
+
+.schedule-time span,
+.schedule-meta span {
+  margin-top: 4px;
+  color: var(--text-muted, #64748b);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.schedule-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 980px) {
+  .summary-grid,
+  .planning-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .planejamentos-page {
+    padding: 14px;
+  }
+
+  .page-heading,
+  .section-heading {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .page-heading h2 {
+    font-size: 21px;
+  }
+
+  .summary-grid,
+  .planning-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .planning-section {
+    margin: 14px 0;
+    padding: 14px;
+  }
+
+  .schedule-item {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .schedule-meta {
+    justify-content: space-between;
+    width: 100%;
+  }
+}

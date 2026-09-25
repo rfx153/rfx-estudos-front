@@ -1,0 +1,114 @@
+<div class="planejamentos-page page-card">
+  <header class="page-heading">
+    <div>
+      <h2>Planejamentos</h2>
+      <p>Monte ciclos, acompanhe cargas semanais e organize revisões antes de conectar os dados reais.</p>
+    </div>
+
+    <button nz-button nzType="primary" type="button">Novo planejamento</button>
+  </header>
+
+  <section class="summary-grid" aria-label="Resumo dos planejamentos">
+    <article class="summary-item">
+      <span>Ciclos mockados</span>
+      <strong>{{ planejamentos.length }}</strong>
+    </article>
+    <article class="summary-item">
+      <span>Horas por semana</span>
+      <strong>{{ totalHorasSemana }}h</strong>
+    </article>
+    <article class="summary-item">
+      <span>Disciplinas cobertas</span>
+      <strong>{{ totalDisciplinas }}</strong>
+    </article>
+    <article class="summary-item">
+      <span>Revisões previstas</span>
+      <strong>{{ totalRevisoes }}</strong>
+    </article>
+  </section>
+
+  <section class="planning-section">
+    <div class="section-heading">
+      <div>
+        <h3>Ciclos em preparação</h3>
+        <p>Dados temporários para validar a experiência da página.</p>
+      </div>
+      <nz-tag nzColor="blue">Sem backend ainda</nz-tag>
+    </div>
+
+    <div class="planning-grid">
+      <article
+        class="planning-card"
+        *ngFor="let planejamento of planejamentos; trackBy: trackByPlanejamentoId">
+        <div class="planning-card-header">
+          <div>
+            <span class="planning-id">#{{ planejamento.id }}</span>
+            <h4>{{ planejamento.nome }}</h4>
+          </div>
+          <nz-tag [nzColor]="corStatus(planejamento.status)">{{ planejamento.status }}</nz-tag>
+        </div>
+
+        <p>{{ planejamento.descricao }}</p>
+
+        <div class="progress-block">
+          <div class="progress-label">
+            <span>Progresso do ciclo</span>
+            <strong>{{ planejamento.progresso }}%</strong>
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <span [style.width.%]="planejamento.progresso"></span>
+          </div>
+        </div>
+
+        <dl class="planning-metrics">
+          <div>
+            <dt>Carga</dt>
+            <dd>{{ planejamento.cargaSemanal }}h</dd>
+          </div>
+          <div>
+            <dt>Disciplinas</dt>
+            <dd>{{ planejamento.disciplinas }}</dd>
+          </div>
+          <div>
+            <dt>Revisoes</dt>
+            <dd>{{ planejamento.revisoes }}</dd>
+          </div>
+        </dl>
+
+        <div class="planning-actions">
+          <button nz-button nzType="default" type="button">Ver detalhes</button>
+          <button nz-button nzType="link" type="button">Editar</button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="planning-section">
+    <div class="section-heading">
+      <div>
+        <h3>Agenda da semana</h3>
+        <p>Sessões simuladas para desenhar a futura rotina de estudo.</p>
+      </div>
+      <nz-tag nzColor="purple">{{ sessoesSemana.length }} sessões</nz-tag>
+    </div>
+
+    <div class="schedule-list">
+      <article class="schedule-item" *ngFor="let sessao of sessoesSemana; trackBy: trackBySessao">
+        <div class="schedule-time">
+          <strong>{{ sessao.dia }}</strong>
+          <span>{{ sessao.horario }}</span>
+        </div>
+
+        <div class="schedule-main">
+          <h4>{{ sessao.disciplina }}</h4>
+          <p>{{ sessao.atividade }}</p>
+        </div>
+
+        <div class="schedule-meta">
+          <span>{{ sessao.duracao }}</span>
+          <nz-tag [nzColor]="corPrioridade(sessao.prioridade)">{{ sessao.prioridade }}</nz-tag>
+        </div>
+      </article>
+    </div>
+  </section>
+</div>
