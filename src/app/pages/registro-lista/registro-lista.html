@@ -1,5 +1,5 @@
 <div class="registro-container">
-  <nz-card class="page-card registro-card" nzTitle="Novo registro de estudo" [nzExtra]="extraTemplate">
+  <nz-card class="page-card registro-card" [nzTitle]="tituloFormulario" [nzExtra]="extraTemplate">
     <form nz-form [formGroup]="validateForm" (ngSubmit)="submitForm()" nzLayout="vertical">
       
       <div nz-row [nzGutter]="24">
@@ -105,7 +105,7 @@
             <nz-form-label nzRequired>Tipo de Material</nz-form-label>
             <nz-form-control>
               <nz-select formControlName="materialTipo" nzPlaceHolder="Ex: PDF, Vídeo...">
-                <nz-option *ngFor="let t of listaTiposMaterial" [nzLabel]="t.nome" [nzValue]="t"></nz-option>
+                <nz-option *ngFor="let t of listaTiposMaterial" [nzLabel]="t.nome" [nzValue]="t.id"></nz-option>
               </nz-select>
             </nz-form-control>
           </nz-form-item>
@@ -244,7 +244,7 @@
 
       <div class="form-footer">
         <button nz-button nzType="primary" [nzLoading]="salvando">
-          <i nz-icon nzType="plus"></i> Salvar Sessão de Estudo
+          <i nz-icon nzType="plus"></i> {{ textoBotaoSalvar }}
         </button>
       </div>
     </form>
@@ -284,5 +284,5 @@
 </div> -->
 
 <ng-template #extraTemplate>
-  <span class="record-count">{{ totalRegistros }} registros</span>
+  <span class="record-count">{{ modoEdicao ? 'Editando registro #' + registroEditandoId : totalRegistros + ' registros' }}</span>
 </ng-template>

@@ -17,6 +17,7 @@ export class RegistroDetalhesModalComponent {
   @Input() titulo = 'Detalhes do estudo';
   @Input() registros: Registro[] = [];
   @Output() visivelChange = new EventEmitter<boolean>();
+  @Output() editar = new EventEmitter<Registro>();
 
   fechar(): void {
     this.visivel = false;
@@ -26,5 +27,9 @@ export class RegistroDetalhesModalComponent {
   aproveitamento(feitas = 0, acertadas = 0): string {
     if (!feitas) return '0%';
     return `${Math.round((acertadas / feitas) * 100)}%`;
+  }
+
+  editarRegistro(registro: Registro): void {
+    this.editar.emit(registro);
   }
 }

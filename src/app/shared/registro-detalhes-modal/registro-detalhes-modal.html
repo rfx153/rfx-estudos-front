@@ -16,7 +16,10 @@
             <strong>{{ registro.materia?.nome }}</strong>
             <span>{{ registro.assunto?.nome }}</span>
           </div>
-          <nz-tag nzColor="blue">{{ registro.dataEstudo | date: 'dd/MM/yyyy' }}</nz-tag>
+          <div class="detail-actions">
+            <nz-tag nzColor="blue">{{ registro.dataEstudo | date: 'dd/MM/yyyy' }}</nz-tag>
+            <button nz-button nzType="default" nzSize="small" type="button" (click)="editarRegistro(registro)">Editar</button>
+          </div>
         </header>
 
         <div class="detail-grid">

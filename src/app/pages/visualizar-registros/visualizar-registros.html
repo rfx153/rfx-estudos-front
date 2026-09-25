@@ -37,6 +37,7 @@
 
           <div class="history-actions">
             <button nz-button nzType="default" nzSize="small" (click)="abrirDetalhes(registro)">Ver</button>
+            <button nz-button nzType="link" nzSize="small" (click)="editarRegistro(registro)">Editar</button>
             <button nz-button nzDanger nzType="link" nzSize="small" (click)="excluirRegistro(registro)">Apagar</button>
           </div>
         </div>
@@ -85,6 +86,7 @@
 <app-registro-detalhes-modal
   [(visivel)]="detalhesVisiveis"
   [titulo]="detalhesTitulo"
-  [registros]="registrosSelecionados">
+  [registros]="registrosSelecionados"
+  (editar)="editarRegistro($event)">
 </app-registro-detalhes-modal>
 </nz-card>

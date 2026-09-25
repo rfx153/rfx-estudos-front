@@ -114,6 +114,10 @@ export class RegistroService {
     return this.http.post<Registro>(this.apiUrl, registro);
   }
 
+  atualizar(id: number, registro: Partial<Registro>): Observable<Registro> {
+    return this.http.put<Registro>(`${this.apiUrl}/${id}`, registro);
+  }
+
   excluir(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }

@@ -1,6 +1,7 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, ChangeDetectorRef, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { RegistroService, Registro, Assunto, MaterialTipo, TipoRegistro } from '../../services/registro.service';
 import { MateriaService, Materia } from '../../services/materia.service';
 import { PlanejamentoService, Planejamento } from '../../services/planejamento.service';
@@ -49,6 +50,8 @@ export class RegistroListaComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private iconService = inject(NzIconService);
   private message = inject(NzMessageService);
+  private router = inject(Router);
+  private platformId = inject(PLATFORM_ID);
 
   listaRegistros: Registro[] = [];
   totalRegistros = 0;
@@ -63,6 +66,8 @@ listaTiposRegistro: TipoRegistro[] = [];
   carregando = true;
   salvando = false;
   revisaoAberta = false;
+  modoEdicao = false;
+  registroEditandoId: number | null = null;
   validateForm!: FormGroup;
 
   constructor() {
@@ -73,6 +78,7 @@ listaTiposRegistro: TipoRegistro[] = [];
     this.inicializarFormulario();
     this.carregarDadosIniciais();
     this.escutarMudancaDeMateria();
+    this.prepararEdicaoSeNecessario();
   }
 
   inicializarFormulario(): void {
@@ -148,6 +154,14 @@ listaTiposRegistro: TipoRegistro[] = [];
     });
   }
 
+  get tituloFormulario(): string {
+    return this.modoEdicao ? 'Editar registro de estudo' : 'Novo registro de estudo';
+  }
+
+  get textoBotaoSalvar(): string {
+    return this.modoEdicao ? 'Salvar alterações' : 'Salvar Sessão de Estudo';
+  }
+
   submitForm(): void {
   if (this.validateForm.valid) {
     this.salvando = true;
@@ -171,18 +185,33 @@ listaTiposRegistro: TipoRegistro[] = [];
       tempoEstudado: formValue.tempoEstudado ? formValue.tempoEstudado.toTimeString().split(' ')[0] : null
     };
 
-    this.registroService.criar(payload).subscribe({
+    const request$ = this.modoEdicao && this.registroEditandoId
+      ? this.registroService.atualizar(this.registroEditandoId, payload)
+      : this.registroService.criar(payload);
+
+    request$.subscribe({
       next: () => {
         this.salvando = false;
-        this.validateForm.reset({ dataEstudo: new Date(), questoesFeitas: 0, questoesAcertadas: 0 });
+        this.message.success(this.modoEdicao ? 'Registro atualizado com sucesso.' : 'Registro salvo com sucesso.');
+        if (this.modoEdicao) {
+          this.router.navigate(['/visualizar-registros']);
+          return;
+        }
+
+        this.validateForm.reset({
+          dataEstudo: new Date(),
+          questoesFeitas: 0,
+          questoesAcertadas: 0,
+          questoesRevisaoFeitas: 0,
+          questoesRevisaoAcertadas: 0
+        });
         this.revisaoAberta = false;
-        this.message.success('Registro salvo com sucesso.');
         this.carregarDadosIniciais();
       },
       error: (err) => {
         console.error('Erro ao salvar registro:', err);
         this.salvando = false;
-        this.message.error('Não foi possível salvar o registro.');
+        this.message.error(this.modoEdicao ? 'Não foi possível atualizar o registro.' : 'Não foi possível salvar o registro.');
         this.cdr.detectChanges();
       }
     });
@@ -221,18 +250,7 @@ listaTiposRegistro: TipoRegistro[] = [];
       this.listaAssuntos = [];
       this.cdr.detectChanges();
 
-      // Busca os assuntos da matéria no Spring Boot
-      this.registroService.listarAssuntosPorMateria(materiaId).subscribe({
-        next: (assuntos) => {
-          this.listaAssuntos = assuntos;
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          console.error('Erro ao buscar assuntos:', err);
-          this.listaAssuntos = [];
-          this.cdr.detectChanges();
-        }
-      });
+      this.carregarAssuntosDaMateria(materiaId);
     } else {
       // Se não houver matéria selecionada, bloqueia
       this.listaAssuntos = [];
@@ -241,6 +259,79 @@ listaTiposRegistro: TipoRegistro[] = [];
       this.cdr.detectChanges();
     }
   });
+}
+
+private prepararEdicaoSeNecessario(): void {
+  const navigationState = this.router.getCurrentNavigation()?.extras.state;
+  const browserState = isPlatformBrowser(this.platformId) ? history.state : {};
+  const registro = (navigationState?.['registroParaEditar'] ?? browserState?.registroParaEditar) as Registro | undefined;
+
+  if (!registro?.id) return;
+
+  this.modoEdicao = true;
+  this.registroEditandoId = registro.id;
+  this.revisaoAberta = !!registro.revisaoAssunto;
+
+  this.validateForm.patchValue({
+    materia: registro.materia?.id ?? null,
+    planejamento: registro.planejamento?.id ?? null,
+    tipoRegistro: registro.tipoRegistro?.id ?? null,
+    materialTipo: registro.materialTipo?.id ?? null,
+    materialNome: registro.materialNome ?? null,
+    puntoParada: registro.puntoParada ?? null,
+    questoesFeitas: registro.questoesFeitas ?? 0,
+    questoesAcertadas: registro.questoesAcertadas ?? 0,
+    revisaoComplemento: registro.revisaoComplemento ?? null,
+    questoesRevisaoFeitas: registro.questoesRevisaoFeitas ?? 0,
+    questoesRevisaoAcertadas: registro.questoesRevisaoAcertadas ?? 0,
+    dataEstudo: this.dataParaFormulario(registro.dataEstudo),
+    tempoEstudado: this.horaParaFormulario(registro.tempoEstudado),
+    linkDocumento: registro.linkDocumento ?? null,
+    observacoes: registro.observacoes ?? null
+  }, { emitEvent: false });
+
+  if (registro.materia?.id) {
+    this.validateForm.get('assunto')?.enable();
+    this.validateForm.get('revisaoAssunto')?.enable();
+    this.carregarAssuntosDaMateria(registro.materia.id, () => {
+      this.validateForm.patchValue({
+        assunto: registro.assunto?.id ?? null,
+        revisaoAssunto: registro.revisaoAssunto?.id ?? null
+      }, { emitEvent: false });
+      this.cdr.detectChanges();
+    });
+  }
+}
+
+private carregarAssuntosDaMateria(materiaId: number, aoCarregar?: () => void): void {
+  this.registroService.listarAssuntosPorMateria(materiaId).subscribe({
+    next: (assuntos) => {
+      this.listaAssuntos = assuntos;
+      aoCarregar?.();
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error('Erro ao buscar assuntos:', err);
+      this.listaAssuntos = [];
+      this.cdr.detectChanges();
+    }
+  });
+}
+
+private dataParaFormulario(data?: string): Date | null {
+  if (!data) return null;
+
+  const [ano, mes, dia] = data.substring(0, 10).split('-').map(Number);
+  return new Date(ano, mes - 1, dia);
+}
+
+private horaParaFormulario(hora?: string): Date | null {
+  if (!hora) return null;
+
+  const [horas = 0, minutos = 0, segundos = 0] = hora.split(':').map(Number);
+  const data = new Date();
+  data.setHours(horas, minutos, segundos, 0);
+  return data;
 }
  
 // Adicione este método dentro da classe RegistroListaComponent

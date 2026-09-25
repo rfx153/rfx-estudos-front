@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { Router } from '@angular/router';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { Registro, RegistroService } from '../../services/registro.service';
@@ -34,6 +35,7 @@ export class InicioComponent implements OnInit {
   private registroService = inject(RegistroService);
   private cdr = inject(ChangeDetectorRef);
   private platformId = inject(PLATFORM_ID);
+  private router = inject(Router);
 
   carregando = true;
   horasEstudadasHoje = '0h 00min';
@@ -95,6 +97,11 @@ export class InicioComponent implements OnInit {
     this.detalhesTitulo = `Registros de ${materia.nome}`;
     this.registrosSelecionados = materia.registros;
     this.detalhesVisiveis = true;
+  }
+
+  editarRegistro(registro: Registro): void {
+    this.detalhesVisiveis = false;
+    this.router.navigate(['/novo-registro'], { state: { registroParaEditar: registro } });
   }
 
   private carregarResumoDeHoje(): void {

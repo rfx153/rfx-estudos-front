@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -36,7 +37,8 @@ export class VisualizarRegistrosComponent implements OnInit {
     private registroService: RegistroService,
     private materiaService: MateriaService,
     private cdr: ChangeDetectorRef,
-    private message: NzMessageService
+    private message: NzMessageService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -98,6 +100,11 @@ export class VisualizarRegistrosComponent implements OnInit {
     this.detalhesTitulo = `${registro.materia?.nome || 'Estudo'} - ${registro.assunto?.nome || 'Detalhes'}`;
     this.registrosSelecionados = [registro];
     this.detalhesVisiveis = true;
+  }
+
+  editarRegistro(registro: Registro): void {
+    this.detalhesVisiveis = false;
+    this.router.navigate(['/novo-registro'], { state: { registroParaEditar: registro } });
   }
 
   calcularAproveitamento(feitas = 0, acertadas = 0): string {

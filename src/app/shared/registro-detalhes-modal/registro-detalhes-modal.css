@@ -112,3 +112,16 @@
     flex-direction: column;
   }
 }
+.detail-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+@media (max-width: 560px) {
+  .detail-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -101,6 +101,7 @@
   <app-registro-detalhes-modal
     [(visivel)]="detalhesVisiveis"
     [titulo]="detalhesTitulo"
-    [registros]="registrosSelecionados">
+    [registros]="registrosSelecionados"
+    (editar)="editarRegistro($event)">
   </app-registro-detalhes-modal>
 </section>
