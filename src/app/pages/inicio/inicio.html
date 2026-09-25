@@ -22,7 +22,25 @@
     <button class="sound-button" type="button" *ngIf="somBloqueado" (click)="tocarSomRetro()">
       Tocar som retrô
     </button>
+
+    <button class="profile-button" type="button" (click)="alternarPerfil()">
+      {{ perfilVisivel ? 'Ocultar perfil' : 'Perfil' }}
+    </button>
   </header>
+
+  <section class="profile-section" [class.oculta]="!perfilVisivel" aria-label="Perfil">
+    <img class="profile-photo" src="/imagens/perfil.png" alt="Foto de perfil" />
+    <div class="profile-content">
+      <span class="eyebrow">Perfil</span>
+      <h2>Minha jornada</h2>
+      <p>Este é o seu espaço para acompanhar estudos, metas e o caminho que está construindo.</p>
+      <div class="profile-tags">
+        <span>Estudante</span>
+        <span>Pesquisador</span>
+        <span>Concurseiro</span>
+      </div>
+    </div>
+  </section>
 
   <nz-spin [nzSpinning]="carregando">
     <section class="links-section" aria-label="Links de estudo">

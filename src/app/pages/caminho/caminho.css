@@ -12,6 +12,8 @@
 .destinos-section { margin: 20px 0 24px; padding: 20px; border: 1px solid var(--border, #e5e7eb); border-radius: 12px; background: var(--surface-soft, #f8fafc); }
 .destinos-list { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
 .destinos-list span { padding: 14px 8px; border-radius: 8px; color: #fff; background: linear-gradient(135deg, #1e3a8a, #1677ff); font-size: 13px; font-weight: 850; text-align: center; }
+.amores-section { margin: 20px 0 24px; padding: 20px; border: 1px solid var(--border, #e5e7eb); border-radius: 12px; background: var(--surface, #fff); }
+.amores-image { display: block; width: 100%; max-height: 420px; border-radius: 10px; object-fit: cover; }
 .status-resumo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 28px 0; }
 .status-resumo div { display: grid; gap: 4px; padding: 16px; border: 1px solid var(--border, #e5e7eb); border-radius: 10px; background: var(--surface-soft, #f8fafc); }
 .status-resumo strong { color: var(--text, #0f172a); font-size: 28px; }

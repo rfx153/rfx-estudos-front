@@ -49,6 +49,7 @@ export class InicioComponent implements OnInit {
   saudacao = 'Bom dia, Rafael.';
   fraseMotivacional = '';
   somBloqueado = false;
+  perfilVisivel = false;
   atalhosEstudo: AtalhoEstudo[] = [
     {
       nome: 'Estratégia novo',
@@ -91,6 +92,10 @@ export class InicioComponent implements OnInit {
   tocarSomRetro(): void {
     this.tocarChimeRetro();
     this.somBloqueado = false;
+  }
+
+  alternarPerfil(): void {
+    this.perfilVisivel = !this.perfilVisivel;
   }
 
   abrirDetalhesMateria(materia: MateriaEstudadaHoje): void {
