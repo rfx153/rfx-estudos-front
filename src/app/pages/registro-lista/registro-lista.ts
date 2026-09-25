@@ -66,6 +66,7 @@ listaTiposRegistro: TipoRegistro[] = [];
   carregando = true;
   salvando = false;
   revisaoAberta = false;
+  etapasQraqrMarcadas = new Set<string>();
   modoEdicao = false;
   registroEditandoId: number | null = null;
   validateForm!: FormGroup;
@@ -101,6 +102,18 @@ listaTiposRegistro: TipoRegistro[] = [];
       linkDocumento: [null],
       observacoes: [null]
     });
+  }
+
+  alternarEtapaQraqr(etapa: string): void {
+    if (this.etapasQraqrMarcadas.has(etapa)) {
+      this.etapasQraqrMarcadas.delete(etapa);
+    } else {
+      this.etapasQraqrMarcadas.add(etapa);
+    }
+  }
+
+  etapaQraqrMarcada(etapa: string): boolean {
+    return this.etapasQraqrMarcadas.has(etapa);
   }
 
   carregarDadosIniciais(): void {

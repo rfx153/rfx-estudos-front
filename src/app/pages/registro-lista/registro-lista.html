@@ -284,5 +284,12 @@
 </div> -->
 
 <ng-template #extraTemplate>
+  <div class="metodo-etapas-cabecalho" aria-label="Marcação da metodologia">
+    <button type="button" *ngFor="let etapa of ['Q1', 'R1', 'A', 'Q2', 'R2', 'R3', 'Q3']"
+      [class.etapa-marcada]="etapaQraqrMarcada(etapa)"
+      (click)="alternarEtapaQraqr(etapa)">
+      {{ etapa.charAt(0) }}
+    </button>
+  </div>
   <span class="record-count">{{ modoEdicao ? 'Editando registro #' + registroEditandoId : totalRegistros + ' registros' }}</span>
 </ng-template>
