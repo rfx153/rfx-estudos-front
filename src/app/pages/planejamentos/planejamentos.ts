@@ -16,6 +16,7 @@ import {
   Planejamento,
   PlanejamentoCiclo,
   PlanejamentoItem,
+  PlanejamentoMateria,
   PlanejamentoService
 } from '../../services/planejamento.service';
 
@@ -47,21 +48,27 @@ export class PlanejamentosComponent implements OnInit {
   assuntos: Assunto[] = [];
   materialTipos: MaterialTipo[] = [];
   ciclos: Ciclo[] = [];
+  planejamentoMaterias: PlanejamentoMateria[] = [];
   itens: PlanejamentoItem[] = [];
   ciclosVinculados: PlanejamentoCiclo[] = [];
 
   planejamentoSelecionado?: Planejamento;
+  planejamentoMateriaSelecionada?: PlanejamentoMateria;
   planejamentoEditandoId: number | null = null;
+  materiaEditandoId: number | null = null;
   itemEditandoId: number | null = null;
   cicloSelecionadoId: number | null = null;
 
   carregando = true;
   carregandoDetalhes = false;
+  carregandoItens = false;
   salvandoPlanejamento = false;
+  salvandoMateria = false;
   salvandoItem = false;
   vinculandoCiclo = false;
 
   planejamentoForm!: FormGroup;
+  materiaForm!: FormGroup;
   itemForm!: FormGroup;
 
   readonly statusPlanejamento = ['Ativo', 'Rascunho', 'Pausado', 'Concluido'];
@@ -114,21 +121,30 @@ export class PlanejamentosComponent implements OnInit {
     if (!planejamento.id) return;
 
     this.planejamentoSelecionado = planejamento;
+    this.planejamentoMateriaSelecionada = undefined;
     this.planejamentoEditandoId = null;
+    this.materiaEditandoId = null;
     this.itemEditandoId = null;
+    this.itens = [];
+    this.assuntos = [];
+    this.materiaForm.reset({ prioridade: 'Media', status: 'Pendente' });
     this.itemForm.reset({ prioridade: 'Media', status: 'Pendente' });
     this.carregarDetalhes(planejamento.id);
   }
 
   carregarDetalhes(planejamentoId: number): void {
     this.carregandoDetalhes = true;
-    this.planejamentoService.listarItens(planejamentoId).subscribe({
-      next: itens => {
-        this.itens = itens;
+    this.planejamentoService.listarMaterias(planejamentoId).subscribe({
+      next: planejamentoMaterias => {
+        this.planejamentoMaterias = planejamentoMaterias;
         this.carregandoDetalhes = false;
+
+        if (!this.planejamentoMateriaSelecionada && planejamentoMaterias.length) {
+          this.selecionarMateriaPlanejada(planejamentoMaterias[0]);
+        }
       },
       error: erro => {
-        console.error('Erro ao carregar itens:', erro);
+        console.error('Erro ao carregar matérias do planejamento:', erro);
         this.carregandoDetalhes = false;
       }
     });
@@ -178,8 +194,7 @@ export class PlanejamentosComponent implements OnInit {
       descricao: planejamento.descricao,
       dataInicio: planejamento.dataInicio,
       dataPrevista: planejamento.dataPrevista,
-      status: planejamento.status || 'Ativo',
-      dataFinalizacao: planejamento.dataFinalizacao
+      status: planejamento.status || 'Ativo'
     });
   }
 
@@ -196,6 +211,7 @@ export class PlanejamentosComponent implements OnInit {
         this.message.success('Planejamento apagado.');
         if (this.planejamentoSelecionado?.id === planejamento.id) {
           this.planejamentoSelecionado = undefined;
+          this.planejamentoMaterias = [];
           this.itens = [];
           this.ciclosVinculados = [];
         }
@@ -208,34 +224,126 @@ export class PlanejamentosComponent implements OnInit {
     });
   }
 
-  aoSelecionarMateria(materiaId: number): void {
-    this.assuntos = [];
-    this.itemForm.patchValue({ assuntoId: null });
+  salvarMateriaPlanejada(): void {
+    if (!this.planejamentoSelecionado?.id) {
+      this.message.warning('Selecione um planejamento antes de adicionar matérias.');
+      return;
+    }
 
-    if (!materiaId) return;
+    if (this.materiaForm.invalid) {
+      this.materiaForm.markAllAsTouched();
+      this.message.warning('Selecione uma matéria.');
+      return;
+    }
 
-    this.registroService.listarAssuntosPorMateria(materiaId).subscribe({
-      next: assuntos => this.assuntos = assuntos,
-      error: erro => console.error('Erro ao carregar assuntos:', erro)
+    this.salvandoMateria = true;
+    const value = this.materiaForm.value;
+    const payload: PlanejamentoMateria = {
+      materia: { id: value.materiaId, nome: '' },
+      prioridade: value.prioridade,
+      dataPrevista: value.dataPrevista,
+      status: value.status,
+      dataFinalizacao: value.dataFinalizacao,
+      ordem: value.ordem,
+      observacoes: value.observacoes
+    };
+
+    const request$ = this.materiaEditandoId
+      ? this.planejamentoService.atualizarMateria(this.materiaEditandoId, payload)
+      : this.planejamentoService.criarMateria(this.planejamentoSelecionado.id, payload);
+
+    request$.subscribe({
+      next: planejamentoMateria => {
+        this.salvandoMateria = false;
+        this.materiaEditandoId = null;
+        this.materiaForm.reset({ prioridade: 'Media', status: 'Pendente' });
+        this.message.success('Matéria salva no planejamento.');
+        this.planejamentoMateriaSelecionada = planejamentoMateria;
+        this.carregarDetalhes(this.planejamentoSelecionado!.id!);
+        this.carregarItensDaMateria(planejamentoMateria);
+      },
+      error: erro => {
+        console.error('Erro ao salvar matéria do planejamento:', erro);
+        this.salvandoMateria = false;
+        this.message.error('Não foi possível salvar a matéria. Verifique se ela já foi adicionada.');
+      }
+    });
+  }
+
+  selecionarMateriaPlanejada(planejamentoMateria: PlanejamentoMateria): void {
+    this.planejamentoMateriaSelecionada = planejamentoMateria;
+    this.itemEditandoId = null;
+    this.itemForm.reset({ prioridade: 'Media', status: 'Pendente' });
+    this.carregarAssuntosDaMateria(planejamentoMateria.materia?.id);
+    this.carregarItensDaMateria(planejamentoMateria);
+  }
+
+  editarMateriaPlanejada(planejamentoMateria: PlanejamentoMateria): void {
+    if (!planejamentoMateria.id) return;
+
+    this.materiaEditandoId = planejamentoMateria.id;
+    this.materiaForm.patchValue({
+      materiaId: planejamentoMateria.materia?.id,
+      prioridade: planejamentoMateria.prioridade || 'Media',
+      dataPrevista: planejamentoMateria.dataPrevista,
+      status: planejamentoMateria.status || 'Pendente',
+      dataFinalizacao: planejamentoMateria.dataFinalizacao,
+      ordem: planejamentoMateria.ordem,
+      observacoes: planejamentoMateria.observacoes
+    });
+  }
+
+  cancelarEdicaoMateria(): void {
+    this.materiaEditandoId = null;
+    this.materiaForm.reset({ prioridade: 'Media', status: 'Pendente' });
+  }
+
+  excluirMateriaPlanejada(planejamentoMateria: PlanejamentoMateria): void {
+    if (!planejamentoMateria.id || !this.planejamentoSelecionado?.id || !window.confirm('Remover esta matéria do planejamento?')) return;
+
+    this.planejamentoService.excluirMateria(planejamentoMateria.id).subscribe({
+      next: () => {
+        this.message.success('Matéria removida do planejamento.');
+        if (this.planejamentoMateriaSelecionada?.id === planejamentoMateria.id) {
+          this.planejamentoMateriaSelecionada = undefined;
+          this.itens = [];
+        }
+        this.carregarDetalhes(this.planejamentoSelecionado!.id!);
+      },
+      error: erro => {
+        console.error('Erro ao remover matéria:', erro);
+        this.message.error('Não foi possível remover a matéria.');
+      }
+    });
+  }
+
+  carregarItensDaMateria(planejamentoMateria: PlanejamentoMateria): void {
+    if (!planejamentoMateria.id) return;
+
+    this.carregandoItens = true;
+    this.planejamentoService.listarItensDaMateria(planejamentoMateria.id).subscribe({
+      next: itens => {
+        this.itens = itens;
+        this.carregandoItens = false;
+      },
+      error: erro => {
+        console.error('Erro ao carregar itens da matéria:', erro);
+        this.carregandoItens = false;
+      }
     });
   }
 
   salvarItem(): void {
-    if (!this.planejamentoSelecionado?.id) {
-      this.message.warning('Selecione um planejamento antes de adicionar itens.');
-      return;
-    }
-
-    if (this.itemForm.invalid) {
-      this.itemForm.markAllAsTouched();
-      this.message.warning('Informe a matéria do item.');
+    if (!this.planejamentoMateriaSelecionada?.id) {
+      this.message.warning('Selecione uma matéria do planejamento antes de adicionar itens.');
       return;
     }
 
     this.salvandoItem = true;
     const value = this.itemForm.value;
     const payload: PlanejamentoItem = {
-      materia: { id: value.materiaId, nome: '' },
+      planejamentoMateria: this.planejamentoMateriaSelecionada,
+      materia: this.planejamentoMateriaSelecionada.materia,
       assunto: value.assuntoId ? { id: value.assuntoId, nome: '' } : null,
       materialTipo: value.materialTipoId ? { id: value.materialTipoId, nome: '' } : null,
       materialNome: value.materialNome,
@@ -251,16 +359,15 @@ export class PlanejamentosComponent implements OnInit {
 
     const request$ = this.itemEditandoId
       ? this.planejamentoService.atualizarItem(this.itemEditandoId, payload)
-      : this.planejamentoService.criarItem(this.planejamentoSelecionado.id, payload);
+      : this.planejamentoService.criarItemDaMateria(this.planejamentoMateriaSelecionada.id, payload);
 
     request$.subscribe({
       next: () => {
         this.salvandoItem = false;
         this.itemEditandoId = null;
         this.itemForm.reset({ prioridade: 'Media', status: 'Pendente' });
-        this.assuntos = [];
         this.message.success('Item salvo com sucesso.');
-        this.carregarDetalhes(this.planejamentoSelecionado!.id!);
+        this.carregarItensDaMateria(this.planejamentoMateriaSelecionada!);
       },
       error: erro => {
         console.error('Erro ao salvar item:', erro);
@@ -275,7 +382,6 @@ export class PlanejamentosComponent implements OnInit {
 
     this.itemEditandoId = item.id;
     this.itemForm.patchValue({
-      materiaId: item.materia?.id,
       assuntoId: item.assunto?.id,
       materialTipoId: item.materialTipo?.id,
       materialNome: item.materialNome,
@@ -288,27 +394,20 @@ export class PlanejamentosComponent implements OnInit {
       ordem: item.ordem,
       observacoes: item.observacoes
     });
-
-    if (item.materia?.id) {
-      this.registroService.listarAssuntosPorMateria(item.materia.id).subscribe({
-        next: assuntos => this.assuntos = assuntos
-      });
-    }
   }
 
   cancelarEdicaoItem(): void {
     this.itemEditandoId = null;
-    this.assuntos = [];
     this.itemForm.reset({ prioridade: 'Media', status: 'Pendente' });
   }
 
   excluirItem(item: PlanejamentoItem): void {
-    if (!item.id || !this.planejamentoSelecionado?.id || !window.confirm('Apagar este item do planejamento?')) return;
+    if (!item.id || !this.planejamentoMateriaSelecionada || !window.confirm('Apagar este item da matéria?')) return;
 
     this.planejamentoService.excluirItem(item.id).subscribe({
       next: () => {
         this.message.success('Item apagado.');
-        this.carregarDetalhes(this.planejamentoSelecionado!.id!);
+        this.carregarItensDaMateria(this.planejamentoMateriaSelecionada!);
       },
       error: erro => {
         console.error('Erro ao apagar item:', erro);
@@ -356,6 +455,12 @@ export class PlanejamentosComponent implements OnInit {
     return this.ciclos.filter(ciclo => !vinculados.has(ciclo.id));
   }
 
+  materiasDisponiveis(): Materia[] {
+    const vinculadas = new Set(this.planejamentoMaterias.map(item => item.materia?.id));
+    const materiaEmEdicao = this.planejamentoMaterias.find(item => item.id === this.materiaEditandoId)?.materia?.id;
+    return this.materias.filter(materia => !vinculadas.has(materia.id) || materia.id === materiaEmEdicao);
+  }
+
   corStatus(status?: string): string {
     const cores: Record<string, string> = {
       Ativo: 'green',
@@ -379,18 +484,37 @@ export class PlanejamentosComponent implements OnInit {
     return item.id;
   }
 
+  private carregarAssuntosDaMateria(materiaId?: number): void {
+    this.assuntos = [];
+
+    if (!materiaId) return;
+
+    this.registroService.listarAssuntosPorMateria(materiaId).subscribe({
+      next: assuntos => this.assuntos = assuntos,
+      error: erro => console.error('Erro ao carregar assuntos:', erro)
+    });
+  }
+
   private criarForms(): void {
     this.planejamentoForm = this.fb.group({
       nome: [null, [Validators.required]],
       descricao: [null],
       dataInicio: [null],
       dataPrevista: [null],
-      status: ['Ativo'],
-      dataFinalizacao: [null]
+      status: ['Ativo']
+    });
+
+    this.materiaForm = this.fb.group({
+      materiaId: [null, [Validators.required]],
+      prioridade: ['Media'],
+      dataPrevista: [null],
+      status: ['Pendente'],
+      dataFinalizacao: [null],
+      ordem: [null],
+      observacoes: [null]
     });
 
     this.itemForm = this.fb.group({
-      materiaId: [null, [Validators.required]],
       assuntoId: [null],
       materialTipoId: [null],
       materialNome: [null],

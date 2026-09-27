@@ -65,6 +65,7 @@
 }
 
 .planning-list,
+.subject-list,
 .items-list,
 .tag-list,
 .item-form {
@@ -77,6 +78,7 @@
 }
 
 .planning-card,
+.subject-row,
 .item-row {
   display: flex;
   justify-content: space-between;
@@ -87,16 +89,19 @@
   background: var(--surface, #fff);
 }
 
-.planning-card {
+.planning-card,
+.subject-row {
   cursor: pointer;
 }
 
-.planning-card.active {
+.planning-card.active,
+.subject-row.active {
   border-color: #1677ff;
   box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.12);
 }
 
 .planning-card h4,
+.subject-row h4,
 .item-main h4 {
   margin: 0;
   color: var(--text, #0f172a);
@@ -197,6 +202,30 @@
   font-weight: 850;
 }
 
+
+.primary-item-fields {
+  align-items: start;
+}
+
+.optional-details {
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--surface, #fff);
+}
+
+.optional-details summary {
+  cursor: pointer;
+  padding: 12px 14px;
+  color: var(--text, #0f172a);
+  font-weight: 850;
+}
+
+.optional-content {
+  display: grid;
+  gap: 10px;
+  padding: 0 14px 14px;
+}
+
 .item-main {
   min-width: 0;
 }
@@ -247,6 +276,7 @@ textarea[nz-input] {
   .section-heading,
   .detail-header,
   .planning-card,
+  .subject-row,
   .item-row {
     flex-direction: column;
   }

@@ -21,9 +21,22 @@ export interface Ciclo {
   nome: string;
 }
 
+export interface PlanejamentoMateria {
+  id?: number;
+  planejamento?: Planejamento;
+  materia: Materia;
+  prioridade?: string;
+  dataPrevista?: string;
+  status?: string;
+  dataFinalizacao?: string;
+  ordem?: number;
+  observacoes?: string;
+}
+
 export interface PlanejamentoItem {
   id?: number;
   planejamento?: Planejamento;
+  planejamentoMateria?: PlanejamentoMateria;
   materia: Materia;
   assunto?: Assunto | null;
   materialTipo?: MaterialTipo | null;
@@ -76,6 +89,30 @@ export class PlanejamentoService {
 
   excluir(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(tap(() => this.limparCache()));
+  }
+
+  listarMaterias(planejamentoId: number): Observable<PlanejamentoMateria[]> {
+    return this.http.get<PlanejamentoMateria[]>(`${this.apiUrl}/${planejamentoId}/materias`);
+  }
+
+  criarMateria(planejamentoId: number, materia: PlanejamentoMateria): Observable<PlanejamentoMateria> {
+    return this.http.post<PlanejamentoMateria>(`${this.apiUrl}/${planejamentoId}/materias`, materia);
+  }
+
+  atualizarMateria(planejamentoMateriaId: number, materia: PlanejamentoMateria): Observable<PlanejamentoMateria> {
+    return this.http.put<PlanejamentoMateria>(`${this.apiUrl}/materias/${planejamentoMateriaId}`, materia);
+  }
+
+  excluirMateria(planejamentoMateriaId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/materias/${planejamentoMateriaId}`);
+  }
+
+  listarItensDaMateria(planejamentoMateriaId: number): Observable<PlanejamentoItem[]> {
+    return this.http.get<PlanejamentoItem[]>(`${this.apiUrl}/materias/${planejamentoMateriaId}/itens`);
+  }
+
+  criarItemDaMateria(planejamentoMateriaId: number, item: PlanejamentoItem): Observable<PlanejamentoItem> {
+    return this.http.post<PlanejamentoItem>(`${this.apiUrl}/materias/${planejamentoMateriaId}/itens`, item);
   }
 
   listarItens(planejamentoId: number): Observable<PlanejamentoItem[]> {
