@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { MateriaService, Materia } from '../../services/materia.service';
 import { Categoria, CategoriaService } from '../../services/categoria.service';
 import { Assunto, RegistroService, TipoRegistro } from '../../services/registro.service';
-import { Planejamento, PlanejamentoService } from '../../services/planejamento.service';
+import { Ciclo, PlanejamentoService } from '../../services/planejamento.service';
 import { TipoRegistroService } from '../../services/tipo-registro.service';
 
 // Módulos do NG-ZORRO
@@ -51,7 +51,7 @@ export class MateriaListaComponent implements OnInit {
  private cdr = inject(ChangeDetectorRef); // 🔥 Injetamos o detector de mudanças aqui
   listaMaterias: Materia[] = [];
   listaCategorias: Categoria[] = [];
-  listaPlanejamentos: Planejamento[] = [];
+  listaPlanejamentos: Ciclo[] = [];
   listaTiposRegistro: TipoRegistro[] = [];
   categoriaSelecionadaId: number | null = null;
   materiaSelecionadaId: number | null = null;
@@ -155,7 +155,7 @@ export class MateriaListaComponent implements OnInit {
 
   obterPlanejamentos(): void {
     this.planejamentosCarregando = true;
-    this.planejamentoService.listarTodos().subscribe({
+    this.planejamentoService.listarCiclos().subscribe({
       next: planejamentos => {
         this.listaPlanejamentos = planejamentos;
         this.planejamentosCarregando = false;
@@ -189,7 +189,7 @@ export class MateriaListaComponent implements OnInit {
     this.salvandoPlanejamento = true;
     const nome = this.planejamentoForm.value.nome.trim();
 
-    this.planejamentoService.criar({ nome }).subscribe({
+    this.planejamentoService.criarCiclo({ nome }).subscribe({
       next: planejamento => {
         this.listaPlanejamentos = [...this.listaPlanejamentos, planejamento].sort((a, b) =>
           a.nome.localeCompare(b.nome)
@@ -281,18 +281,18 @@ export class MateriaListaComponent implements OnInit {
     });
   }
 
-  iniciarEdicaoPlanejamento(planejamento: Planejamento): void {
+  iniciarEdicaoPlanejamento(planejamento: Ciclo): void {
     if (!planejamento.id) return;
     this.planejamentoEditandoId = planejamento.id;
     this.nomePlanejamentoEdicao = planejamento.nome;
   }
 
-  salvarEdicaoPlanejamento(planejamento: Planejamento): void {
+  salvarEdicaoPlanejamento(planejamento: Ciclo): void {
     if (!planejamento.id) return;
     const nome = this.nomePlanejamentoEdicao.trim();
     if (!nome) return;
 
-    this.planejamentoService.atualizar(planejamento.id, { nome }).subscribe({
+    this.planejamentoService.atualizarCiclo(planejamento.id, { nome }).subscribe({
       next: atualizado => {
         this.listaPlanejamentos = this.listaPlanejamentos.map(item => item.id === atualizado.id ? atualizado : item);
         this.planejamentoEditandoId = null;
@@ -306,11 +306,11 @@ export class MateriaListaComponent implements OnInit {
     });
   }
 
-  excluirPlanejamento(planejamento: Planejamento): void {
+  excluirPlanejamento(planejamento: Ciclo): void {
     if (!planejamento.id || !window.confirm(`Apagar o planejamento "${planejamento.nome}"?`)) return;
 
     this.excluindo = true;
-    this.planejamentoService.excluir(planejamento.id).subscribe({
+    this.planejamentoService.excluirCiclo(planejamento.id).subscribe({
       next: () => {
         this.listaPlanejamentos = this.listaPlanejamentos.filter(item => item.id !== planejamento.id);
         this.excluindo = false;

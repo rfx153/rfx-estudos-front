@@ -2,113 +2,219 @@
   <header class="page-heading">
     <div>
       <h2>Planejamentos</h2>
-      <p>Monte ciclos, acompanhe cargas semanais e organize revisões antes de conectar os dados reais.</p>
+      <p>Crie o plano macro, vincule ciclos e organize matérias, assuntos, materiais, prioridades e prazos.</p>
     </div>
-
-    <button nz-button nzType="primary" type="button">Novo planejamento</button>
+    <nz-tag nzColor="blue">{{ planejamentos.length }} planejamento(s)</nz-tag>
   </header>
 
-  <section class="summary-grid" aria-label="Resumo dos planejamentos">
-    <article class="summary-item">
-      <span>Ciclos mockados</span>
-      <strong>{{ planejamentos.length }}</strong>
-    </article>
-    <article class="summary-item">
-      <span>Horas por semana</span>
-      <strong>{{ totalHorasSemana }}h</strong>
-    </article>
-    <article class="summary-item">
-      <span>Disciplinas cobertas</span>
-      <strong>{{ totalDisciplinas }}</strong>
-    </article>
-    <article class="summary-item">
-      <span>Revisões previstas</span>
-      <strong>{{ totalRevisoes }}</strong>
-    </article>
-  </section>
+  <section class="planning-layout">
+    <aside class="planning-sidebar">
+      <form class="panel-form" nz-form [formGroup]="planejamentoForm" (ngSubmit)="salvarPlanejamento()">
+        <div class="section-heading">
+          <div>
+            <h3>{{ planejamentoEditandoId ? 'Editar planejamento' : 'Novo planejamento' }}</h3>
+            <p>Dados gerais do objetivo de estudo.</p>
+          </div>
+        </div>
 
-  <section class="planning-section">
-    <div class="section-heading">
-      <div>
-        <h3>Ciclos em preparação</h3>
-        <p>Dados temporários para validar a experiência da página.</p>
-      </div>
-      <nz-tag nzColor="blue">Sem backend ainda</nz-tag>
-    </div>
+        <nz-form-item>
+          <nz-form-control nzErrorTip="Informe o nome do planejamento">
+            <input nz-input formControlName="nome" placeholder="Ex: Concurso SEFAZ SC" />
+          </nz-form-control>
+        </nz-form-item>
 
-    <div class="planning-grid">
-      <article
-        class="planning-card"
-        *ngFor="let planejamento of planejamentos; trackBy: trackByPlanejamentoId">
-        <div class="planning-card-header">
+        <nz-form-item>
+          <nz-form-control>
+            <textarea nz-input formControlName="descricao" rows="3" placeholder="Descrição curta"></textarea>
+          </nz-form-control>
+        </nz-form-item>
+
+        <div class="form-grid two">
+          <label class="field-block">
+            <span>Data de início</span>
+            <small>Quando você pretende começar esse planejamento.</small>
+            <input nz-input type="date" formControlName="dataInicio" />
+          </label>
+
+          <label class="field-block">
+            <span>Prazo final</span>
+            <small>Data alvo para concluir o planejamento.</small>
+            <input nz-input type="date" formControlName="dataPrevista" />
+          </label>
+        </div>
+
+        <label class="field-block">
+          <span>Status do planejamento</span>
+          <nz-select formControlName="status" nzPlaceHolder="Status">
+            <nz-option *ngFor="let status of statusPlanejamento" [nzValue]="status" [nzLabel]="status"></nz-option>
+          </nz-select>
+        </label>
+
+        <div class="form-actions">
+          <button nz-button nzType="primary" [nzLoading]="salvandoPlanejamento">Salvar</button>
+          <button nz-button type="button" *ngIf="planejamentoEditandoId" (click)="cancelarEdicaoPlanejamento()">Cancelar</button>
+        </div>
+      </form>
+
+      <div class="planning-list" *ngIf="!carregando && planejamentos.length; else estadoLista">
+        <article
+          class="planning-card"
+          *ngFor="let planejamento of planejamentos; trackBy: trackById"
+          [class.active]="planejamentoSelecionado?.id === planejamento.id"
+          (click)="selecionarPlanejamento(planejamento)">
           <div>
             <span class="planning-id">#{{ planejamento.id }}</span>
             <h4>{{ planejamento.nome }}</h4>
+            <p>{{ planejamento.descricao || 'Sem descrição' }}</p>
           </div>
-          <nz-tag [nzColor]="corStatus(planejamento.status)">{{ planejamento.status }}</nz-tag>
-        </div>
-
-        <p>{{ planejamento.descricao }}</p>
-
-        <div class="progress-block">
-          <div class="progress-label">
-            <span>Progresso do ciclo</span>
-            <strong>{{ planejamento.progresso }}%</strong>
+          <div class="card-actions" (click)="$event.stopPropagation()">
+            <nz-tag [nzColor]="corStatus(planejamento.status)">{{ planejamento.status || 'Ativo' }}</nz-tag>
+            <button nz-button nzType="link" nzSize="small" (click)="editarPlanejamento(planejamento)">Editar</button>
+            <button nz-button nzDanger nzType="link" nzSize="small" (click)="excluirPlanejamento(planejamento)">Apagar</button>
           </div>
-          <div class="progress-track" aria-hidden="true">
-            <span [style.width.%]="planejamento.progresso"></span>
-          </div>
-        </div>
-
-        <dl class="planning-metrics">
-          <div>
-            <dt>Carga</dt>
-            <dd>{{ planejamento.cargaSemanal }}h</dd>
-          </div>
-          <div>
-            <dt>Disciplinas</dt>
-            <dd>{{ planejamento.disciplinas }}</dd>
-          </div>
-          <div>
-            <dt>Revisoes</dt>
-            <dd>{{ planejamento.revisoes }}</dd>
-          </div>
-        </dl>
-
-        <div class="planning-actions">
-          <button nz-button nzType="default" type="button">Ver detalhes</button>
-          <button nz-button nzType="link" type="button">Editar</button>
-        </div>
-      </article>
-    </div>
-  </section>
-
-  <section class="planning-section">
-    <div class="section-heading">
-      <div>
-        <h3>Agenda da semana</h3>
-        <p>Sessões simuladas para desenhar a futura rotina de estudo.</p>
+        </article>
       </div>
-      <nz-tag nzColor="purple">{{ sessoesSemana.length }} sessões</nz-tag>
-    </div>
 
-    <div class="schedule-list">
-      <article class="schedule-item" *ngFor="let sessao of sessoesSemana; trackBy: trackBySessao">
-        <div class="schedule-time">
-          <strong>{{ sessao.dia }}</strong>
-          <span>{{ sessao.horario }}</span>
+      <ng-template #estadoLista>
+        <div class="empty-state">{{ carregando ? 'Carregando planejamentos...' : 'Nenhum planejamento cadastrado.' }}</div>
+      </ng-template>
+    </aside>
+
+    <main class="planning-detail" *ngIf="planejamentoSelecionado; else selecionePlanejamento">
+      <section class="detail-header">
+        <div>
+          <span class="eyebrow">Planejamento selecionado</span>
+          <h3>{{ planejamentoSelecionado.nome }}</h3>
+          <p>{{ planejamentoSelecionado.descricao || 'Organize os itens deste planejamento.' }}</p>
+        </div>
+        <nz-tag [nzColor]="corStatus(planejamentoSelecionado.status)">{{ planejamentoSelecionado.status || 'Ativo' }}</nz-tag>
+      </section>
+
+      <section class="planning-section">
+        <div class="section-heading">
+          <div>
+            <h3>Ciclos vinculados</h3>
+            <p>Use ciclos como Estratégia, Guruja ou Reta Final dentro deste planejamento.</p>
+          </div>
+          <nz-tag nzColor="blue">{{ ciclosVinculados.length }} ciclo(s)</nz-tag>
         </div>
 
-        <div class="schedule-main">
-          <h4>{{ sessao.disciplina }}</h4>
-          <p>{{ sessao.atividade }}</p>
+        <div class="cycle-link-row">
+          <nz-select [(ngModel)]="cicloSelecionadoId" nzPlaceHolder="Selecionar ciclo" [ngModelOptions]="{standalone: true}">
+            <nz-option *ngFor="let ciclo of ciclosDisponiveis()" [nzValue]="ciclo.id" [nzLabel]="ciclo.nome"></nz-option>
+          </nz-select>
+          <button nz-button nzType="primary" type="button" [disabled]="!cicloSelecionadoId" [nzLoading]="vinculandoCiclo" (click)="vincularCiclo()">Vincular</button>
         </div>
 
-        <div class="schedule-meta">
-          <span>{{ sessao.duracao }}</span>
-          <nz-tag [nzColor]="corPrioridade(sessao.prioridade)">{{ sessao.prioridade }}</nz-tag>
+        <div class="tag-list" *ngIf="ciclosVinculados.length; else semCiclos">
+          <nz-tag *ngFor="let vinculo of ciclosVinculados; trackBy: trackById" nzColor="purple">
+            {{ vinculo.ciclo.nome }}
+            <button type="button" class="tag-remove" (click)="desvincularCiclo(vinculo)">x</button>
+          </nz-tag>
         </div>
-      </article>
-    </div>
+        <ng-template #semCiclos><div class="empty-state compact">Nenhum ciclo vinculado.</div></ng-template>
+      </section>
+
+      <section class="planning-section">
+        <div class="section-heading">
+          <div>
+            <h3>{{ itemEditandoId ? 'Editar item' : 'Novo item' }}</h3>
+            <p>Adicione matéria, assunto, material, prioridade e data prevista.</p>
+          </div>
+        </div>
+
+        <form nz-form class="item-form" [formGroup]="itemForm" (ngSubmit)="salvarItem()">
+          <div class="form-grid three">
+            <nz-form-item>
+              <nz-form-control nzErrorTip="Selecione a matéria">
+                <nz-select formControlName="materiaId" nzPlaceHolder="Matéria" (ngModelChange)="aoSelecionarMateria($event)">
+                  <nz-option *ngFor="let materia of materias" [nzValue]="materia.id" [nzLabel]="materia.nome"></nz-option>
+                </nz-select>
+              </nz-form-control>
+            </nz-form-item>
+            <nz-form-item>
+              <nz-form-control>
+                <nz-select formControlName="assuntoId" nzPlaceHolder="Assunto">
+                  <nz-option *ngFor="let assunto of assuntos" [nzValue]="assunto.id" [nzLabel]="assunto.nome"></nz-option>
+                </nz-select>
+              </nz-form-control>
+            </nz-form-item>
+            <nz-form-item>
+              <nz-form-control>
+                <nz-select formControlName="materialTipoId" nzPlaceHolder="Tipo de material">
+                  <nz-option *ngFor="let tipo of materialTipos" [nzValue]="tipo.id" [nzLabel]="tipo.nome"></nz-option>
+                </nz-select>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+
+          <div class="form-grid three">
+            <input nz-input formControlName="materialNome" placeholder="Nome do material" />
+            <nz-select formControlName="prioridade" nzPlaceHolder="Prioridade">
+              <nz-option *ngFor="let prioridade of prioridades" [nzValue]="prioridade" [nzLabel]="prioridade"></nz-option>
+            </nz-select>
+            <input nz-input type="date" formControlName="dataPrevista" />
+          </div>
+
+          <div class="form-grid three">
+            <nz-select formControlName="status" nzPlaceHolder="Status">
+              <nz-option *ngFor="let status of statusItem" [nzValue]="status" [nzLabel]="status"></nz-option>
+            </nz-select>
+            <input nz-input type="number" formControlName="ordem" placeholder="Ordem" />
+            <input nz-input type="date" formControlName="dataFinalizacao" />
+          </div>
+
+          <textarea nz-input formControlName="meta" rows="2" placeholder="Meta: ler PDF, fazer questões, revisar..."></textarea>
+          <input nz-input formControlName="linkDocumento" placeholder="Link do documento" />
+          <textarea nz-input formControlName="observacoes" rows="2" placeholder="Observações"></textarea>
+
+          <div class="form-actions">
+            <button nz-button nzType="primary" [nzLoading]="salvandoItem">Salvar item</button>
+            <button nz-button type="button" *ngIf="itemEditandoId" (click)="cancelarEdicaoItem()">Cancelar</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="planning-section">
+        <div class="section-heading">
+          <div>
+            <h3>Itens planejados</h3>
+            <p>Fila de execução por matéria, assunto e material.</p>
+          </div>
+          <nz-tag nzColor="green">{{ itens.length }} item(ns)</nz-tag>
+        </div>
+
+        <div class="items-list" *ngIf="!carregandoDetalhes && itens.length; else estadoItens">
+          <article class="item-row" *ngFor="let item of itens; trackBy: trackById">
+            <div class="item-main">
+              <span class="eyebrow">{{ item.materia.nome }}</span>
+              <h4>{{ item.assunto?.nome || 'Sem assunto específico' }}</h4>
+              <p>{{ item.meta || item.materialNome || 'Sem meta definida' }}</p>
+              <div class="item-tags">
+                <nz-tag [nzColor]="corPrioridade(item.prioridade)">{{ item.prioridade || 'Media' }}</nz-tag>
+                <nz-tag [nzColor]="corStatus(item.status)">{{ item.status || 'Pendente' }}</nz-tag>
+                <nz-tag *ngIf="item.materialTipo">{{ item.materialTipo.nome }}</nz-tag>
+              </div>
+            </div>
+            <div class="item-meta">
+              <span>{{ item.dataPrevista || 'Sem prazo' }}</span>
+              <button nz-button nzType="link" nzSize="small" (click)="editarItem(item)">Editar</button>
+              <button nz-button nzDanger nzType="link" nzSize="small" (click)="excluirItem(item)">Apagar</button>
+            </div>
+          </article>
+        </div>
+
+        <ng-template #estadoItens>
+          <div class="empty-state">{{ carregandoDetalhes ? 'Carregando itens...' : 'Nenhum item planejado ainda.' }}</div>
+        </ng-template>
+      </section>
+    </main>
+
+    <ng-template #selecionePlanejamento>
+      <main class="planning-detail empty-detail">
+        <h3>Selecione ou crie um planejamento</h3>
+        <p>Depois disso, você poderá vincular ciclos e cadastrar os itens por matéria e assunto.</p>
+      </main>
+    </ng-template>
   </section>
 </div>
