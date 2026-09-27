@@ -13,6 +13,8 @@ export const routes: Routes = [
   { path: 'novo-registro', component: RegistroListaComponent },
   { path: 'visualizar-registros', component: VisualizarRegistrosComponent },
   { path: 'planejamentos', component: PlanejamentosComponent },
+  { path: 'planejamentos/novo', component: PlanejamentosComponent },
+  { path: 'planejamentos/:id', component: PlanejamentosComponent },
   { path: 'metodologia', component: MetodologiaComponent },
   { path: 'caminho', component: CaminhoComponent },
   { path: 'materias', component: MateriaListaComponent },

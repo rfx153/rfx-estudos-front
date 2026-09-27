@@ -210,10 +210,11 @@
             <span class="disciplina-id">#{{ data.id }}</span>
 
             <ng-container *ngIf="editandoId !== data.id; else editarNome">
-              <h4>{{ data.nome }}</h4>
+              <h4 class="materia-color-label" [style.backgroundColor]="data.cor || '#3B82F6'">{{ data.nome }}</h4>
             </ng-container>
             <ng-template #editarNome>
               <input nz-input [(ngModel)]="formularioEdicao.nome" placeholder="Nome da disciplina" />
+              <label class="color-picker-label edit-color-label">Cor <input type="color" [(ngModel)]="formularioEdicao.cor" [ngModelOptions]="{standalone: true}" /></label>
             </ng-template>
 
             <div class="disciplina-tags" *ngIf="editandoId !== data.id; else editarCategorias">
@@ -246,7 +247,7 @@
           <header class="assuntos-header">
             <div>
               <span class="eyebrow">Assuntos cadastrados</span>
-              <h4>{{ data.nome }}</h4>
+              <h4 class="materia-color-label" [style.backgroundColor]="data.cor || '#3B82F6'">{{ data.nome }}</h4>
             </div>
             <nz-tag nzColor="blue" *ngIf="!assuntosCarregando">{{ assuntosDaMateria.length }} assunto(s)</nz-tag>
           </header>

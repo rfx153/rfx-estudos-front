@@ -126,7 +126,7 @@
         <article class="studied-item" *ngFor="let materia of materiasComAssuntosHoje">
           <header>
             <div>
-              <strong>{{ materia.nome }}</strong>
+              <strong class="materia-color-label" [style.backgroundColor]="materia.cor || '#3B82F6'">{{ materia.nome }}</strong>
               <small>{{ materia.assuntos.length }} assunto(s)</small>
             </div>
             <button type="button" class="detail-button" (click)="abrirDetalhesMateria(materia)">Ver detalhes</button>

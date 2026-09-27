@@ -224,3 +224,5 @@ nz-form-label {
     width: 100%;
   }
 }
+
+.materia-color-label { display: inline-block; padding: 3px 8px; border-radius: 3px; color: #0b1020; font-weight: 700; }

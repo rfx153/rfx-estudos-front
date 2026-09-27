@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -42,6 +43,10 @@ export class PlanejamentosComponent implements OnInit {
   private materiaService = inject(MateriaService);
   private planejamentoService = inject(PlanejamentoService);
   private registroService = inject(RegistroService);
+  router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  modoDetalhe = false;
 
   planejamentos: Planejamento[] = [];
   materias: Materia[] = [];
@@ -76,6 +81,7 @@ export class PlanejamentosComponent implements OnInit {
   readonly prioridades = ['Alta', 'Media', 'Baixa'];
 
   ngOnInit(): void {
+    this.modoDetalhe = this.route.snapshot.url.length > 1;
     this.criarForms();
     this.carregarDadosBase();
     this.carregarPlanejamentos();
@@ -105,8 +111,14 @@ export class PlanejamentosComponent implements OnInit {
         this.planejamentos = planejamentos;
         this.carregando = false;
 
-        if (!this.planejamentoSelecionado && planejamentos.length) {
-          this.selecionarPlanejamento(planejamentos[0]);
+        if (this.modoDetalhe) {
+          const id = this.route.snapshot.paramMap.get('id');
+          if (id) {
+            const planejamento = planejamentos.find(item => item.id === Number(id));
+            if (planejamento) this.selecionarPlanejamento(planejamento);
+          } else {
+            this.planejamentoForm.reset({ status: 'Ativo' });
+          }
         }
       },
       error: erro => {
@@ -117,8 +129,13 @@ export class PlanejamentosComponent implements OnInit {
     });
   }
 
+  novoPlanejamento(): void {
+    this.router.navigate(['/planejamentos/novo']);
+  }
+
   selecionarPlanejamento(planejamento: Planejamento): void {
     if (!planejamento.id) return;
+    this.router.navigate(['/planejamentos', planejamento.id]);
 
     this.planejamentoSelecionado = planejamento;
     this.planejamentoMateriaSelecionada = undefined;
@@ -176,6 +193,7 @@ export class PlanejamentosComponent implements OnInit {
         this.message.success('Planejamento salvo com sucesso.');
         this.planejamentoSelecionado = planejamento;
         this.carregarPlanejamentos();
+        if (planejamento.id) this.router.navigate(['/planejamentos', planejamento.id]);
       },
       error: erro => {
         console.error('Erro ao salvar planejamento:', erro);

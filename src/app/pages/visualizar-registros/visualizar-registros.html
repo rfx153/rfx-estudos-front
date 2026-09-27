@@ -31,7 +31,7 @@
       <div class="history-main">
         <div class="history-title-row">
           <div>
-            <h3>{{ registro.materia?.nome || 'Matéria não informada' }}</h3>
+            <h3 class="materia-color-label" [style.backgroundColor]="registro.materia?.cor || '#3B82F6'">{{ registro.materia?.nome || 'Matéria não informada' }}</h3>
             <p>{{ registro.assunto?.nome || 'Assunto não informado' }}</p>
           </div>
 

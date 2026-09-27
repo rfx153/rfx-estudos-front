@@ -10,6 +10,7 @@ import { RegistroDetalhesModalComponent } from '../../shared/registro-detalhes-m
 interface MateriaEstudadaHoje {
   id: number | string;
   nome: string;
+  cor?: string;
   assuntos: string[];
   questoesFeitas: number;
   questoesAcertadas: number;

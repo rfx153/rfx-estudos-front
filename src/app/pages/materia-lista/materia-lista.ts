@@ -76,7 +76,7 @@ export class MateriaListaComponent implements OnInit {
   nomePlanejamentoEdicao = '';
   nomeTipoRegistroEdicao = '';
   excluindo = false;
-  formularioEdicao = { nome: '', categorias: [] as number[] };
+  formularioEdicao = { nome: '', cor: '#3B82F6', categorias: [] as number[] };
   validateForm!: FormGroup;
   planejamentoForm!: FormGroup;
   categoriaForm!: FormGroup;
@@ -94,6 +94,7 @@ export class MateriaListaComponent implements OnInit {
     
     this.validateForm = this.fb.group({
       nome: [null, [Validators.required]],
+      cor: ['#3B82F6', [Validators.required]],
       categorias: [[], [Validators.required]]
     });
     this.planejamentoForm = this.fb.group({
@@ -584,6 +585,7 @@ export class MateriaListaComponent implements OnInit {
     this.editandoId = materia.id;
     this.formularioEdicao = {
       nome: materia.nome,
+      cor: materia.cor || '#3B82F6',
       categorias: materia.categorias?.map(categoria => categoria.id) ?? []
     };
   }
@@ -602,6 +604,7 @@ export class MateriaListaComponent implements OnInit {
     this.materiaService.atualizar(materia.id, {
       ...materia,
       nome: this.formularioEdicao.nome.trim(),
+      cor: this.formularioEdicao.cor || '#3B82F6',
       categorias: this.categoriasPorIds(this.formularioEdicao.categorias)
     }).subscribe({
       next: (atualizada) => {

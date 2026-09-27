@@ -9,6 +9,7 @@ import { Categoria } from './categoria.service';
 export interface Materia {
   id?: number;
   nome: string;
+  cor?: string;
   categorias?: Categoria[];
 }
 

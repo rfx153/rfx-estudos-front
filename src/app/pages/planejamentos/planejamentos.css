@@ -301,3 +301,23 @@ textarea[nz-input] {
     width: 100%;
   }
 }
+
+.new-planning-button { width: 100%; margin-bottom: 14px; }
+
+.subject-name {
+  display: inline-block;
+  max-width: 100%;
+  padding: 5px 10px;
+  border-radius: 3px;
+  color: #0b1020 !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.subject-name span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

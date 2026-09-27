@@ -9,7 +9,11 @@
 
   <section class="planning-layout">
     <aside class="planning-sidebar">
-      <form class="panel-form" nz-form [formGroup]="planejamentoForm" (ngSubmit)="salvarPlanejamento()">
+      <button nz-button nzType="primary" class="new-planning-button" (click)="novoPlanejamento()">
+        Novo planejamento
+      </button>
+
+      <form *ngIf="modoDetalhe" class="panel-form" nz-form [formGroup]="planejamentoForm" (ngSubmit)="salvarPlanejamento()">
         <div class="section-heading">
           <div>
             <h3>{{ planejamentoEditandoId ? 'Editar planejamento' : 'Novo planejamento' }}</h3>
@@ -69,7 +73,7 @@
           </div>
           <div class="card-actions" (click)="$event.stopPropagation()">
             <nz-tag [nzColor]="corStatus(planejamento.status)">{{ planejamento.status || 'Ativo' }}</nz-tag>
-            <button nz-button nzType="link" nzSize="small" (click)="editarPlanejamento(planejamento)">Editar</button>
+            <button nz-button nzType="link" nzSize="small" (click)="router.navigate(['/planejamentos', planejamento.id])">Editar</button>
             <button nz-button nzDanger nzType="link" nzSize="small" (click)="excluirPlanejamento(planejamento)">Apagar</button>
           </div>
         </article>
@@ -80,7 +84,7 @@
       </ng-template>
     </aside>
 
-    <main class="planning-detail" *ngIf="planejamentoSelecionado; else selecionePlanejamento">
+    <main class="planning-detail" *ngIf="modoDetalhe && planejamentoSelecionado; else selecionePlanejamento">
       <section class="detail-header">
         <div>
           <span class="eyebrow">Planejamento selecionado</span>
@@ -189,7 +193,7 @@
             (click)="selecionarMateriaPlanejada(item)">
             <div>
               <span class="eyebrow">Matéria</span>
-              <h4>{{ item.materia.nome }}</h4>
+              <h4 class="subject-name" [style.backgroundColor]="item.materia.cor || '#3B82F6'"><span>{{ item.materia.nome }}</span></h4>
               <div class="item-tags">
                 <nz-tag [nzColor]="corPrioridade(item.prioridade)">{{ item.prioridade || 'Media' }}</nz-tag>
                 <nz-tag [nzColor]="corStatus(item.status)">{{ item.status || 'Pendente' }}</nz-tag>
@@ -315,7 +319,7 @@
     </main>
 
     <ng-template #selecionePlanejamento>
-      <main class="planning-detail empty-detail">
+      <main *ngIf="modoDetalhe" class="planning-detail empty-detail">
         <h3>Selecione ou crie um planejamento</h3>
         <p>Depois disso, você poderá vincular ciclos e cadastrar os itens por matéria e assunto.</p>
       </main>
