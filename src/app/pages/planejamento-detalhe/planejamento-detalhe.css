@@ -395,3 +395,52 @@ textarea[nz-input] {
 .nested-items-header { min-height: 30px; margin-bottom: 4px; }
 .nested-item-row { padding: 7px 8px; background: rgba(59, 130, 246, .035); }
 .detail-header { padding: 4px 0 10px; }
+
+/* Lista hierarquica de materias e itens */
+.materias-section {
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border, #e5e7eb);
+}
+.subject-list { gap: 0; }
+.subject-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  min-height: 64px;
+  padding: 10px 14px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 6px;
+}
+.subject-row > div:first-child { min-width: 0; }
+.subject-row .eyebrow { margin-bottom: 4px; }
+.subject-name { margin-bottom: 7px !important; }
+.subject-row .item-meta { flex-direction: row; align-items: center; gap: 4px; }
+.nested-items {
+  margin: 0 0 0 26px;
+  padding: 0 0 4px 14px;
+  border-left: 2px solid #b7d4ff;
+  border-bottom: 0;
+}
+.nested-items-header {
+  min-height: 42px;
+  margin: 0;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+}
+.nested-item-row {
+  grid-template-columns: minmax(80px, .7fr) minmax(150px, 2fr) auto auto auto;
+  min-height: 42px;
+  padding: 6px 10px;
+  border-top: 0;
+  border-bottom: 1px solid rgba(148, 163, 184, .2);
+  background: transparent;
+}
+.nested-item-row:last-of-type { border-bottom: 0; }
+.nested-item-title { font-weight: 600; }
+.nested-items .empty-state { padding: 14px 10px; text-align: left; }
+@media (max-width: 720px) {
+  .subject-row { grid-template-columns: 1fr; gap: 6px; }
+  .subject-row .item-meta { justify-content: flex-start; }
+  .nested-item-row { grid-template-columns: 1fr 1fr; gap: 6px; }
+}

@@ -1,0 +1,23 @@
+<div class="planning-list-page page-card">
+  <header class="page-heading">
+    <div>
+      <h2>Planejamentos</h2>
+      <p>Organize seus objetivos de estudo.</p>
+    </div>
+    <button nz-button nzType="primary" (click)="novo()">Novo planejamento</button>
+  </header>
+
+  <div class="planning-loading" *ngIf="carregando">Carregando planejamentos...</div>
+  <div class="planning-empty" *ngIf="!carregando && !planejamentos.length">Nenhum planejamento cadastrado.</div>
+
+  <div class="planning-list-grid" *ngIf="!carregando && planejamentos.length">
+    <a class="planning-list-card" *ngFor="let planejamento of planejamentos" [routerLink]="['/planejamentos', planejamento.id]">
+      <div>
+        <span class="planning-id">#{{ planejamento.id }}</span>
+        <h3>{{ planejamento.nome }}</h3>
+        <p>{{ planejamento.descricao || 'Sem descrição' }}</p>
+      </div>
+      <nz-tag [nzColor]="corStatus(planejamento.status)">{{ planejamento.status || 'Ativo' }}</nz-tag>
+    </a>
+  </div>
+</div>

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -22,7 +22,7 @@ import {
 } from '../../services/planejamento.service';
 
 @Component({
-  selector: 'app-planejamentos',
+  selector: 'app-planejamento-detalhe',
   standalone: true,
   imports: [
     CommonModule,
@@ -34,10 +34,10 @@ import {
     NzSelectModule,
     NzTagModule
   ],
-  templateUrl: './planejamentos.html',
-  styleUrl: './planejamentos.css'
+  templateUrl: './planejamento-detalhe.html',
+  styleUrl: './planejamento-detalhe.css'
 })
-export class PlanejamentosComponent implements OnInit {
+export class PlanejamentoDetalheComponent implements OnInit {
   private fb = inject(FormBuilder);
   private message = inject(NzMessageService);
   private materiaService = inject(MateriaService);
@@ -45,6 +45,7 @@ export class PlanejamentosComponent implements OnInit {
   private registroService = inject(RegistroService);
   router = inject(Router);
   private route = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
 
   modoDetalhe = false;
   abaAtiva: 'visao-geral' | 'materias' | 'itens' = 'visao-geral';
@@ -90,9 +91,20 @@ export class PlanejamentosComponent implements OnInit {
     this.modoDetalhe = this.route.snapshot.url.length > 1;
     this.mostrarFormularioGeral = !this.modoDetalhe;
     this.criarForms();
-    this.carregarPlanejamentos();
     if (this.modoDetalhe) {
       this.carregarDadosBase();
+      const id = this.route.snapshot.paramMap.get('id');
+      if (id) {
+        this.planejamentoService.buscarPorId(Number(id)).subscribe({
+          next: planejamento => this.selecionarPlanejamento(planejamento),
+          error: erro => {
+            console.error('Erro ao carregar planejamento:', erro);
+            this.message.error('Não foi possível carregar o planejamento.');
+          }
+        });
+      } else {
+        this.planejamentoForm.reset({ status: 'Ativo' });
+      }
     }
   }
 
@@ -162,6 +174,7 @@ export class PlanejamentosComponent implements OnInit {
       next: planejamentoMaterias => {
         this.planejamentoMaterias = planejamentoMaterias;
         this.carregandoDetalhes = false;
+        this.cdr.detectChanges();
 
 
       },
@@ -388,10 +401,12 @@ export class PlanejamentosComponent implements OnInit {
       next: itens => {
         this.itens = itens;
         this.carregandoItens = false;
+        this.cdr.detectChanges();
       },
       error: erro => {
         console.error('Erro ao carregar itens da matéria:', erro);
         this.carregandoItens = false;
+        this.cdr.detectChanges();
       }
     });
   }

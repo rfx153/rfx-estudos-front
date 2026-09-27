@@ -1,0 +1,13 @@
+.planning-list-page { padding: 28px; }
+.page-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:24px; }
+.page-heading h2 { margin:0; font-size:24px; }
+.page-heading p { margin:6px 0 0; color:var(--text-muted,#64748b); }
+.planning-list-grid { display:grid; gap:10px; }
+.planning-list-card { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px; border:1px solid var(--border,#e5e7eb); border-radius:8px; background:var(--surface,#fff); cursor:pointer; }
+.planning-list-card:hover { border-color:#1677ff; box-shadow:0 0 0 2px rgba(22,119,255,.1); }
+.planning-list-card h3 { margin:0; color:var(--text,#0f172a); }
+.planning-list-card p { margin:6px 0 0; color:var(--text-muted,#64748b); }
+.planning-id { display:block; margin-bottom:5px; color:var(--text-muted,#64748b); font-size:12px; }
+.planning-loading,.planning-empty { padding:28px; text-align:center; color:var(--text-muted,#64748b); }
+
+.planning-list-card { text-decoration: none; color: inherit; }
