@@ -145,7 +145,18 @@
             </nz-form-control>
           </nz-form-item>
         </div>
-        <div nz-col [nzSpan]="16">
+        <div nz-col [nzSpan]="4">
+          <nz-form-item>
+            <nz-form-label>Detalhes</nz-form-label>
+            <nz-form-control>
+              <button nz-button nzSize="small" type="button" class="question-log-button" (click)="questoesAbaAberta = true">
+                <i nz-icon nzType="plus"></i> Registros
+                <span *ngIf="registrosQuestoes.length">({{ registrosQuestoes.length }})</span>
+              </button>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col [nzSpan]="12">
           <nz-form-item>
             <nz-form-label>Ponto de Parada (Onde parei?)</nz-form-label>
             <nz-form-control>
@@ -211,7 +222,7 @@
           </div>
 
           <div nz-row [nzGutter]="24">
-            <div nz-col [nzSpan]="12">
+            <div nz-col [nzSpan]="10">
               <nz-form-item>
                 <nz-form-label>Questões de Revisão Feitas</nz-form-label>
                 <nz-form-control>
@@ -225,7 +236,7 @@
               </nz-form-item>
             </div>
 
-            <div nz-col [nzSpan]="12">
+            <div nz-col [nzSpan]="10">
               <nz-form-item>
                 <nz-form-label>Questões de Revisão Acertadas</nz-form-label>
                 <nz-form-control>
@@ -235,6 +246,18 @@
                     [nzStep]="1"
                     style="width: 100%;">
                   </nz-input-number>
+                </nz-form-control>
+              </nz-form-item>
+            </div>
+
+            <div nz-col [nzSpan]="4">
+              <nz-form-item>
+                <nz-form-label>Detalhes</nz-form-label>
+                <nz-form-control>
+                  <button nz-button nzSize="small" type="button" class="question-log-button" (click)="questoesRevisaoAbaAberta = true">
+                    <i nz-icon nzType="plus"></i> Registros
+                    <span *ngIf="registrosQuestoesRevisao.length">({{ registrosQuestoesRevisao.length }})</span>
+                  </button>
                 </nz-form-control>
               </nz-form-item>
             </div>
@@ -282,6 +305,77 @@
     </tbody>
   </nz-table>
 </div> -->
+
+
+<nz-modal
+  [(nzVisible)]="questoesAbaAberta"
+  nzTitle="Registros das questões feitas"
+  [nzFooter]="null"
+  [nzWidth]="620"
+  (nzOnCancel)="questoesAbaAberta = false">
+  <ng-container *nzModalContent>
+    <div class="question-log-modal">
+      <div class="question-log-entry" [formGroup]="registroQuestoesForm">
+        <input nz-input formControlName="descricao" placeholder="Ex: Caderno de erros, bloco 01, questões 1 a 15" />
+        <nz-input-number formControlName="feitas" [nzMin]="0" [nzStep]="1" nzPlaceHolder="Feitas"></nz-input-number>
+        <nz-input-number formControlName="acertadas" [nzMin]="0" [nzStep]="1" nzPlaceHolder="Acertos"></nz-input-number>
+        <button nz-button nzType="default" type="button" (click)="adicionarRegistroQuestoes('estudo')">
+          <i nz-icon nzType="plus"></i> Adicionar
+        </button>
+      </div>
+
+      <div class="question-log-summary" *ngIf="registrosQuestoes.length">
+        <span>Total: <strong>{{ totalQuestoes('estudo', 'acertadas') }}/{{ totalQuestoes('estudo', 'feitas') }}</strong></span>
+        <span>{{ calcularAproveitamento(totalQuestoes('estudo', 'feitas'), totalQuestoes('estudo', 'acertadas')) }} de aproveitamento</span>
+      </div>
+
+      <div class="question-log-list" *ngIf="registrosQuestoes.length">
+        <div class="question-log-item" *ngFor="let registro of registrosQuestoes; let i = index">
+          <span>{{ registro.descricao || 'Registro sem descrição' }}</span>
+          <strong>{{ registro.acertadas }}/{{ registro.feitas }}</strong>
+          <button nz-button nzType="text" nzDanger type="button" (click)="removerRegistroQuestoes('estudo', i)" aria-label="Remover registro de questões">
+            <i nz-icon nzType="delete"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</nz-modal>
+
+<nz-modal
+  [(nzVisible)]="questoesRevisaoAbaAberta"
+  nzTitle="Registros das questões de revisão"
+  [nzFooter]="null"
+  [nzWidth]="620"
+  (nzOnCancel)="questoesRevisaoAbaAberta = false">
+  <ng-container *nzModalContent>
+    <div class="question-log-modal">
+      <div class="question-log-entry" [formGroup]="registroQuestoesRevisaoForm">
+        <input nz-input formControlName="descricao" placeholder="Ex: Revisão R1, bloco 02, questões 16 a 30" />
+        <nz-input-number formControlName="feitas" [nzMin]="0" [nzStep]="1" nzPlaceHolder="Feitas"></nz-input-number>
+        <nz-input-number formControlName="acertadas" [nzMin]="0" [nzStep]="1" nzPlaceHolder="Acertos"></nz-input-number>
+        <button nz-button nzType="default" type="button" (click)="adicionarRegistroQuestoes('revisao')">
+          <i nz-icon nzType="plus"></i> Adicionar
+        </button>
+      </div>
+
+      <div class="question-log-summary" *ngIf="registrosQuestoesRevisao.length">
+        <span>Total: <strong>{{ totalQuestoes('revisao', 'acertadas') }}/{{ totalQuestoes('revisao', 'feitas') }}</strong></span>
+        <span>{{ calcularAproveitamento(totalQuestoes('revisao', 'feitas'), totalQuestoes('revisao', 'acertadas')) }} de aproveitamento</span>
+      </div>
+
+      <div class="question-log-list" *ngIf="registrosQuestoesRevisao.length">
+        <div class="question-log-item" *ngFor="let registro of registrosQuestoesRevisao; let i = index">
+          <span>{{ registro.descricao || 'Registro sem descrição' }}</span>
+          <strong>{{ registro.acertadas }}/{{ registro.feitas }}</strong>
+          <button nz-button nzType="text" nzDanger type="button" (click)="removerRegistroQuestoes('revisao', i)" aria-label="Remover registro de questões de revisão">
+            <i nz-icon nzType="delete"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</nz-modal>
 
 <ng-template #extraTemplate>
   <div class="metodo-etapas-cabecalho" aria-label="Marcação da metodologia">

@@ -16,10 +16,18 @@ import { NzTimePickerModule } from 'ng-zorro-antd/time-picker';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule, NzIconService } from 'ng-zorro-antd/icon';
-import { PlusOutline, CalendarOutline, ClockCircleOutline, InfoCircleOutline } from '@ant-design/icons-angular/icons';
+import { PlusOutline, CalendarOutline, ClockCircleOutline, InfoCircleOutline, DeleteOutline } from '@ant-design/icons-angular/icons';
 import { NzCardModule } from 'ng-zorro-antd/card';       // <-- INSTALE ESTE IMPORT
 import { NzTooltipModule } from 'ng-zorro-antd/tooltip'; // <-- INSTALE ESTE IMPORT
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzModalModule } from 'ng-zorro-antd/modal';
+
+interface RegistroQuestoesTemporario {
+  descricao: string;
+  feitas: number;
+  acertadas: number;
+}
+
 @Component({
   selector: 'app-registro-lista',
   standalone: true,
@@ -36,7 +44,8 @@ import { NzMessageService } from 'ng-zorro-antd/message';
     NzButtonModule,
     NzIconModule,
     NzCardModule,     
-    NzTooltipModule
+    NzTooltipModule,
+    NzModalModule
   ],
   templateUrl: 'registro-lista.html',
   styleUrl: 'registro-lista.css',
@@ -66,13 +75,19 @@ listaTiposRegistro: TipoRegistro[] = [];
   carregando = true;
   salvando = false;
   revisaoAberta = false;
+  questoesAbaAberta = false;
+  questoesRevisaoAbaAberta = false;
   etapasQraqrMarcadas = new Set<string>();
   modoEdicao = false;
   registroEditandoId: number | null = null;
   validateForm!: FormGroup;
+  registroQuestoesForm!: FormGroup;
+  registroQuestoesRevisaoForm!: FormGroup;
+  registrosQuestoes: RegistroQuestoesTemporario[] = [];
+  registrosQuestoesRevisao: RegistroQuestoesTemporario[] = [];
 
   constructor() {
-    this.iconService.addIcon(...[PlusOutline, CalendarOutline, ClockCircleOutline, InfoCircleOutline]);
+    this.iconService.addIcon(...[PlusOutline, CalendarOutline, ClockCircleOutline, InfoCircleOutline, DeleteOutline]);
   }
 
   ngOnInit(): void {
@@ -101,6 +116,17 @@ listaTiposRegistro: TipoRegistro[] = [];
       tempoEstudado: [null, [Validators.required]],
       linkDocumento: [null],
       observacoes: [null]
+    });
+
+    this.registroQuestoesForm = this.criarFormularioRegistroQuestoes();
+    this.registroQuestoesRevisaoForm = this.criarFormularioRegistroQuestoes();
+  }
+
+  private criarFormularioRegistroQuestoes(): FormGroup {
+    return this.fb.group({
+      descricao: [null],
+      feitas: [0],
+      acertadas: [0]
     });
   }
 
@@ -218,6 +244,12 @@ listaTiposRegistro: TipoRegistro[] = [];
           questoesRevisaoFeitas: 0,
           questoesRevisaoAcertadas: 0
         });
+        this.registrosQuestoes = [];
+        this.registrosQuestoesRevisao = [];
+        this.registroQuestoesForm.reset({ feitas: 0, acertadas: 0 });
+        this.registroQuestoesRevisaoForm.reset({ feitas: 0, acertadas: 0 });
+        this.questoesAbaAberta = false;
+        this.questoesRevisaoAbaAberta = false;
         this.revisaoAberta = false;
         this.carregarDadosIniciais();
       },
@@ -237,6 +269,52 @@ listaTiposRegistro: TipoRegistro[] = [];
     });
     this.message.warning('Preencha os campos obrigatórios antes de salvar.');
   }
+}
+
+
+adicionarRegistroQuestoes(tipo: 'estudo' | 'revisao'): void {
+  const form = tipo === 'estudo' ? this.registroQuestoesForm : this.registroQuestoesRevisaoForm;
+  const lista = tipo === 'estudo' ? this.registrosQuestoes : this.registrosQuestoesRevisao;
+  const descricao = (form.value.descricao || '').trim();
+  const feitas = Number(form.value.feitas || 0);
+  const acertadas = Number(form.value.acertadas || 0);
+
+  if (feitas <= 0 && acertadas <= 0 && !descricao) {
+    this.message.warning('Informe ao menos uma anotação ou quantidade de questões.');
+    return;
+  }
+
+  if (acertadas > feitas) {
+    this.message.warning('Os acertos não podem ser maiores que as questões feitas.');
+    return;
+  }
+
+  lista.push({ descricao, feitas, acertadas });
+  form.reset({ feitas: 0, acertadas: 0 });
+  this.atualizarTotaisQuestoes(tipo);
+  this.cdr.detectChanges();
+}
+
+removerRegistroQuestoes(tipo: 'estudo' | 'revisao', index: number): void {
+  const lista = tipo === 'estudo' ? this.registrosQuestoes : this.registrosQuestoesRevisao;
+  lista.splice(index, 1);
+  this.atualizarTotaisQuestoes(tipo);
+  this.cdr.detectChanges();
+}
+
+totalQuestoes(tipo: 'estudo' | 'revisao', campo: 'feitas' | 'acertadas'): number {
+  const lista = tipo === 'estudo' ? this.registrosQuestoes : this.registrosQuestoesRevisao;
+  return lista.reduce((total, registro) => total + (registro[campo] || 0), 0);
+}
+
+private atualizarTotaisQuestoes(tipo: 'estudo' | 'revisao'): void {
+  const campoFeitas = tipo === 'estudo' ? 'questoesFeitas' : 'questoesRevisaoFeitas';
+  const campoAcertadas = tipo === 'estudo' ? 'questoesAcertadas' : 'questoesRevisaoAcertadas';
+
+  this.validateForm.patchValue({
+    [campoFeitas]: this.totalQuestoes(tipo, 'feitas'),
+    [campoAcertadas]: this.totalQuestoes(tipo, 'acertadas')
+  });
 }
 
   calcularAproveitamento(feitas: number, acertadas: number): string {
