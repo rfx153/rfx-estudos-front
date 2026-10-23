@@ -28,4 +28,61 @@
       <button nz-button type="button" (click)="voltar()">Cancelar</button>
     </div>
   </form>
+
+  <section class="planning-section" *ngIf="id && !carregando">
+    <div class="section-heading">
+      <div>
+        <h3>Matérias do planejamento</h3>
+        <p>Adicione as matérias e defina, se necessário, o peso e a ordem.</p>
+      </div>
+    </div>
+
+    <form class="materia-form" nz-form [formGroup]="materiaForm" (ngSubmit)="salvarMateria()">
+      <nz-form-item>
+        <nz-form-label nzRequired>Matéria</nz-form-label>
+        <nz-form-control nzErrorTip="Selecione uma matéria.">
+          <nz-select formControlName="materiaId" nzPlaceHolder="Selecione a matéria">
+            <nz-option *ngFor="let materia of materiasDisponiveis()" [nzValue]="materia.id" [nzLabel]="materia.nome"></nz-option>
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Peso</nz-form-label>
+        <nz-form-control nzErrorTip="Informe um valor de 1 a 5.">
+          <input nz-input type="number" min="1" max="5" formControlName="peso" placeholder="1 a 5" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Ordem</nz-form-label>
+        <nz-form-control nzErrorTip="Informe um número maior que zero.">
+          <input nz-input type="number" min="1" formControlName="ordem" placeholder="Ex.: 1" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <div class="form-actions">
+        <button nz-button nzType="primary" [nzLoading]="salvandoMateria">
+          {{ materiaEditandoId ? 'Atualizar matéria' : 'Adicionar matéria' }}
+        </button>
+        <button nz-button type="button" *ngIf="materiaEditandoId" (click)="cancelarEdicaoMateria()">Cancelar</button>
+      </div>
+    </form>
+
+    <div class="planning-loading" *ngIf="carregandoMaterias">Carregando matérias...</div>
+    <div class="empty-state" *ngIf="!carregandoMaterias && !materiasPlanejadas.length">Nenhuma matéria adicionada.</div>
+
+    <div class="materias-planejadas" *ngIf="!carregandoMaterias && materiasPlanejadas.length">
+      <article class="materia-planejada" *ngFor="let item of materiasPlanejadas">
+        <div>
+          <h4>{{ item.materia.nome }}</h4>
+          <span>Peso: {{ item.peso ?? 'não definido' }} · Ordem: {{ item.ordem ?? 'não definida' }}</span>
+        </div>
+        <div class="materia-actions">
+          <button nz-button nzType="link" type="button" (click)="editarMateria(item)">Editar</button>
+          <button nz-button nzDanger nzType="link" type="button" (click)="excluirMateria(item)">Remover</button>
+        </div>
+      </article>
+    </div>
+  </section>
 </div>
