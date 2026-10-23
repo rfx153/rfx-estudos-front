@@ -9,7 +9,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { finalize } from 'rxjs';
 import { Materia, MateriaService } from '../../services/materia.service';
-import { Assunto, RegistroService } from '../../services/registro.service';
+import { Assunto, RegistroService, TipoRegistro } from '../../services/registro.service';
 import {
   Planejamento,
   PlanejamentoMateria,
@@ -19,6 +19,8 @@ import {
   PlanejamentoGrupoAssuntoTipo,
   PlanejamentoGrupoAssuntoItem,
   PlanejamentoGrupoAssuntoItemDTO,
+  PlanejamentoItemEtapa,
+  PlanejamentoItemEtapaDTO,
   PlanejamentoService
 } from '../../services/planejamento.service';
 
@@ -59,6 +61,12 @@ export class PlanejamentoDetalheComponent implements OnInit {
     peso: [null as number | null, [Validators.min(1), Validators.max(5)]],
     ordem: [null as number | null, Validators.min(1)]
   });
+  readonly etapaForm = this.fb.group({
+    tipoRegistroId: [null as number | null, Validators.required],
+    ordem: [null as number | null, Validators.min(1)],
+    concluida: [false],
+    concluidaManualmente: [false]
+  });
 
   id?: number;
   carregando = false;
@@ -79,6 +87,12 @@ export class PlanejamentoDetalheComponent implements OnInit {
   itemEditandoId?: number;
   carregandoItens = false;
   salvandoItem = false;
+  itemSelecionado?: PlanejamentoGrupoAssuntoItem;
+  etapas: PlanejamentoItemEtapa[] = [];
+  tiposRegistro: TipoRegistro[] = [];
+  etapaEditandoId?: number;
+  carregandoEtapas = false;
+  salvandoEtapa = false;
 
   ngOnInit(): void {
     const parametroId = this.route.snapshot.paramMap.get('id');
@@ -323,6 +337,62 @@ export class PlanejamentoDetalheComponent implements OnInit {
     });
   }
 
+  selecionarItem(item: PlanejamentoGrupoAssuntoItem): void {
+    if (!item.id) return;
+    this.itemSelecionado = item;
+    this.cancelarEdicaoEtapa();
+    this.carregarEtapas();
+    if (!this.tiposRegistro.length) {
+      this.registroService.listarTiposRegistro().subscribe({
+        next: tipos => { this.tiposRegistro = tipos; this.cdr.detectChanges(); },
+        error: erro => console.error('Erro ao carregar tipos de registro:', erro)
+      });
+    }
+  }
+
+  salvarEtapa(): void {
+    if (!this.id || !this.materiaSelecionada?.id || !this.grupoSelecionado?.id || !this.itemSelecionado?.id || this.etapaForm.invalid) {
+      this.etapaForm.markAllAsTouched(); return;
+    }
+    if (this.etapaForm.controls.concluidaManualmente.value && !this.etapaForm.controls.concluida.value) {
+      this.message.warning('Uma etapa manualmente concluída também deve estar concluída.'); return;
+    }
+    const dados: PlanejamentoItemEtapaDTO = {
+      tipoRegistroId: this.etapaForm.controls.tipoRegistroId.value!,
+      ordem: this.etapaForm.controls.ordem.value,
+      concluida: this.etapaForm.controls.concluida.value!,
+      concluidaManualmente: this.etapaForm.controls.concluidaManualmente.value!
+    };
+    const editando = !!this.etapaEditandoId;
+    this.salvandoEtapa = true;
+    const request$ = this.etapaEditandoId
+      ? this.service.atualizarEtapa(this.id, this.materiaSelecionada.id, this.grupoSelecionado.id, this.itemSelecionado.id, this.etapaEditandoId, dados)
+      : this.service.adicionarEtapa(this.id, this.materiaSelecionada.id, this.grupoSelecionado.id, this.itemSelecionado.id, dados);
+    request$.subscribe({
+      next: () => { this.salvandoEtapa = false; this.cancelarEdicaoEtapa(); this.carregarEtapas(); this.message.success(`Etapa ${editando ? 'atualizada' : 'adicionada'} com sucesso.`); },
+      error: erro => { console.error('Erro ao salvar etapa:', erro); this.salvandoEtapa = false; this.message.error('Não foi possível salvar a etapa.'); }
+    });
+  }
+
+  editarEtapa(etapa: PlanejamentoItemEtapa): void {
+    if (!etapa.id) return;
+    this.etapaEditandoId = etapa.id;
+    this.etapaForm.setValue({ tipoRegistroId: etapa.tipoRegistro.id, ordem: etapa.ordem ?? null, concluida: !!etapa.concluida, concluidaManualmente: !!etapa.concluidaManualmente });
+  }
+
+  cancelarEdicaoEtapa(): void {
+    this.etapaEditandoId = undefined;
+    this.etapaForm.reset({ tipoRegistroId: null, ordem: null, concluida: false, concluidaManualmente: false });
+  }
+
+  excluirEtapa(etapa: PlanejamentoItemEtapa): void {
+    if (!this.id || !this.materiaSelecionada?.id || !this.grupoSelecionado?.id || !this.itemSelecionado?.id || !etapa.id || !window.confirm('Remover esta etapa?')) return;
+    this.service.excluirEtapa(this.id, this.materiaSelecionada.id, this.grupoSelecionado.id, this.itemSelecionado.id, etapa.id).subscribe({
+      next: () => { this.message.success('Etapa removida.'); this.carregarEtapas(); },
+      error: erro => { console.error('Erro ao remover etapa:', erro); this.message.error('Não foi possível remover a etapa.'); }
+    });
+  }
+
   private carregar(): void {
     if (!this.id) return;
     this.carregando = true;
@@ -387,6 +457,15 @@ export class PlanejamentoDetalheComponent implements OnInit {
     })).subscribe({
       next: itens => { this.itens = itens; this.cdr.detectChanges(); },
       error: erro => { console.error('Erro ao carregar itens:', erro); this.message.error('Não foi possível carregar os itens.'); }
+    });
+  }
+
+  private carregarEtapas(): void {
+    if (!this.id || !this.materiaSelecionada?.id || !this.grupoSelecionado?.id || !this.itemSelecionado?.id) return;
+    this.carregandoEtapas = true;
+    this.service.listarEtapas(this.id, this.materiaSelecionada.id, this.grupoSelecionado.id, this.itemSelecionado.id).pipe(finalize(() => { this.carregandoEtapas = false; this.cdr.detectChanges(); })).subscribe({
+      next: etapas => { this.etapas = etapas; this.cdr.detectChanges(); },
+      error: erro => { console.error('Erro ao carregar etapas:', erro); this.message.error('Não foi possível carregar as etapas.'); }
     });
   }
 }

@@ -87,6 +87,15 @@
   flex-shrink: 0;
 }
 
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  color: var(--text, #0f172a);
+  font-size: 14px;
+}
+
 .planning-loading,
 .empty-state {
   margin-top: 14px;

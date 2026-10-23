@@ -4,6 +4,7 @@ import { Observable, shareReplay, tap } from 'rxjs';
 import { environment } from '../../environments/environment.development';
 import { Materia } from './materia.service';
 import { Assunto } from './registro.service';
+import { TipoRegistro } from './registro.service';
 
 export interface Planejamento {
   id?: number;
@@ -52,6 +53,21 @@ export interface PlanejamentoGrupoAssuntoItemDTO {
   assuntoId: number;
   peso?: number | null;
   ordem?: number | null;
+}
+
+export interface PlanejamentoItemEtapa {
+  id?: number;
+  tipoRegistro: TipoRegistro;
+  ordem?: number | null;
+  concluida?: boolean | null;
+  concluidaManualmente?: boolean | null;
+}
+
+export interface PlanejamentoItemEtapaDTO {
+  tipoRegistroId: number;
+  ordem?: number | null;
+  concluida?: boolean;
+  concluidaManualmente?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -142,6 +158,26 @@ export class PlanejamentoService {
 
   excluirItem(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${id}`);
+  }
+
+  listarEtapas(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, itemId: number): Observable<PlanejamentoItemEtapa[]> {
+    return this.http.get<PlanejamentoItemEtapa[]>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas`);
+  }
+
+  buscarEtapa(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, itemId: number, id: number): Observable<PlanejamentoItemEtapa> {
+    return this.http.get<PlanejamentoItemEtapa>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas/${id}`);
+  }
+
+  adicionarEtapa(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, itemId: number, dados: PlanejamentoItemEtapaDTO): Observable<PlanejamentoItemEtapa> {
+    return this.http.post<PlanejamentoItemEtapa>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas`, dados);
+  }
+
+  atualizarEtapa(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, itemId: number, id: number, dados: PlanejamentoItemEtapaDTO): Observable<PlanejamentoItemEtapa> {
+    return this.http.put<PlanejamentoItemEtapa>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas/${id}`, dados);
+  }
+
+  excluirEtapa(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, itemId: number, id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas/${id}`);
   }
 
   private limparCache(): void {

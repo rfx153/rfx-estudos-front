@@ -123,6 +123,19 @@
     </form>
     <div class="planning-loading" *ngIf="carregandoItens">Carregando itens...</div>
     <div class="empty-state" *ngIf="!carregandoItens && !itens.length">Nenhum item adicionado.</div>
-    <div class="materias-planejadas" *ngIf="!carregandoItens && itens.length"><article class="materia-planejada" *ngFor="let item of itens"><div><h4>{{ item.assunto.nome }}</h4><span>Peso: {{ item.peso ?? 'não definido' }} · Ordem: {{ item.ordem ?? 'não definida' }}</span></div><div class="materia-actions"><button nz-button nzType="link" type="button" (click)="editarItem(item)">Editar</button><button nz-button nzDanger nzType="link" type="button" (click)="excluirItem(item)">Remover</button></div></article></div>
+    <div class="materias-planejadas" *ngIf="!carregandoItens && itens.length"><article class="materia-planejada" *ngFor="let item of itens"><div><h4>{{ item.assunto.nome }}</h4><span>Peso: {{ item.peso ?? 'não definido' }} · Ordem: {{ item.ordem ?? 'não definida' }}</span></div><div class="materia-actions"><button nz-button nzType="link" type="button" (click)="selecionarItem(item)">Etapas</button><button nz-button nzType="link" type="button" (click)="editarItem(item)">Editar</button><button nz-button nzDanger nzType="link" type="button" (click)="excluirItem(item)">Remover</button></div></article></div>
+  </section>
+
+  <section class="planning-section" *ngIf="itemSelecionado">
+    <div class="section-heading"><div><h3>Etapas: {{ itemSelecionado.assunto.nome }}</h3><p>Defina os tipos de registro e a conclusão de cada etapa.</p></div></div>
+    <form class="grupo-form" nz-form [formGroup]="etapaForm" (ngSubmit)="salvarEtapa()">
+      <nz-form-item><nz-form-label nzRequired>Tipo de registro</nz-form-label><nz-form-control nzErrorTip="Selecione um tipo."><nz-select formControlName="tipoRegistroId" nzPlaceHolder="Selecione o tipo"><nz-option *ngFor="let tipo of tiposRegistro" [nzValue]="tipo.id" [nzLabel]="tipo.nome"></nz-option></nz-select></nz-form-control></nz-form-item>
+      <nz-form-item><nz-form-label>Ordem</nz-form-label><nz-form-control><input nz-input type="number" min="1" formControlName="ordem" /></nz-form-control></nz-form-item>
+      <label class="checkbox-field"><input type="checkbox" formControlName="concluida" /> Concluída</label>
+      <label class="checkbox-field"><input type="checkbox" formControlName="concluidaManualmente" /> Concluída manualmente</label>
+      <div class="form-actions"><button nz-button nzType="primary" [nzLoading]="salvandoEtapa">{{ etapaEditandoId ? 'Atualizar etapa' : 'Adicionar etapa' }}</button><button nz-button type="button" *ngIf="etapaEditandoId" (click)="cancelarEdicaoEtapa()">Cancelar</button></div>
+    </form>
+    <div class="planning-loading" *ngIf="carregandoEtapas">Carregando etapas...</div><div class="empty-state" *ngIf="!carregandoEtapas && !etapas.length">Nenhuma etapa adicionada.</div>
+    <div class="materias-planejadas" *ngIf="!carregandoEtapas && etapas.length"><article class="materia-planejada" *ngFor="let etapa of etapas"><div><h4>{{ etapa.tipoRegistro.nome }}</h4><span>Ordem: {{ etapa.ordem ?? 'não definida' }} · {{ etapa.concluida ? 'Concluída' : 'Pendente' }}{{ etapa.concluidaManualmente ? ' manualmente' : '' }}</span></div><div class="materia-actions"><button nz-button nzType="link" type="button" (click)="editarEtapa(etapa)">Editar</button><button nz-button nzDanger nzType="link" type="button" (click)="excluirEtapa(etapa)">Remover</button></div></article></div>
   </section>
 </div>
