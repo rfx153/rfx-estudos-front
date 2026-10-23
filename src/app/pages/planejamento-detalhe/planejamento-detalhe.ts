@@ -79,6 +79,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
   materiaSelecionada?: PlanejamentoMateria;
   grupos: PlanejamentoGrupoAssunto[] = [];
   grupoEditandoId?: number;
+  quantidadeItensGrupoEditando = 0;
   carregandoGrupos = false;
   salvandoGrupo = false;
   grupoSelecionado?: PlanejamentoGrupoAssunto;
@@ -236,6 +237,10 @@ export class PlanejamentoDetalheComponent implements OnInit {
     }
     const tipo = this.grupoForm.controls.tipo.value!;
     const nome = this.grupoForm.controls.nome.value?.trim() || null;
+    if (tipo === 'ASSUNTO' && this.quantidadeItensGrupoEditando > 1) {
+      this.message.warning('Um grupo com mais de um item não pode ser convertido para ASSUNTO.');
+      return;
+    }
     if (tipo === 'BLOCO' && (!nome || nome.length > 150)) {
       this.message.warning('Informe um nome de até 150 caracteres para o bloco.');
       return;
@@ -270,11 +275,19 @@ export class PlanejamentoDetalheComponent implements OnInit {
   editarGrupo(grupo: PlanejamentoGrupoAssunto): void {
     if (!grupo.id) return;
     this.grupoEditandoId = grupo.id;
+    this.quantidadeItensGrupoEditando = 0;
     this.grupoForm.setValue({ tipo: grupo.tipo, nome: grupo.nome || '', peso: grupo.peso ?? null, ordem: grupo.ordem ?? null });
+    if (this.id && this.materiaSelecionada?.id) {
+      this.service.listarItens(this.id, this.materiaSelecionada.id, grupo.id).subscribe({
+        next: itens => this.quantidadeItensGrupoEditando = itens.length,
+        error: erro => console.error('Erro ao verificar itens do grupo:', erro)
+      });
+    }
   }
 
   cancelarEdicaoGrupo(): void {
     this.grupoEditandoId = undefined;
+    this.quantidadeItensGrupoEditando = 0;
     this.grupoForm.reset({ tipo: 'BLOCO', nome: '', peso: null, ordem: null });
   }
 
@@ -300,6 +313,10 @@ export class PlanejamentoDetalheComponent implements OnInit {
   salvarItem(): void {
     if (!this.id || !this.materiaSelecionada?.id || !this.grupoSelecionado?.id || this.itemForm.invalid) {
       this.itemForm.markAllAsTouched();
+      return;
+    }
+    if (!this.podeAdicionarItem()) {
+      this.message.warning('Um grupo do tipo ASSUNTO pode possuir somente um item.');
       return;
     }
     const dados: PlanejamentoGrupoAssuntoItemDTO = {
@@ -335,6 +352,12 @@ export class PlanejamentoDetalheComponent implements OnInit {
       next: () => { this.message.success('Item removido.'); this.carregarItens(); },
       error: erro => { console.error('Erro ao remover item:', erro); this.message.error('Não foi possível remover o item.'); }
     });
+  }
+
+  podeAdicionarItem(): boolean {
+    return this.grupoSelecionado?.tipo !== 'ASSUNTO'
+      || !!this.itemEditandoId
+      || this.itens.length === 0;
   }
 
   selecionarItem(item: PlanejamentoGrupoAssuntoItem): void {
