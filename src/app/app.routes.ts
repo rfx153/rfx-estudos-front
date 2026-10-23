@@ -6,6 +6,7 @@ import { MateriaListaComponent } from './pages/materia-lista/materia-lista';
 import { InicioComponent } from './pages/inicio/inicio';
 import { PlanejamentoListaComponent } from './pages/planejamento-lista/planejamento-lista';
 import { PlanejamentoDetalheComponent } from './pages/planejamento-detalhe/planejamento-detalhe';
+import { PlanejamentoVisualizacaoComponent } from './pages/planejamento-visualizacao/planejamento-visualizacao';
 import { MetodologiaComponent } from './pages/metodologia/metodologia';
 import { CaminhoComponent } from './pages/caminho/caminho';
 
@@ -16,6 +17,8 @@ export const routes: Routes = [
   { path: 'planejamentos', component: PlanejamentoListaComponent },
   { path: 'planejamentos/novo', component: PlanejamentoDetalheComponent },
   { path: 'planejamentos/:id', component: PlanejamentoDetalheComponent },
+  { path: 'planejamento', component: PlanejamentoVisualizacaoComponent },
+  { path: 'planejamento/:id', component: PlanejamentoVisualizacaoComponent },
   { path: 'metodologia', component: MetodologiaComponent },
   { path: 'caminho', component: CaminhoComponent },
   { path: 'materias', component: MateriaListaComponent },
