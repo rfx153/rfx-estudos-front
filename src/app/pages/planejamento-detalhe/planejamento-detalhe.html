@@ -79,9 +79,36 @@
           <span>Peso: {{ item.peso ?? 'não definido' }} · Ordem: {{ item.ordem ?? 'não definida' }}</span>
         </div>
         <div class="materia-actions">
+          <button nz-button nzType="link" type="button" (click)="selecionarMateria(item)">Grupos</button>
           <button nz-button nzType="link" type="button" (click)="editarMateria(item)">Editar</button>
           <button nz-button nzDanger nzType="link" type="button" (click)="excluirMateria(item)">Remover</button>
         </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="planning-section" *ngIf="materiaSelecionada">
+    <div class="section-heading">
+      <div>
+        <h3>Grupos de assuntos: {{ materiaSelecionada.materia.nome }}</h3>
+        <p>Um grupo pode ser um assunto ou um bloco nomeado.</p>
+      </div>
+    </div>
+
+    <form class="grupo-form" nz-form [formGroup]="grupoForm" (ngSubmit)="salvarGrupo()">
+      <nz-form-item><nz-form-label nzRequired>Tipo</nz-form-label><nz-form-control><nz-select formControlName="tipo"><nz-option nzValue="ASSUNTO" nzLabel="Assunto"></nz-option><nz-option nzValue="BLOCO" nzLabel="Bloco"></nz-option></nz-select></nz-form-control></nz-form-item>
+      <nz-form-item *ngIf="grupoForm.controls.tipo.value === 'BLOCO'"><nz-form-label nzRequired>Nome do bloco</nz-form-label><nz-form-control><input nz-input formControlName="nome" maxlength="150" placeholder="Nome do bloco" /></nz-form-control></nz-form-item>
+      <nz-form-item><nz-form-label>Peso</nz-form-label><nz-form-control><input nz-input type="number" min="1" max="5" formControlName="peso" /></nz-form-control></nz-form-item>
+      <nz-form-item><nz-form-label>Ordem</nz-form-label><nz-form-control><input nz-input type="number" min="1" formControlName="ordem" /></nz-form-control></nz-form-item>
+      <div class="form-actions"><button nz-button nzType="primary" [nzLoading]="salvandoGrupo">{{ grupoEditandoId ? 'Atualizar grupo' : 'Adicionar grupo' }}</button><button nz-button type="button" *ngIf="grupoEditandoId" (click)="cancelarEdicaoGrupo()">Cancelar</button></div>
+    </form>
+
+    <div class="planning-loading" *ngIf="carregandoGrupos">Carregando grupos...</div>
+    <div class="empty-state" *ngIf="!carregandoGrupos && !grupos.length">Nenhum grupo adicionado.</div>
+    <div class="materias-planejadas" *ngIf="!carregandoGrupos && grupos.length">
+      <article class="materia-planejada" *ngFor="let grupo of grupos">
+        <div><h4>{{ grupo.tipo === 'BLOCO' ? grupo.nome : 'Assunto' }}</h4><span>Tipo: {{ grupo.tipo }} · Peso: {{ grupo.peso ?? 'não definido' }} · Ordem: {{ grupo.ordem ?? 'não definida' }}</span></div>
+        <div class="materia-actions"><button nz-button nzType="link" type="button" (click)="editarGrupo(grupo)">Editar</button><button nz-button nzDanger nzType="link" type="button" (click)="excluirGrupo(grupo)">Remover</button></div>
       </article>
     </div>
   </section>

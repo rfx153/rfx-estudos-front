@@ -47,7 +47,8 @@
   justify-content: flex-end;
 }
 
-.materia-form {
+.materia-form,
+.grupo-form {
   display: grid;
   grid-template-columns: minmax(220px, 2fr) minmax(110px, 1fr) minmax(110px, 1fr) auto;
   align-items: end;
@@ -55,7 +56,8 @@
   margin: 16px 0;
 }
 
-.materia-form nz-form-item {
+.materia-form nz-form-item,
+.grupo-form nz-form-item {
   margin-bottom: 0;
 }
 
@@ -96,11 +98,13 @@
 }
 
 @media (max-width: 700px) {
-  .materia-form {
+  .materia-form,
+  .grupo-form {
     grid-template-columns: 1fr;
   }
 
-  .materia-form .form-actions {
+  .materia-form .form-actions,
+  .grupo-form .form-actions {
     justify-content: flex-start;
   }
 

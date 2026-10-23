@@ -13,6 +13,9 @@ import {
   Planejamento,
   PlanejamentoMateria,
   PlanejamentoMateriaDTO,
+  PlanejamentoGrupoAssunto,
+  PlanejamentoGrupoAssuntoDTO,
+  PlanejamentoGrupoAssuntoTipo,
   PlanejamentoService
 } from '../../services/planejamento.service';
 
@@ -41,6 +44,12 @@ export class PlanejamentoDetalheComponent implements OnInit {
     peso: [null as number | null, [Validators.min(1), Validators.max(5)]],
     ordem: [null as number | null, Validators.min(1)]
   });
+  readonly grupoForm = this.fb.group({
+    tipo: ['BLOCO' as PlanejamentoGrupoAssuntoTipo, Validators.required],
+    nome: [''],
+    peso: [null as number | null, [Validators.min(1), Validators.max(5)]],
+    ordem: [null as number | null, Validators.min(1)]
+  });
 
   id?: number;
   carregando = false;
@@ -50,6 +59,11 @@ export class PlanejamentoDetalheComponent implements OnInit {
   materiaEditandoId?: number;
   materias: Materia[] = [];
   materiasPlanejadas: PlanejamentoMateria[] = [];
+  materiaSelecionada?: PlanejamentoMateria;
+  grupos: PlanejamentoGrupoAssunto[] = [];
+  grupoEditandoId?: number;
+  carregandoGrupos = false;
+  salvandoGrupo = false;
 
   ngOnInit(): void {
     const parametroId = this.route.snapshot.paramMap.get('id');
@@ -179,6 +193,70 @@ export class PlanejamentoDetalheComponent implements OnInit {
     return this.materias.filter(materia => !idsAdicionados.has(materia.id));
   }
 
+  selecionarMateria(item: PlanejamentoMateria): void {
+    if (!item.id) return;
+    this.materiaSelecionada = item;
+    this.cancelarEdicaoGrupo();
+    this.carregarGrupos();
+  }
+
+  salvarGrupo(): void {
+    if (!this.id || !this.materiaSelecionada?.id || this.grupoForm.invalid) {
+      this.grupoForm.markAllAsTouched();
+      return;
+    }
+    const tipo = this.grupoForm.controls.tipo.value!;
+    const nome = this.grupoForm.controls.nome.value?.trim() || null;
+    if (tipo === 'BLOCO' && (!nome || nome.length > 150)) {
+      this.message.warning('Informe um nome de até 150 caracteres para o bloco.');
+      return;
+    }
+
+    const dados: PlanejamentoGrupoAssuntoDTO = {
+      tipo,
+      nome: tipo === 'BLOCO' ? nome : null,
+      peso: this.grupoForm.controls.peso.value,
+      ordem: this.grupoForm.controls.ordem.value
+    };
+    const editando = !!this.grupoEditandoId;
+    this.salvandoGrupo = true;
+    const request$ = this.grupoEditandoId
+      ? this.service.atualizarGrupo(this.id, this.materiaSelecionada.id, this.grupoEditandoId, dados)
+      : this.service.adicionarGrupo(this.id, this.materiaSelecionada.id, dados);
+    request$.subscribe({
+      next: () => {
+        this.salvandoGrupo = false;
+        this.cancelarEdicaoGrupo();
+        this.carregarGrupos();
+        this.message.success(`Grupo ${editando ? 'atualizado' : 'adicionado'} com sucesso.`);
+      },
+      error: erro => {
+        console.error('Erro ao salvar grupo:', erro);
+        this.salvandoGrupo = false;
+        this.message.error('Não foi possível salvar o grupo.');
+      }
+    });
+  }
+
+  editarGrupo(grupo: PlanejamentoGrupoAssunto): void {
+    if (!grupo.id) return;
+    this.grupoEditandoId = grupo.id;
+    this.grupoForm.setValue({ tipo: grupo.tipo, nome: grupo.nome || '', peso: grupo.peso ?? null, ordem: grupo.ordem ?? null });
+  }
+
+  cancelarEdicaoGrupo(): void {
+    this.grupoEditandoId = undefined;
+    this.grupoForm.reset({ tipo: 'BLOCO', nome: '', peso: null, ordem: null });
+  }
+
+  excluirGrupo(grupo: PlanejamentoGrupoAssunto): void {
+    if (!this.id || !this.materiaSelecionada?.id || !grupo.id || !window.confirm('Remover este grupo?')) return;
+    this.service.excluirGrupo(this.id, this.materiaSelecionada.id, grupo.id).subscribe({
+      next: () => { this.message.success('Grupo removido.'); this.carregarGrupos(); },
+      error: erro => { console.error('Erro ao remover grupo:', erro); this.message.error('Não foi possível remover o grupo.'); }
+    });
+  }
+
   private carregar(): void {
     if (!this.id) return;
     this.carregando = true;
@@ -219,6 +297,18 @@ export class PlanejamentoDetalheComponent implements OnInit {
         console.error('Erro ao carregar matérias do planejamento:', erro);
         this.message.error('Não foi possível carregar as matérias do planejamento.');
       }
+    });
+  }
+
+  private carregarGrupos(): void {
+    if (!this.id || !this.materiaSelecionada?.id) return;
+    this.carregandoGrupos = true;
+    this.service.listarGrupos(this.id, this.materiaSelecionada.id).pipe(finalize(() => {
+      this.carregandoGrupos = false;
+      this.cdr.detectChanges();
+    })).subscribe({
+      next: grupos => { this.grupos = grupos; this.cdr.detectChanges(); },
+      error: erro => { console.error('Erro ao carregar grupos:', erro); this.message.error('Não foi possível carregar os grupos.'); }
     });
   }
 }

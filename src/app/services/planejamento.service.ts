@@ -23,6 +23,23 @@ export interface PlanejamentoMateriaDTO {
   ordem?: number | null;
 }
 
+export type PlanejamentoGrupoAssuntoTipo = 'ASSUNTO' | 'BLOCO';
+
+export interface PlanejamentoGrupoAssunto {
+  id?: number;
+  tipo: PlanejamentoGrupoAssuntoTipo;
+  nome?: string | null;
+  peso?: number | null;
+  ordem?: number | null;
+}
+
+export interface PlanejamentoGrupoAssuntoDTO {
+  tipo: PlanejamentoGrupoAssuntoTipo;
+  nome?: string | null;
+  peso?: number | null;
+  ordem?: number | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PlanejamentoService {
   private readonly http = inject(HttpClient);
@@ -71,6 +88,26 @@ export class PlanejamentoService {
 
   excluirMateria(planejamentoId: number, id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${planejamentoId}/materias/${id}`);
+  }
+
+  listarGrupos(planejamentoId: number, planejamentoMateriaId: number): Observable<PlanejamentoGrupoAssunto[]> {
+    return this.http.get<PlanejamentoGrupoAssunto[]>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos`);
+  }
+
+  buscarGrupo(planejamentoId: number, planejamentoMateriaId: number, id: number): Observable<PlanejamentoGrupoAssunto> {
+    return this.http.get<PlanejamentoGrupoAssunto>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${id}`);
+  }
+
+  adicionarGrupo(planejamentoId: number, planejamentoMateriaId: number, dados: PlanejamentoGrupoAssuntoDTO): Observable<PlanejamentoGrupoAssunto> {
+    return this.http.post<PlanejamentoGrupoAssunto>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos`, dados);
+  }
+
+  atualizarGrupo(planejamentoId: number, planejamentoMateriaId: number, id: number, dados: PlanejamentoGrupoAssuntoDTO): Observable<PlanejamentoGrupoAssunto> {
+    return this.http.put<PlanejamentoGrupoAssunto>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${id}`, dados);
+  }
+
+  excluirGrupo(planejamentoId: number, planejamentoMateriaId: number, id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${id}`);
   }
 
   private limparCache(): void {
