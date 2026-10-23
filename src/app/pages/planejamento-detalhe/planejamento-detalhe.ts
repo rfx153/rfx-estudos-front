@@ -9,6 +9,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { finalize } from 'rxjs';
 import { Materia, MateriaService } from '../../services/materia.service';
+import { Assunto, RegistroService } from '../../services/registro.service';
 import {
   Planejamento,
   PlanejamentoMateria,
@@ -16,6 +17,8 @@ import {
   PlanejamentoGrupoAssunto,
   PlanejamentoGrupoAssuntoDTO,
   PlanejamentoGrupoAssuntoTipo,
+  PlanejamentoGrupoAssuntoItem,
+  PlanejamentoGrupoAssuntoItemDTO,
   PlanejamentoService
 } from '../../services/planejamento.service';
 
@@ -32,6 +35,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly service = inject(PlanejamentoService);
   private readonly materiaService = inject(MateriaService);
+  private readonly registroService = inject(RegistroService);
   private readonly message = inject(NzMessageService);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -50,6 +54,11 @@ export class PlanejamentoDetalheComponent implements OnInit {
     peso: [null as number | null, [Validators.min(1), Validators.max(5)]],
     ordem: [null as number | null, Validators.min(1)]
   });
+  readonly itemForm = this.fb.group({
+    assuntoId: [null as number | null, Validators.required],
+    peso: [null as number | null, [Validators.min(1), Validators.max(5)]],
+    ordem: [null as number | null, Validators.min(1)]
+  });
 
   id?: number;
   carregando = false;
@@ -64,6 +73,12 @@ export class PlanejamentoDetalheComponent implements OnInit {
   grupoEditandoId?: number;
   carregandoGrupos = false;
   salvandoGrupo = false;
+  grupoSelecionado?: PlanejamentoGrupoAssunto;
+  itens: PlanejamentoGrupoAssuntoItem[] = [];
+  assuntos: Assunto[] = [];
+  itemEditandoId?: number;
+  carregandoItens = false;
+  salvandoItem = false;
 
   ngOnInit(): void {
     const parametroId = this.route.snapshot.paramMap.get('id');
@@ -257,6 +272,57 @@ export class PlanejamentoDetalheComponent implements OnInit {
     });
   }
 
+  selecionarGrupo(grupo: PlanejamentoGrupoAssunto): void {
+    if (!grupo.id || !this.materiaSelecionada?.materia.id) return;
+    this.grupoSelecionado = grupo;
+    this.cancelarEdicaoItem();
+    this.carregarItens();
+    this.registroService.listarAssuntosPorMateria(this.materiaSelecionada.materia.id).subscribe({
+      next: assuntos => { this.assuntos = assuntos; this.cdr.detectChanges(); },
+      error: erro => console.error('Erro ao carregar assuntos:', erro)
+    });
+  }
+
+  salvarItem(): void {
+    if (!this.id || !this.materiaSelecionada?.id || !this.grupoSelecionado?.id || this.itemForm.invalid) {
+      this.itemForm.markAllAsTouched();
+      return;
+    }
+    const dados: PlanejamentoGrupoAssuntoItemDTO = {
+      assuntoId: this.itemForm.controls.assuntoId.value!,
+      peso: this.itemForm.controls.peso.value,
+      ordem: this.itemForm.controls.ordem.value
+    };
+    const editando = !!this.itemEditandoId;
+    this.salvandoItem = true;
+    const request$ = this.itemEditandoId
+      ? this.service.atualizarItem(this.id, this.materiaSelecionada.id, this.grupoSelecionado.id, this.itemEditandoId, dados)
+      : this.service.adicionarItem(this.id, this.materiaSelecionada.id, this.grupoSelecionado.id, dados);
+    request$.subscribe({
+      next: () => { this.salvandoItem = false; this.cancelarEdicaoItem(); this.carregarItens(); this.message.success(`Item ${editando ? 'atualizado' : 'adicionado'} com sucesso.`); },
+      error: erro => { console.error('Erro ao salvar item:', erro); this.salvandoItem = false; this.message.error('Não foi possível salvar o item.'); }
+    });
+  }
+
+  editarItem(item: PlanejamentoGrupoAssuntoItem): void {
+    if (!item.id) return;
+    this.itemEditandoId = item.id;
+    this.itemForm.setValue({ assuntoId: item.assunto.id, peso: item.peso ?? null, ordem: item.ordem ?? null });
+  }
+
+  cancelarEdicaoItem(): void {
+    this.itemEditandoId = undefined;
+    this.itemForm.reset({ assuntoId: null, peso: null, ordem: null });
+  }
+
+  excluirItem(item: PlanejamentoGrupoAssuntoItem): void {
+    if (!this.id || !this.materiaSelecionada?.id || !this.grupoSelecionado?.id || !item.id || !window.confirm(`Remover o assunto "${item.assunto.nome}"?`)) return;
+    this.service.excluirItem(this.id, this.materiaSelecionada.id, this.grupoSelecionado.id, item.id).subscribe({
+      next: () => { this.message.success('Item removido.'); this.carregarItens(); },
+      error: erro => { console.error('Erro ao remover item:', erro); this.message.error('Não foi possível remover o item.'); }
+    });
+  }
+
   private carregar(): void {
     if (!this.id) return;
     this.carregando = true;
@@ -309,6 +375,18 @@ export class PlanejamentoDetalheComponent implements OnInit {
     })).subscribe({
       next: grupos => { this.grupos = grupos; this.cdr.detectChanges(); },
       error: erro => { console.error('Erro ao carregar grupos:', erro); this.message.error('Não foi possível carregar os grupos.'); }
+    });
+  }
+
+  private carregarItens(): void {
+    if (!this.id || !this.materiaSelecionada?.id || !this.grupoSelecionado?.id) return;
+    this.carregandoItens = true;
+    this.service.listarItens(this.id, this.materiaSelecionada.id, this.grupoSelecionado.id).pipe(finalize(() => {
+      this.carregandoItens = false;
+      this.cdr.detectChanges();
+    })).subscribe({
+      next: itens => { this.itens = itens; this.cdr.detectChanges(); },
+      error: erro => { console.error('Erro ao carregar itens:', erro); this.message.error('Não foi possível carregar os itens.'); }
     });
   }
 }

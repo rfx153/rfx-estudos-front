@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, shareReplay, tap } from 'rxjs';
 import { environment } from '../../environments/environment.development';
 import { Materia } from './materia.service';
+import { Assunto } from './registro.service';
 
 export interface Planejamento {
   id?: number;
@@ -36,6 +37,19 @@ export interface PlanejamentoGrupoAssunto {
 export interface PlanejamentoGrupoAssuntoDTO {
   tipo: PlanejamentoGrupoAssuntoTipo;
   nome?: string | null;
+  peso?: number | null;
+  ordem?: number | null;
+}
+
+export interface PlanejamentoGrupoAssuntoItem {
+  id?: number;
+  assunto: Assunto;
+  peso?: number | null;
+  ordem?: number | null;
+}
+
+export interface PlanejamentoGrupoAssuntoItemDTO {
+  assuntoId: number;
   peso?: number | null;
   ordem?: number | null;
 }
@@ -108,6 +122,26 @@ export class PlanejamentoService {
 
   excluirGrupo(planejamentoId: number, planejamentoMateriaId: number, id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${id}`);
+  }
+
+  listarItens(planejamentoId: number, planejamentoMateriaId: number, grupoId: number): Observable<PlanejamentoGrupoAssuntoItem[]> {
+    return this.http.get<PlanejamentoGrupoAssuntoItem[]>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens`);
+  }
+
+  buscarItem(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, id: number): Observable<PlanejamentoGrupoAssuntoItem> {
+    return this.http.get<PlanejamentoGrupoAssuntoItem>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${id}`);
+  }
+
+  adicionarItem(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, dados: PlanejamentoGrupoAssuntoItemDTO): Observable<PlanejamentoGrupoAssuntoItem> {
+    return this.http.post<PlanejamentoGrupoAssuntoItem>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens`, dados);
+  }
+
+  atualizarItem(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, id: number, dados: PlanejamentoGrupoAssuntoItemDTO): Observable<PlanejamentoGrupoAssuntoItem> {
+    return this.http.put<PlanejamentoGrupoAssuntoItem>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${id}`, dados);
+  }
+
+  excluirItem(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${id}`);
   }
 
   private limparCache(): void {

@@ -108,8 +108,21 @@
     <div class="materias-planejadas" *ngIf="!carregandoGrupos && grupos.length">
       <article class="materia-planejada" *ngFor="let grupo of grupos">
         <div><h4>{{ grupo.tipo === 'BLOCO' ? grupo.nome : 'Assunto' }}</h4><span>Tipo: {{ grupo.tipo }} · Peso: {{ grupo.peso ?? 'não definido' }} · Ordem: {{ grupo.ordem ?? 'não definida' }}</span></div>
-        <div class="materia-actions"><button nz-button nzType="link" type="button" (click)="editarGrupo(grupo)">Editar</button><button nz-button nzDanger nzType="link" type="button" (click)="excluirGrupo(grupo)">Remover</button></div>
+        <div class="materia-actions"><button nz-button nzType="link" type="button" (click)="selecionarGrupo(grupo)">Itens</button><button nz-button nzType="link" type="button" (click)="editarGrupo(grupo)">Editar</button><button nz-button nzDanger nzType="link" type="button" (click)="excluirGrupo(grupo)">Remover</button></div>
       </article>
     </div>
+  </section>
+
+  <section class="planning-section" *ngIf="grupoSelecionado">
+    <div class="section-heading"><div><h3>Itens: {{ grupoSelecionado.tipo === 'BLOCO' ? grupoSelecionado.nome : 'Assunto' }}</h3><p>Selecione os assuntos que pertencem a este grupo.</p></div></div>
+    <form class="grupo-form" nz-form [formGroup]="itemForm" (ngSubmit)="salvarItem()">
+      <nz-form-item><nz-form-label nzRequired>Assunto</nz-form-label><nz-form-control nzErrorTip="Selecione um assunto."><nz-select formControlName="assuntoId" nzPlaceHolder="Selecione o assunto"><nz-option *ngFor="let assunto of assuntos" [nzValue]="assunto.id" [nzLabel]="assunto.nome"></nz-option></nz-select></nz-form-control></nz-form-item>
+      <nz-form-item><nz-form-label>Peso</nz-form-label><nz-form-control><input nz-input type="number" min="1" max="5" formControlName="peso" /></nz-form-control></nz-form-item>
+      <nz-form-item><nz-form-label>Ordem</nz-form-label><nz-form-control><input nz-input type="number" min="1" formControlName="ordem" /></nz-form-control></nz-form-item>
+      <div class="form-actions"><button nz-button nzType="primary" [nzLoading]="salvandoItem">{{ itemEditandoId ? 'Atualizar item' : 'Adicionar item' }}</button><button nz-button type="button" *ngIf="itemEditandoId" (click)="cancelarEdicaoItem()">Cancelar</button></div>
+    </form>
+    <div class="planning-loading" *ngIf="carregandoItens">Carregando itens...</div>
+    <div class="empty-state" *ngIf="!carregandoItens && !itens.length">Nenhum item adicionado.</div>
+    <div class="materias-planejadas" *ngIf="!carregandoItens && itens.length"><article class="materia-planejada" *ngFor="let item of itens"><div><h4>{{ item.assunto.nome }}</h4><span>Peso: {{ item.peso ?? 'não definido' }} · Ordem: {{ item.ordem ?? 'não definida' }}</span></div><div class="materia-actions"><button nz-button nzType="link" type="button" (click)="editarItem(item)">Editar</button><button nz-button nzDanger nzType="link" type="button" (click)="excluirItem(item)">Remover</button></div></article></div>
   </section>
 </div>
