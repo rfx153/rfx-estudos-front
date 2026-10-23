@@ -114,7 +114,10 @@ export class InicioComponent implements OnInit {
 
     this.registroService.listarHoje().subscribe({
       next: registros => {
-        const registrosDeHoje = registros;
+        // O endpoint pode usar o fuso do servidor. Como `dataEstudo` é um
+        // LocalDate (YYYY-MM-DD), confirme o dia no fuso local do navegador.
+        const hoje = this.formatarDataLocal(new Date());
+        const registrosDeHoje = registros.filter(registro => registro.dataEstudo?.substring(0, 10) === hoje);
         const minutosEstudados = registrosDeHoje.reduce(
           (total, registro) => total + this.tempoParaMinutos(registro.tempoEstudado),
           0
@@ -122,11 +125,11 @@ export class InicioComponent implements OnInit {
 
         this.horasEstudadasHoje = this.formatarMinutos(minutosEstudados);
         this.questoesFeitasHoje = registrosDeHoje.reduce(
-          (total, registro) => total + (registro.questoesFeitas || 0) + (registro.questoesRevisaoFeitas || 0),
+          (total, registro) => total + (registro.questoesFeitas || 0),
           0
         );
         const questoesAcertadasHoje = registrosDeHoje.reduce(
-          (total, registro) => total + (registro.questoesAcertadas || 0) + (registro.questoesRevisaoAcertadas || 0),
+          (total, registro) => total + (registro.questoesAcertadas || 0),
           0
         );
         this.percentualAcertosHoje = this.calcularPercentualAcertos(questoesAcertadasHoje, this.questoesFeitasHoje);
@@ -191,6 +194,14 @@ export class InicioComponent implements OnInit {
     }
 
     this.saudacao = 'Bom dia, Rafael.';
+  }
+
+  private formatarDataLocal(data: Date): string {
+    const ano = data.getFullYear();
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const dia = String(data.getDate()).padStart(2, '0');
+
+    return `${ano}-${mes}-${dia}`;
   }
 
   private tentarTocarSomInicial(): void {
@@ -271,8 +282,8 @@ export class InicioComponent implements OnInit {
         materia.assuntos.push(assuntoNome);
       }
 
-      materia.questoesFeitas += (registro.questoesFeitas || 0) + (registro.questoesRevisaoFeitas || 0);
-      materia.questoesAcertadas += (registro.questoesAcertadas || 0) + (registro.questoesRevisaoAcertadas || 0);
+      materia.questoesFeitas += registro.questoesFeitas || 0;
+      materia.questoesAcertadas += registro.questoesAcertadas || 0;
       materia.percentualAcertos = this.calcularPercentualAcertos(materia.questoesAcertadas, materia.questoesFeitas);
       materia.registros.push(registro);
 

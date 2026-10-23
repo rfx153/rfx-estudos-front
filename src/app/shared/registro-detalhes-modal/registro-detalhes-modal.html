@@ -56,21 +56,6 @@
           <p><strong>Observações:</strong> {{ registro.observacoes || 'Sem observações.' }}</p>
         </div>
 
-        <section class="review-box">
-          <h4>Revisão</h4>
-          <ng-container *ngIf="registro.revisaoAssunto; else semRevisao">
-            <p><strong>Assunto:</strong> {{ registro.revisaoAssunto.nome }}</p>
-            <p><strong>Complemento:</strong> {{ registro.revisaoComplemento || 'Sem detalhes' }}</p>
-            <p>
-              <strong>Questões:</strong>
-              {{ registro.questoesRevisaoAcertadas || 0 }}/{{ registro.questoesRevisaoFeitas || 0 }}
-              ({{ aproveitamento(registro.questoesRevisaoFeitas, registro.questoesRevisaoAcertadas) }})
-            </p>
-          </ng-container>
-          <ng-template #semRevisao>
-            <p class="muted-state">Nenhuma revisão realizada neste registro.</p>
-          </ng-template>
-        </section>
       </article>
     </div>
   </ng-container>

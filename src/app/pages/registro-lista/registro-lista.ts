@@ -74,17 +74,13 @@ listaTiposRegistro: TipoRegistro[] = [];
 
   carregando = true;
   salvando = false;
-  revisaoAberta = false;
   questoesAbaAberta = false;
-  questoesRevisaoAbaAberta = false;
   etapasQraqrMarcadas = new Set<string>();
   modoEdicao = false;
   registroEditandoId: number | null = null;
   validateForm!: FormGroup;
   registroQuestoesForm!: FormGroup;
-  registroQuestoesRevisaoForm!: FormGroup;
   registrosQuestoes: RegistroQuestoesTemporario[] = [];
-  registrosQuestoesRevisao: RegistroQuestoesTemporario[] = [];
 
   constructor() {
     this.iconService.addIcon(...[PlusOutline, CalendarOutline, ClockCircleOutline, InfoCircleOutline, DeleteOutline]);
@@ -108,10 +104,6 @@ listaTiposRegistro: TipoRegistro[] = [];
       puntoParada: [null],
       questoesFeitas: [0],
       questoesAcertadas: [0],
-      revisaoAssunto: [null],
-      revisaoComplemento: [null],
-      questoesRevisaoFeitas: [0],
-      questoesRevisaoAcertadas: [0],
       dataEstudo: [new Date(), [Validators.required]],
       tempoEstudado: [null, [Validators.required]],
       linkDocumento: [null],
@@ -119,7 +111,6 @@ listaTiposRegistro: TipoRegistro[] = [];
     });
 
     this.registroQuestoesForm = this.criarFormularioRegistroQuestoes();
-    this.registroQuestoesRevisaoForm = this.criarFormularioRegistroQuestoes();
   }
 
   private criarFormularioRegistroQuestoes(): FormGroup {
@@ -213,14 +204,15 @@ listaTiposRegistro: TipoRegistro[] = [];
       assunto: formValue.assunto ? { id: formValue.assunto } as any : null,
       planejamento: formValue.planejamento ? { id: formValue.planejamento } as any : null,
       tipoRegistro: formValue.tipoRegistro ? { id: formValue.tipoRegistro } as any : null,
-      revisaoAssunto: formValue.revisaoAssunto ? { id: formValue.revisaoAssunto } as any : null,
       // Se materialTipo também for apenas ID no formulário, converta aqui também:
       materialTipo: formValue.materialTipo && typeof formValue.materialTipo !== 'object' 
         ? { id: formValue.materialTipo } as any 
         : formValue.materialTipo,
       
       // Formatação de datas e horas
-      dataEstudo: formValue.dataEstudo ? formValue.dataEstudo.toISOString().split('T')[0] : null,
+      // `toISOString()` converte para UTC e pode mudar o dia no fuso de Brasília.
+      // Como o backend espera um LocalDate, envie a data usando os campos locais.
+      dataEstudo: formValue.dataEstudo ? this.formatarDataLocal(formValue.dataEstudo) : null,
       tempoEstudado: formValue.tempoEstudado ? formValue.tempoEstudado.toTimeString().split(' ')[0] : null
     };
 
@@ -240,17 +232,11 @@ listaTiposRegistro: TipoRegistro[] = [];
         this.validateForm.reset({
           dataEstudo: new Date(),
           questoesFeitas: 0,
-          questoesAcertadas: 0,
-          questoesRevisaoFeitas: 0,
-          questoesRevisaoAcertadas: 0
+          questoesAcertadas: 0
         });
         this.registrosQuestoes = [];
-        this.registrosQuestoesRevisao = [];
         this.registroQuestoesForm.reset({ feitas: 0, acertadas: 0 });
-        this.registroQuestoesRevisaoForm.reset({ feitas: 0, acertadas: 0 });
         this.questoesAbaAberta = false;
-        this.questoesRevisaoAbaAberta = false;
-        this.revisaoAberta = false;
         this.carregarDadosIniciais();
       },
       error: (err) => {
@@ -272,9 +258,9 @@ listaTiposRegistro: TipoRegistro[] = [];
 }
 
 
-adicionarRegistroQuestoes(tipo: 'estudo' | 'revisao'): void {
-  const form = tipo === 'estudo' ? this.registroQuestoesForm : this.registroQuestoesRevisaoForm;
-  const lista = tipo === 'estudo' ? this.registrosQuestoes : this.registrosQuestoesRevisao;
+adicionarRegistroQuestoes(): void {
+  const form = this.registroQuestoesForm;
+  const lista = this.registrosQuestoes;
   const descricao = (form.value.descricao || '').trim();
   const feitas = Number(form.value.feitas || 0);
   const acertadas = Number(form.value.acertadas || 0);
@@ -291,29 +277,24 @@ adicionarRegistroQuestoes(tipo: 'estudo' | 'revisao'): void {
 
   lista.push({ descricao, feitas, acertadas });
   form.reset({ feitas: 0, acertadas: 0 });
-  this.atualizarTotaisQuestoes(tipo);
+  this.atualizarTotaisQuestoes();
   this.cdr.detectChanges();
 }
 
-removerRegistroQuestoes(tipo: 'estudo' | 'revisao', index: number): void {
-  const lista = tipo === 'estudo' ? this.registrosQuestoes : this.registrosQuestoesRevisao;
-  lista.splice(index, 1);
-  this.atualizarTotaisQuestoes(tipo);
+removerRegistroQuestoes(index: number): void {
+  this.registrosQuestoes.splice(index, 1);
+  this.atualizarTotaisQuestoes();
   this.cdr.detectChanges();
 }
 
-totalQuestoes(tipo: 'estudo' | 'revisao', campo: 'feitas' | 'acertadas'): number {
-  const lista = tipo === 'estudo' ? this.registrosQuestoes : this.registrosQuestoesRevisao;
-  return lista.reduce((total, registro) => total + (registro[campo] || 0), 0);
+totalQuestoes(campo: 'feitas' | 'acertadas'): number {
+  return this.registrosQuestoes.reduce((total, registro) => total + (registro[campo] || 0), 0);
 }
 
-private atualizarTotaisQuestoes(tipo: 'estudo' | 'revisao'): void {
-  const campoFeitas = tipo === 'estudo' ? 'questoesFeitas' : 'questoesRevisaoFeitas';
-  const campoAcertadas = tipo === 'estudo' ? 'questoesAcertadas' : 'questoesRevisaoAcertadas';
-
+private atualizarTotaisQuestoes(): void {
   this.validateForm.patchValue({
-    [campoFeitas]: this.totalQuestoes(tipo, 'feitas'),
-    [campoAcertadas]: this.totalQuestoes(tipo, 'acertadas')
+    questoesFeitas: this.totalQuestoes('feitas'),
+    questoesAcertadas: this.totalQuestoes('acertadas')
   });
 }
 
@@ -327,16 +308,13 @@ private atualizarTotaisQuestoes(tipo: 'estudo' | 'revisao'): void {
  escutarMudancaDeMateria(): void {
   this.validateForm.get('materia')?.valueChanges.subscribe((materiaId: number | null) => {
     const campoAssunto = this.validateForm.get('assunto');
-    const campoRevisao = this.validateForm.get('revisaoAssunto');
 
     // Reseta os assuntos quando troca a matéria
     campoAssunto?.reset();
-    campoRevisao?.reset();
 
     if (materiaId) {
       // 🔥 LIBERA OS CAMPOS IMEDIATAMENTE
       campoAssunto?.enable();
-      campoRevisao?.enable();
       
       this.listaAssuntos = [];
       this.cdr.detectChanges();
@@ -346,7 +324,6 @@ private atualizarTotaisQuestoes(tipo: 'estudo' | 'revisao'): void {
       // Se não houver matéria selecionada, bloqueia
       this.listaAssuntos = [];
       campoAssunto?.disable();
-      campoRevisao?.disable();
       this.cdr.detectChanges();
     }
   });
@@ -361,7 +338,6 @@ private prepararEdicaoSeNecessario(): void {
 
   this.modoEdicao = true;
   this.registroEditandoId = registro.id;
-  this.revisaoAberta = !!registro.revisaoAssunto;
 
   this.validateForm.patchValue({
     materia: registro.materia?.id ?? null,
@@ -372,9 +348,6 @@ private prepararEdicaoSeNecessario(): void {
     puntoParada: registro.puntoParada ?? null,
     questoesFeitas: registro.questoesFeitas ?? 0,
     questoesAcertadas: registro.questoesAcertadas ?? 0,
-    revisaoComplemento: registro.revisaoComplemento ?? null,
-    questoesRevisaoFeitas: registro.questoesRevisaoFeitas ?? 0,
-    questoesRevisaoAcertadas: registro.questoesRevisaoAcertadas ?? 0,
     dataEstudo: this.dataParaFormulario(registro.dataEstudo),
     tempoEstudado: this.horaParaFormulario(registro.tempoEstudado),
     linkDocumento: registro.linkDocumento ?? null,
@@ -383,11 +356,9 @@ private prepararEdicaoSeNecessario(): void {
 
   if (registro.materia?.id) {
     this.validateForm.get('assunto')?.enable();
-    this.validateForm.get('revisaoAssunto')?.enable();
     this.carregarAssuntosDaMateria(registro.materia.id, () => {
       this.validateForm.patchValue({
-        assunto: registro.assunto?.id ?? null,
-        revisaoAssunto: registro.revisaoAssunto?.id ?? null
+        assunto: registro.assunto?.id ?? null
       }, { emitEvent: false });
       this.cdr.detectChanges();
     });
@@ -414,6 +385,14 @@ private dataParaFormulario(data?: string): Date | null {
 
   const [ano, mes, dia] = data.substring(0, 10).split('-').map(Number);
   return new Date(ano, mes - 1, dia);
+}
+
+private formatarDataLocal(data: Date): string {
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  const dia = String(data.getDate()).padStart(2, '0');
+
+  return `${ano}-${mes}-${dia}`;
 }
 
 private horaParaFormulario(hora?: string): Date | null {

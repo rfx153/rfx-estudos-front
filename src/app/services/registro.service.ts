@@ -33,10 +33,6 @@ export interface Registro {
   puntoParada?: string;
   questoesFeitas: number;
   questoesAcertadas: number;
-  questoesRevisaoFeitas?: number;
-  questoesRevisaoAcertadas?: number;
-  revisaoAssunto?: Assunto;
-  revisaoComplemento?: string;
   dataEstudo: string; // LocalDate mapeia como string (YYYY-MM-DD)
   tempoEstudado: string; // LocalTime mapeia como string (HH:mm:ss)
   linkDocumento?: string;

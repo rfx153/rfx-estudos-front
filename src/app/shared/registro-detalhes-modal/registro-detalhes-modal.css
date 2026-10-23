@@ -32,8 +32,7 @@
 }
 
 .registro-detail header span,
-.detail-notes p,
-.review-box p {
+.detail-notes p {
   color: var(--text-muted, #64748b);
 }
 
@@ -69,21 +68,8 @@
   font-weight: 800;
 }
 
-.detail-notes p,
-.review-box p {
+.detail-notes p {
   margin-bottom: 7px;
-}
-
-.review-box {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border, #e5e7eb);
-}
-
-.review-box h4 {
-  margin: 0 0 8px;
-  color: var(--text, #0f172a);
-  font-weight: 850;
 }
 
 .modal-empty {

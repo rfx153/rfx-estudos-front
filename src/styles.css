@@ -160,8 +160,7 @@ body {
 .dark-theme .studied-item li,
 .dark-theme .filter-label,
 .dark-theme .expanded-details p,
-.dark-theme .materia-open-button span,
-.dark-theme .review-toggle small {
+.dark-theme .materia-open-button span {
   color: #94a3b8;
 }
 
@@ -202,7 +201,6 @@ body {
 .dark-theme .schedule-item,
 .dark-theme .materia-form,
 .dark-theme .filters-row,
-.dark-theme .review-toggle-card,
 .dark-theme .studied-item,
 .dark-theme .expanded-details,
 .dark-theme .assuntos-panel,
@@ -217,7 +215,6 @@ body {
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.26);
 }
 
-.dark-theme .review-toggle-card.review-open,
 .dark-theme .assunto-item,
 .dark-theme .ant-table-cell,
 .dark-theme .ant-table-tbody > tr {
@@ -236,7 +233,6 @@ body {
 .dark-theme .studied-item strong,
 .dark-theme .assunto-info,
 .dark-theme .expanded-details h4,
-.dark-theme .review-toggle strong,
 .dark-theme .page-heading h2,
 .dark-theme .section-title,
 .dark-theme .assuntos-header h4,
@@ -374,8 +370,6 @@ body {
 .dark-theme .ant-divider,
 .dark-theme hr,
 .dark-theme .form-footer,
-.dark-theme .review-fields,
-.dark-theme .review-column,
 .dark-theme .materias-page hr,
 .dark-theme .section-title::after,
 .dark-theme .assunto-item + .assunto-item {
