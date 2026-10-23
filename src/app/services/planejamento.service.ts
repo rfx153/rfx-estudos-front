@@ -1,28 +1,30 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { shareReplay, tap } from 'rxjs/operators';
+import { Observable, shareReplay, tap } from 'rxjs';
 import { environment } from '../../environments/environment.development';
 
 export interface Planejamento {
   id?: number;
   nome: string;
+  descricao?: string | null;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class PlanejamentoService {
-  private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/ciclos`;
-  private planejamentosCache$?: Observable<Planejamento[]>;
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${environment.apiUrl}/planejamentos`;
+  private cache$?: Observable<Planejamento[]>;
 
   listarTodos(): Observable<Planejamento[]> {
-    if (!this.planejamentosCache$) {
-      this.planejamentosCache$ = this.http.get<Planejamento[]>(this.apiUrl).pipe(shareReplay(1));
+    if (!this.cache$) {
+      this.cache$ = this.http.get<Planejamento[]>(this.apiUrl).pipe(shareReplay(1));
     }
 
-    return this.planejamentosCache$;
+    return this.cache$;
+  }
+
+  buscarPorId(id: number): Observable<Planejamento> {
+    return this.http.get<Planejamento>(`${this.apiUrl}/${id}`);
   }
 
   criar(planejamento: Planejamento): Observable<Planejamento> {
@@ -38,6 +40,6 @@ export class PlanejamentoService {
   }
 
   private limparCache(): void {
-    this.planejamentosCache$ = undefined;
+    this.cache$ = undefined;
   }
 }

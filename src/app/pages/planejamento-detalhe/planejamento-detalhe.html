@@ -1,0 +1,31 @@
+<div class="planejamentos-page page-card">
+  <header class="page-heading">
+    <div>
+      <h2>{{ id ? 'Editar planejamento' : 'Novo planejamento' }}</h2>
+      <p>Preencha apenas as informações cadastradas na tabela de planejamentos.</p>
+    </div>
+  </header>
+
+  <div class="planning-loading" *ngIf="carregando">Carregando planejamento...</div>
+
+  <form class="panel-form" nz-form [formGroup]="form" (ngSubmit)="salvar()" *ngIf="!carregando">
+    <nz-form-item>
+      <nz-form-label nzRequired>Nome</nz-form-label>
+      <nz-form-control nzErrorTip="Informe um nome de até 150 caracteres.">
+        <input nz-input formControlName="nome" maxlength="150" placeholder="Nome do planejamento" />
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label>Descrição</nz-form-label>
+      <nz-form-control>
+        <textarea nz-input formControlName="descricao" rows="5" placeholder="Descrição opcional"></textarea>
+      </nz-form-control>
+    </nz-form-item>
+
+    <div class="form-actions">
+      <button nz-button nzType="primary" [nzLoading]="salvando">Salvar</button>
+      <button nz-button type="button" (click)="voltar()">Cancelar</button>
+    </div>
+  </form>
+</div>
