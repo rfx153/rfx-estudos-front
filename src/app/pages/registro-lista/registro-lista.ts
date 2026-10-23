@@ -98,7 +98,9 @@ listaTiposRegistro: TipoRegistro[] = [];
       materia: [null, [Validators.required]],
       assunto: [null, [Validators.required]],
       planejamento: [null],
+      planejamentoEtapa: [null],
       tipoRegistro: [null, [Validators.required]],
+      concluido: [false],
       materialTipo: [null, [Validators.required]],
       materialNome: [null],
       puntoParada: [null],
@@ -203,6 +205,7 @@ listaTiposRegistro: TipoRegistro[] = [];
       materia: formValue.materia ? { id: formValue.materia } as any : null,
       assunto: formValue.assunto ? { id: formValue.assunto } as any : null,
       planejamento: formValue.planejamento ? { id: formValue.planejamento } as any : null,
+      planejamentoEtapa: formValue.planejamentoEtapa ? { id: formValue.planejamentoEtapa } : null,
       tipoRegistro: formValue.tipoRegistro ? { id: formValue.tipoRegistro } as any : null,
       // Se materialTipo também for apenas ID no formulário, converta aqui também:
       materialTipo: formValue.materialTipo && typeof formValue.materialTipo !== 'object' 
@@ -232,7 +235,8 @@ listaTiposRegistro: TipoRegistro[] = [];
         this.validateForm.reset({
           dataEstudo: new Date(),
           questoesFeitas: 0,
-          questoesAcertadas: 0
+          questoesAcertadas: 0,
+          concluido: false
         });
         this.registrosQuestoes = [];
         this.registroQuestoesForm.reset({ feitas: 0, acertadas: 0 });
@@ -342,7 +346,9 @@ private prepararEdicaoSeNecessario(): void {
   this.validateForm.patchValue({
     materia: registro.materia?.id ?? null,
     planejamento: registro.planejamento?.id ?? null,
+    planejamentoEtapa: registro.planejamentoEtapa?.id ?? null,
     tipoRegistro: registro.tipoRegistro?.id ?? null,
+    concluido: registro.concluido ?? false,
     materialTipo: registro.materialTipo?.id ?? null,
     materialNome: registro.materialNome ?? null,
     puntoParada: registro.puntoParada ?? null,

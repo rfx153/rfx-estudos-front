@@ -28,6 +28,8 @@ export interface Registro {
   assunto: Assunto;
   materialTipo: MaterialTipo;
   tipoRegistro?: TipoRegistro;
+  concluido?: boolean;
+  planejamentoEtapa?: { id?: number };
   planejamento?: Planejamento;
   materialNome?: string;
   puntoParada?: string;
