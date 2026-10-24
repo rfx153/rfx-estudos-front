@@ -101,12 +101,6 @@
             </nz-form-control>
           </nz-form-item>
         </div>
-        <div nz-col [nzSpan]="8">
-          <nz-form-item>
-            <nz-form-label>Conclusão</nz-form-label>
-            <nz-form-control><label><input type="checkbox" formControlName="concluido" /> Sessão concluída</label></nz-form-control>
-          </nz-form-item>
-        </div>
       </div>
 
       <div nz-row [nzGutter]="24">
@@ -120,6 +114,14 @@
             </nz-form-control>
           </nz-form-item>
         </div>
+        <div nz-col [nzSpan]="4">
+          <nz-form-item>
+            <nz-form-label>Conclusão</nz-form-label>
+            <nz-form-control>
+              <label><input type="checkbox" formControlName="concluido" /> Sessão concluída</label>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
         <div nz-col [nzSpan]="6">
           <nz-form-item>
             <nz-form-label nzRequired>Tipo de Material</nz-form-label>
@@ -130,7 +132,7 @@
             </nz-form-control>
           </nz-form-item>
         </div>
-        <div nz-col [nzSpan]="8">
+        <div nz-col [nzSpan]="4">
           <nz-form-item>
             <nz-form-label>Nome do Material / Aula</nz-form-label>
             <nz-form-control>

@@ -20,7 +20,14 @@ interface GrupoVisualizacao {
 
 interface AssuntoVisualizacao {
   nome: string;
-  etapas: string[];
+  etapas: EtapaVisualizacao[];
+}
+
+interface EtapaVisualizacao {
+  nome: string;
+  iniciada: boolean;
+  concluida: boolean;
+  dataConcluida?: string | null;
 }
 
 interface MateriaVisualizacao {
@@ -140,7 +147,22 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
   }
 
   temEtapa(assunto: AssuntoVisualizacao, tipo: string): boolean {
-    return assunto.etapas.some((etapa) => etapa.toLocaleLowerCase('pt-BR').includes(tipo));
+    return !!this.etapaPorTipo(assunto, tipo);
+  }
+
+  etapaEmAndamento(assunto: AssuntoVisualizacao, tipo: string): boolean {
+    const etapa = this.etapaPorTipo(assunto, tipo);
+    return !!etapa?.iniciada && !etapa.concluida;
+  }
+
+  etapaConcluida(assunto: AssuntoVisualizacao, tipo: string): boolean {
+    return !!this.etapaPorTipo(assunto, tipo)?.concluida;
+  }
+
+  dataConclusao(assunto: AssuntoVisualizacao): string | null {
+    return (
+      assunto.etapas.find((etapa) => etapa.concluida && etapa.dataConcluida)?.dataConcluida ?? null
+    );
   }
 
   private carregarMaterias(materias: PlanejamentoMateria[]) {
@@ -236,7 +258,12 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
         nome: item.assunto.nome,
         etapas: etapas
           .sort((a, b) => (a.ordem ?? 9999) - (b.ordem ?? 9999))
-          .map((etapa) => etapa.tipoRegistro.nome),
+          .map((etapa) => ({
+            nome: etapa.tipoRegistro.nome,
+            iniciada: !!etapa.iniciada,
+            concluida: !!etapa.concluida,
+            dataConcluida: etapa.dataConcluida,
+          })),
       })),
       catchError(() => of({ nome: item.assunto.nome, etapas: [] })),
     );
@@ -244,6 +271,10 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
 
   private nomeGrupo(grupo: PlanejamentoGrupoAssunto): string {
     return grupo.tipo === 'BLOCO' ? grupo.nome || 'Bloco sem nome' : 'Assuntos';
+  }
+
+  private etapaPorTipo(assunto: AssuntoVisualizacao, tipo: string): EtapaVisualizacao | undefined {
+    return assunto.etapas.find((etapa) => etapa.nome.toLocaleLowerCase('pt-BR').includes(tipo));
   }
 
   private agruparMaterias(

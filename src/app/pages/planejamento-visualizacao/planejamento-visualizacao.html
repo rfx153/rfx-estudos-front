@@ -70,19 +70,60 @@
                   <span>Aproveitamento</span>
                 </div>
                 <div class="assunto-linha" *ngFor="let assunto of grupo.assuntos">
-                  <strong>{{ assunto.nome }}</strong>
-                  <span class="etapa-status" [class.ativa]="temEtapa(assunto, 'assunto')">{{
-                    temEtapa(assunto, 'assunto') ? '✓' : '—'
-                  }}</span>
-                  <span class="etapa-status" [class.ativa]="temEtapa(assunto, 'quest')">{{
-                    temEtapa(assunto, 'quest') ? '✓' : '—'
-                  }}</span>
-                  <span class="etapa-status" [class.ativa]="temEtapa(assunto, 'revis')">{{
-                    temEtapa(assunto, 'revis') ? '✓' : '—'
-                  }}</span>
-                  <span class="etapa-status" [class.ativa]="temEtapa(assunto, 'resum')">{{
-                    temEtapa(assunto, 'resum') ? '✓' : '—'
-                  }}</span>
+                  <div>
+                    <strong>{{ assunto.nome }}</strong>
+                    <small *ngIf="dataConclusao(assunto)">
+                      Finalizada em {{ dataConclusao(assunto) | date: 'dd/MM/yyyy' }}
+                    </small>
+                  </div>
+                  <span
+                    class="etapa-status"
+                    [class.ativa]="etapaConcluida(assunto, 'assunto')"
+                    [class.andamento]="etapaEmAndamento(assunto, 'assunto')"
+                    >{{
+                      etapaConcluida(assunto, 'assunto')
+                        ? '✓'
+                        : etapaEmAndamento(assunto, 'assunto')
+                          ? '◔'
+                          : '—'
+                    }}</span
+                  >
+                  <span
+                    class="etapa-status"
+                    [class.ativa]="etapaConcluida(assunto, 'quest')"
+                    [class.andamento]="etapaEmAndamento(assunto, 'quest')"
+                    >{{
+                      etapaConcluida(assunto, 'quest')
+                        ? '✓'
+                        : etapaEmAndamento(assunto, 'quest')
+                          ? '◔'
+                          : '—'
+                    }}</span
+                  >
+                  <span
+                    class="etapa-status"
+                    [class.ativa]="etapaConcluida(assunto, 'revis')"
+                    [class.andamento]="etapaEmAndamento(assunto, 'revis')"
+                    >{{
+                      etapaConcluida(assunto, 'revis')
+                        ? '✓'
+                        : etapaEmAndamento(assunto, 'revis')
+                          ? '◔'
+                          : '—'
+                    }}</span
+                  >
+                  <span
+                    class="etapa-status"
+                    [class.ativa]="etapaConcluida(assunto, 'resum')"
+                    [class.andamento]="etapaEmAndamento(assunto, 'resum')"
+                    >{{
+                      etapaConcluida(assunto, 'resum')
+                        ? '✓'
+                        : etapaEmAndamento(assunto, 'resum')
+                          ? '◔'
+                          : '—'
+                    }}</span
+                  >
                   <span class="aproveitamento">—</span>
                 </div>
               </div>

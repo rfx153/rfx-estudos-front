@@ -2,7 +2,13 @@ import { Component, OnInit, inject, ChangeDetectorRef, PLATFORM_ID } from '@angu
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { RegistroService, Registro, Assunto, MaterialTipo, TipoRegistro } from '../../services/registro.service';
+import {
+  RegistroService,
+  Registro,
+  Assunto,
+  MaterialTipo,
+  TipoRegistro,
+} from '../../services/registro.service';
 import { MateriaService, Materia } from '../../services/materia.service';
 import { PlanejamentoService, Planejamento } from '../../services/planejamento.service';
 import { Ciclo, CicloService } from '../../services/ciclos.service';
@@ -17,11 +23,17 @@ import { NzTimePickerModule } from 'ng-zorro-antd/time-picker';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule, NzIconService } from 'ng-zorro-antd/icon';
-import { PlusOutline, CalendarOutline, ClockCircleOutline, InfoCircleOutline, DeleteOutline } from '@ant-design/icons-angular/icons';
-import { NzCardModule } from 'ng-zorro-antd/card';       // <-- INSTALE ESTE IMPORT
+import {
+  PlusOutline,
+  CalendarOutline,
+  ClockCircleOutline,
+  InfoCircleOutline,
+  DeleteOutline,
+} from '@ant-design/icons-angular/icons';
+import { NzCardModule } from 'ng-zorro-antd/card'; // <-- INSTALE ESTE IMPORT
 import { NzTooltipModule } from 'ng-zorro-antd/tooltip'; // <-- INSTALE ESTE IMPORT
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 
 interface RegistroQuestoesTemporario {
   descricao: string;
@@ -44,15 +56,14 @@ interface RegistroQuestoesTemporario {
     NzInputNumberModule,
     NzButtonModule,
     NzIconModule,
-    NzCardModule,     
+    NzCardModule,
     NzTooltipModule,
-    NzModalModule
+    NzModalModule,
   ],
   templateUrl: 'registro-lista.html',
   styleUrl: 'registro-lista.css',
 })
 export class RegistroListaComponent implements OnInit {
-  
   private registroService = inject(RegistroService);
   private materiaService = inject(MateriaService);
   private planejamentoService = inject(PlanejamentoService);
@@ -61,6 +72,7 @@ export class RegistroListaComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private iconService = inject(NzIconService);
   private message = inject(NzMessageService);
+  private modal = inject(NzModalService);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
 
@@ -69,11 +81,11 @@ export class RegistroListaComponent implements OnInit {
   listaMaterias: Materia[] = [];
   listaPlanejamentos: Planejamento[] = [];
   listaCiclos: Ciclo[] = [];
-  
+
   // Listas fictícias iniciais (ajuste conforme criar os services delas depois)
-  listaAssuntos: Assunto[] = [] 
-listaTiposMaterial: MaterialTipo[] = [];
-listaTiposRegistro: TipoRegistro[] = [];
+  listaAssuntos: Assunto[] = [];
+  listaTiposMaterial: MaterialTipo[] = [];
+  listaTiposRegistro: TipoRegistro[] = [];
 
   carregando = true;
   salvando = false;
@@ -86,7 +98,9 @@ listaTiposRegistro: TipoRegistro[] = [];
   registrosQuestoes: RegistroQuestoesTemporario[] = [];
 
   constructor() {
-    this.iconService.addIcon(...[PlusOutline, CalendarOutline, ClockCircleOutline, InfoCircleOutline, DeleteOutline]);
+    this.iconService.addIcon(
+      ...[PlusOutline, CalendarOutline, ClockCircleOutline, InfoCircleOutline, DeleteOutline],
+    );
   }
 
   ngOnInit(): void {
@@ -112,7 +126,7 @@ listaTiposRegistro: TipoRegistro[] = [];
       dataEstudo: [new Date(), [Validators.required]],
       tempoEstudado: [null, [Validators.required]],
       linkDocumento: [null],
-      observacoes: [null]
+      observacoes: [null],
     });
 
     this.registroQuestoesForm = this.criarFormularioRegistroQuestoes();
@@ -122,7 +136,7 @@ listaTiposRegistro: TipoRegistro[] = [];
     return this.fb.group({
       descricao: [null],
       feitas: [0],
-      acertadas: [0]
+      acertadas: [0],
     });
   }
 
@@ -140,46 +154,46 @@ listaTiposRegistro: TipoRegistro[] = [];
 
   carregarDadosIniciais(): void {
     this.carregando = true;
-    
+
     // Busca os registros e as matérias em paralelo
-    this.materiaService.listarTodas().subscribe(materias => {
+    this.materiaService.listarTodas().subscribe((materias) => {
       this.listaMaterias = materias;
       this.cdr.detectChanges();
     });
     this.planejamentoService.listarTodos().subscribe({
-      next: planejamentos => {
+      next: (planejamentos) => {
         this.listaPlanejamentos = planejamentos;
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Erro ao carregar planejamentos:', err);
-      }
+      },
     });
     this.cicloService.listarTodos().subscribe({
-      next: ciclos => {
+      next: (ciclos) => {
         this.listaCiclos = ciclos;
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Erro ao carregar ciclos:', err)
+      error: (err) => console.error('Erro ao carregar ciclos:', err),
     });
     //listar os tipos de materias
     this.registroService.listarTiposMaterial().subscribe({
-    next: (tipos) => {
-      this.listaTiposMaterial = tipos;
-      this.cdr.detectChanges(); // Atualiza a tela com os dados novos do banco
-    },
-    error: (err) => {
-      console.error('Erro ao carregar tipos de material:', err);
-    }
+      next: (tipos) => {
+        this.listaTiposMaterial = tipos;
+        this.cdr.detectChanges(); // Atualiza a tela com os dados novos do banco
+      },
+      error: (err) => {
+        console.error('Erro ao carregar tipos de material:', err);
+      },
     });
     this.registroService.listarTiposRegistro().subscribe({
-    next: (tipos) => {
-      this.listaTiposRegistro = tipos;
-      this.cdr.detectChanges();
-    },
-    error: (err) => {
-      console.error('Erro ao carregar tipos de registro:', err);
-    }
+      next: (tipos) => {
+        this.listaTiposRegistro = tipos;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erro ao carregar tipos de registro:', err);
+      },
     });
 
     this.registroService.contarTodos().subscribe({
@@ -192,7 +206,7 @@ listaTiposRegistro: TipoRegistro[] = [];
         console.error('Erro ao contar registros:', err);
         this.carregando = false;
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 
@@ -205,38 +219,102 @@ listaTiposRegistro: TipoRegistro[] = [];
   }
 
   submitForm(): void {
-  if (this.validateForm.valid) {
-    this.salvando = true;
-    const formValue = this.validateForm.value;
+    if (this.validateForm.valid) {
+      this.salvando = true;
+      const formValue = this.validateForm.value;
 
-    // Converte os IDs numéricos em objetos com a chave { id: X } para o Jackson/Spring aceitar
-    const payload: Partial<Registro> = {
-      ...formValue,
-      materia: formValue.materia ? { id: formValue.materia } as any : null,
-      assunto: formValue.assunto ? { id: formValue.assunto } as any : null,
-      planejamento: formValue.planejamento ? { id: formValue.planejamento } as any : null,
-      ciclo: formValue.ciclo ? { id: formValue.ciclo } as any : null,
-      tipoRegistro: formValue.tipoRegistro ? { id: formValue.tipoRegistro } as any : null,
-      // Se materialTipo também for apenas ID no formulário, converta aqui também:
-      materialTipo: formValue.materialTipo && typeof formValue.materialTipo !== 'object' 
-        ? { id: formValue.materialTipo } as any 
-        : formValue.materialTipo,
-      
-      // Formatação de datas e horas
-      // `toISOString()` converte para UTC e pode mudar o dia no fuso de Brasília.
-      // Como o backend espera um LocalDate, envie a data usando os campos locais.
-      dataEstudo: formValue.dataEstudo ? this.formatarDataLocal(formValue.dataEstudo) : null,
-      tempoEstudado: formValue.tempoEstudado ? formValue.tempoEstudado.toTimeString().split(' ')[0] : null
-    };
+      // Converte os IDs numéricos em objetos com a chave { id: X } para o Jackson/Spring aceitar
+      const payload: Partial<Registro> = {
+        ...formValue,
+        materia: formValue.materia ? ({ id: formValue.materia } as any) : null,
+        assunto: formValue.assunto ? ({ id: formValue.assunto } as any) : null,
+        planejamento: formValue.planejamento ? ({ id: formValue.planejamento } as any) : null,
+        ciclo: formValue.ciclo ? ({ id: formValue.ciclo } as any) : null,
+        tipoRegistro: formValue.tipoRegistro ? ({ id: formValue.tipoRegistro } as any) : null,
+        // Se materialTipo também for apenas ID no formulário, converta aqui também:
+        materialTipo:
+          formValue.materialTipo && typeof formValue.materialTipo !== 'object'
+            ? ({ id: formValue.materialTipo } as any)
+            : formValue.materialTipo,
 
-    const request$ = this.modoEdicao && this.registroEditandoId
-      ? this.registroService.atualizar(this.registroEditandoId, payload)
-      : this.registroService.criar(payload);
+        // Formatação de datas e horas
+        // `toISOString()` converte para UTC e pode mudar o dia no fuso de Brasília.
+        // Como o backend espera um LocalDate, envie a data usando os campos locais.
+        dataEstudo: formValue.dataEstudo ? this.formatarDataLocal(formValue.dataEstudo) : null,
+        tempoEstudado: formValue.tempoEstudado
+          ? formValue.tempoEstudado.toTimeString().split(' ')[0]
+          : null,
+      };
+
+      if (formValue.planejamento) {
+        this.planejamentoService
+          .buscarEtapaPorAssunto(formValue.planejamento, formValue.assunto, formValue.tipoRegistro)
+          .subscribe({
+            next: (etapa) => {
+              if (etapa) {
+                this.salvarRegistro(payload);
+                return;
+              }
+              this.salvando = false;
+              this.modal.confirm({
+                nzTitle: 'Etapa não configurada',
+                nzContent:
+                  'Não existe uma etapa para este assunto e tipo de registro no planejamento. Deseja criá-la agora?',
+                nzOkText: 'Criar etapa',
+                nzCancelText: 'Salvar sem etapa',
+                nzOnOk: () => {
+                  this.salvando = true;
+                  this.planejamentoService
+                    .adicionarEtapaPorAssunto(
+                      formValue.planejamento,
+                      formValue.assunto,
+                      formValue.tipoRegistro,
+                    )
+                    .subscribe({
+                      next: () => this.salvarRegistro(payload),
+                      error: () => {
+                        this.salvando = false;
+                        this.message.error(
+                          'Não foi possível criar a etapa. Verifique se o assunto foi adicionado ao planejamento.',
+                        );
+                      },
+                    });
+                },
+                nzOnCancel: () => this.salvarRegistro(payload),
+              });
+            },
+            error: () => {
+              this.salvando = false;
+              this.message.error('Não foi possível verificar a etapa do planejamento.');
+            },
+          });
+        return;
+      }
+
+      this.salvarRegistro(payload);
+    } else {
+      Object.values(this.validateForm.controls).forEach((control) => {
+        if (control.invalid) {
+          control.markAsDirty();
+          control.updateValueAndValidity({ onlySelf: true });
+        }
+      });
+      this.message.warning('Preencha os campos obrigatórios antes de salvar.');
+    }
+  }
+
+  private salvarRegistro(payload: Partial<Registro>): void {
+    const request$ =
+      this.modoEdicao && this.registroEditandoId
+        ? this.registroService.atualizar(this.registroEditandoId, payload)
+        : this.registroService.criar(payload);
 
     request$.subscribe({
-      next: () => {
+      next: (registroSalvo) => {
         this.salvando = false;
-        this.message.success(this.modoEdicao ? 'Registro atualizado com sucesso.' : 'Registro salvo com sucesso.');
+        this.message.success(
+          this.modoEdicao ? 'Registro atualizado com sucesso.' : 'Registro salvo com sucesso.',
+        );
         if (this.modoEdicao) {
           this.router.navigate(['/visualizar-registros']);
           return;
@@ -246,7 +324,7 @@ listaTiposRegistro: TipoRegistro[] = [];
           dataEstudo: new Date(),
           questoesFeitas: 0,
           questoesAcertadas: 0,
-          concluido: false
+          concluido: false,
         });
         this.registrosQuestoes = [];
         this.registroQuestoesForm.reset({ feitas: 0, acertadas: 0 });
@@ -256,267 +334,267 @@ listaTiposRegistro: TipoRegistro[] = [];
       error: (err) => {
         console.error('Erro ao salvar registro:', err);
         this.salvando = false;
-        this.message.error(this.modoEdicao ? 'Não foi possível atualizar o registro.' : 'Não foi possível salvar o registro.');
+        this.message.error(
+          this.modoEdicao
+            ? 'Não foi possível atualizar o registro.'
+            : 'Não foi possível salvar o registro.',
+        );
         this.cdr.detectChanges();
-      }
+      },
     });
-  } else {
-    Object.values(this.validateForm.controls).forEach(control => {
-      if (control.invalid) {
-        control.markAsDirty();
-        control.updateValueAndValidity({ onlySelf: true });
-      }
+  }
+
+  adicionarRegistroQuestoes(): void {
+    const form = this.registroQuestoesForm;
+    const lista = this.registrosQuestoes;
+    const descricao = (form.value.descricao || '').trim();
+    const feitas = Number(form.value.feitas || 0);
+    const acertadas = Number(form.value.acertadas || 0);
+
+    if (feitas <= 0 && acertadas <= 0 && !descricao) {
+      this.message.warning('Informe ao menos uma anotação ou quantidade de questões.');
+      return;
+    }
+
+    if (acertadas > feitas) {
+      this.message.warning('Os acertos não podem ser maiores que as questões feitas.');
+      return;
+    }
+
+    lista.push({ descricao, feitas, acertadas });
+    form.reset({ feitas: 0, acertadas: 0 });
+    this.atualizarTotaisQuestoes();
+    this.cdr.detectChanges();
+  }
+
+  removerRegistroQuestoes(index: number): void {
+    this.registrosQuestoes.splice(index, 1);
+    this.atualizarTotaisQuestoes();
+    this.cdr.detectChanges();
+  }
+
+  totalQuestoes(campo: 'feitas' | 'acertadas'): number {
+    return this.registrosQuestoes.reduce((total, registro) => total + (registro[campo] || 0), 0);
+  }
+
+  private atualizarTotaisQuestoes(): void {
+    this.validateForm.patchValue({
+      questoesFeitas: this.totalQuestoes('feitas'),
+      questoesAcertadas: this.totalQuestoes('acertadas'),
     });
-    this.message.warning('Preencha os campos obrigatórios antes de salvar.');
   }
-}
-
-
-adicionarRegistroQuestoes(): void {
-  const form = this.registroQuestoesForm;
-  const lista = this.registrosQuestoes;
-  const descricao = (form.value.descricao || '').trim();
-  const feitas = Number(form.value.feitas || 0);
-  const acertadas = Number(form.value.acertadas || 0);
-
-  if (feitas <= 0 && acertadas <= 0 && !descricao) {
-    this.message.warning('Informe ao menos uma anotação ou quantidade de questões.');
-    return;
-  }
-
-  if (acertadas > feitas) {
-    this.message.warning('Os acertos não podem ser maiores que as questões feitas.');
-    return;
-  }
-
-  lista.push({ descricao, feitas, acertadas });
-  form.reset({ feitas: 0, acertadas: 0 });
-  this.atualizarTotaisQuestoes();
-  this.cdr.detectChanges();
-}
-
-removerRegistroQuestoes(index: number): void {
-  this.registrosQuestoes.splice(index, 1);
-  this.atualizarTotaisQuestoes();
-  this.cdr.detectChanges();
-}
-
-totalQuestoes(campo: 'feitas' | 'acertadas'): number {
-  return this.registrosQuestoes.reduce((total, registro) => total + (registro[campo] || 0), 0);
-}
-
-private atualizarTotaisQuestoes(): void {
-  this.validateForm.patchValue({
-    questoesFeitas: this.totalQuestoes('feitas'),
-    questoesAcertadas: this.totalQuestoes('acertadas')
-  });
-}
 
   calcularAproveitamento(feitas: number, acertadas: number): string {
     if (!feitas || feitas === 0) return '0%';
     const percentual = (acertadas / feitas) * 100;
     return `${percentual.toFixed(0)}%`;
   }
-  
 
- escutarMudancaDeMateria(): void {
-  this.validateForm.get('materia')?.valueChanges.subscribe((materiaId: number | null) => {
-    const campoAssunto = this.validateForm.get('assunto');
+  escutarMudancaDeMateria(): void {
+    this.validateForm.get('materia')?.valueChanges.subscribe((materiaId: number | null) => {
+      const campoAssunto = this.validateForm.get('assunto');
 
-    // Reseta os assuntos quando troca a matéria
-    campoAssunto?.reset();
+      // Reseta os assuntos quando troca a matéria
+      campoAssunto?.reset();
 
-    if (materiaId) {
-      // 🔥 LIBERA OS CAMPOS IMEDIATAMENTE
-      campoAssunto?.enable();
-      
-      this.listaAssuntos = [];
-      this.cdr.detectChanges();
+      if (materiaId) {
+        // 🔥 LIBERA OS CAMPOS IMEDIATAMENTE
+        campoAssunto?.enable();
 
-      this.carregarAssuntosDaMateria(materiaId);
-    } else {
-      // Se não houver matéria selecionada, bloqueia
-      this.listaAssuntos = [];
-      campoAssunto?.disable();
-      this.cdr.detectChanges();
-    }
-  });
-}
+        this.listaAssuntos = [];
+        this.cdr.detectChanges();
 
-private prepararEdicaoSeNecessario(): void {
-  const navigationState = this.router.getCurrentNavigation()?.extras.state;
-  const browserState = isPlatformBrowser(this.platformId) ? history.state : {};
-  const registro = (navigationState?.['registroParaEditar'] ?? browserState?.registroParaEditar) as Registro | undefined;
-
-  if (!registro?.id) return;
-
-  this.modoEdicao = true;
-  this.registroEditandoId = registro.id;
-
-  this.validateForm.patchValue({
-    materia: registro.materia?.id ?? null,
-    planejamento: registro.planejamento?.id ?? null,
-    ciclo: registro.ciclo?.id ?? null,
-    tipoRegistro: registro.tipoRegistro?.id ?? null,
-    concluido: registro.concluido ?? false,
-    materialTipo: registro.materialTipo?.id ?? null,
-    materialNome: registro.materialNome ?? null,
-    puntoParada: registro.puntoParada ?? null,
-    questoesFeitas: registro.questoesFeitas ?? 0,
-    questoesAcertadas: registro.questoesAcertadas ?? 0,
-    dataEstudo: this.dataParaFormulario(registro.dataEstudo),
-    tempoEstudado: this.horaParaFormulario(registro.tempoEstudado),
-    linkDocumento: registro.linkDocumento ?? null,
-    observacoes: registro.observacoes ?? null
-  }, { emitEvent: false });
-
-  if (registro.materia?.id) {
-    this.validateForm.get('assunto')?.enable();
-    this.carregarAssuntosDaMateria(registro.materia.id, () => {
-      this.validateForm.patchValue({
-        assunto: registro.assunto?.id ?? null
-      }, { emitEvent: false });
-      this.cdr.detectChanges();
+        this.carregarAssuntosDaMateria(materiaId);
+      } else {
+        // Se não houver matéria selecionada, bloqueia
+        this.listaAssuntos = [];
+        campoAssunto?.disable();
+        this.cdr.detectChanges();
+      }
     });
   }
-}
 
-private carregarAssuntosDaMateria(materiaId: number, aoCarregar?: () => void): void {
-  this.registroService.listarAssuntosPorMateria(materiaId).subscribe({
-    next: (assuntos) => {
-      this.listaAssuntos = assuntos;
-      aoCarregar?.();
-      this.cdr.detectChanges();
-    },
-    error: (err) => {
-      console.error('Erro ao buscar assuntos:', err);
-      this.listaAssuntos = [];
-      this.cdr.detectChanges();
+  private prepararEdicaoSeNecessario(): void {
+    const navigationState = this.router.getCurrentNavigation()?.extras.state;
+    const browserState = isPlatformBrowser(this.platformId) ? history.state : {};
+    const registro = (navigationState?.['registroParaEditar'] ??
+      browserState?.registroParaEditar) as Registro | undefined;
+
+    if (!registro?.id) return;
+
+    this.modoEdicao = true;
+    this.registroEditandoId = registro.id;
+
+    this.validateForm.patchValue(
+      {
+        materia: registro.materia?.id ?? null,
+        planejamento: registro.planejamento?.id ?? null,
+        ciclo: registro.ciclo?.id ?? null,
+        tipoRegistro: registro.tipoRegistro?.id ?? null,
+        concluido: registro.concluido ?? false,
+        materialTipo: registro.materialTipo?.id ?? null,
+        materialNome: registro.materialNome ?? null,
+        puntoParada: registro.puntoParada ?? null,
+        questoesFeitas: registro.questoesFeitas ?? 0,
+        questoesAcertadas: registro.questoesAcertadas ?? 0,
+        dataEstudo: this.dataParaFormulario(registro.dataEstudo),
+        tempoEstudado: this.horaParaFormulario(registro.tempoEstudado),
+        linkDocumento: registro.linkDocumento ?? null,
+        observacoes: registro.observacoes ?? null,
+      },
+      { emitEvent: false },
+    );
+
+    if (registro.materia?.id) {
+      this.validateForm.get('assunto')?.enable();
+      this.carregarAssuntosDaMateria(registro.materia.id, () => {
+        this.validateForm.patchValue(
+          {
+            assunto: registro.assunto?.id ?? null,
+          },
+          { emitEvent: false },
+        );
+        this.cdr.detectChanges();
+      });
     }
-  });
-}
-
-private dataParaFormulario(data?: string): Date | null {
-  if (!data) return null;
-
-  const [ano, mes, dia] = data.substring(0, 10).split('-').map(Number);
-  return new Date(ano, mes - 1, dia);
-}
-
-private formatarDataLocal(data: Date): string {
-  const ano = data.getFullYear();
-  const mes = String(data.getMonth() + 1).padStart(2, '0');
-  const dia = String(data.getDate()).padStart(2, '0');
-
-  return `${ano}-${mes}-${dia}`;
-}
-
-private horaParaFormulario(hora?: string): Date | null {
-  if (!hora) return null;
-
-  const [horas = 0, minutos = 0, segundos = 0] = hora.split(':').map(Number);
-  const data = new Date();
-  data.setHours(horas, minutos, segundos, 0);
-  return data;
-}
- 
-// Adicione este método dentro da classe RegistroListaComponent
-cadastrarAssuntoRapido(inputElement: HTMLInputElement): void {
-  const nomeAssunto = inputElement.value.trim();
-  const materiaFormValue = this.validateForm.get('materia')?.value;
-
-  if (!nomeAssunto) {
-    return; // Se estiver em branco, ignora
   }
 
-  // Garante que pegamos o ID correto da matéria
-  const materiaId = materiaFormValue && typeof materiaFormValue === 'object'
-    ? materiaFormValue.id
-    : materiaFormValue;
-
-  if (!materiaId) {
-    console.warn('Selecione uma matéria antes de cadastrar um assunto.');
-    this.message.warning('Selecione uma matéria antes de criar o assunto.');
-    return;
+  private carregarAssuntosDaMateria(materiaId: number, aoCarregar?: () => void): void {
+    this.registroService.listarAssuntosPorMateria(materiaId).subscribe({
+      next: (assuntos) => {
+        this.listaAssuntos = assuntos;
+        aoCarregar?.();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erro ao buscar assuntos:', err);
+        this.listaAssuntos = [];
+        this.cdr.detectChanges();
+      },
+    });
   }
 
-  // DTO esperado pelo Spring Boot (nome + materiaId)
-  const novoAssuntoPayload = {
-    nome: nomeAssunto,
-    materiaId: materiaId
-  };
+  private dataParaFormulario(data?: string): Date | null {
+    if (!data) return null;
 
-  this.registroService.criarAssunto(novoAssuntoPayload).subscribe({
-    next: (assuntoSalvo) => {
-      // 1. Adiciona o novo assunto retornado do Java na lista da tela
-      this.listaAssuntos = [...this.listaAssuntos, assuntoSalvo];
-      
-      // 2. 🔥 CORREÇÃO: Passamos apenas o ID 'assuntoSalvo.id' para bater com o [nzValue]="a.id" do HTML
-      this.validateForm.get('assunto')?.setValue(assuntoSalvo.id);
-      
-      // 3. Limpa o input de texto do dropdown
-      inputElement.value = '';
-      
-      // 4. Força o Angular a renderizar a alteração e selecionar o item
-      this.message.success('Assunto criado com sucesso.');
-      this.cdr.detectChanges();
-    },
-    error: (err) => {
-      console.error('Erro ao cadastrar assunto rápido:', err);
-      this.message.error('Não foi possível criar o assunto.');
-    }
-  });
-}
-
-cadastrarMateriaRapida(inputElement: HTMLInputElement): void {
-  const nomeMateria = inputElement.value.trim();
-
-  if (!nomeMateria) {
-    return; // Se estiver em branco, não faz nada
+    const [ano, mes, dia] = data.substring(0, 10).split('-').map(Number);
+    return new Date(ano, mes - 1, dia);
   }
 
-  this.materiaService.criar({ nome: nomeMateria }).subscribe({
-    next: (materiaSalva) => {
-      // 1. Adiciona a nova matéria retornada do Java na lista da tela
-      this.listaMaterias = [...this.listaMaterias, materiaSalva];
-      
-      // 2. Já seleciona ela automaticamente no formulário usando o ID
-      this.validateForm.get('materia')?.setValue(materiaSalva.id);
-      
-      // 3. Limpa o campo de texto do dropdown
-      inputElement.value = '';
-      
-      // 4. Força o Angular a renderizar a alteração na tela
-      this.message.success('Matéria criada com sucesso.');
-      this.cdr.detectChanges();
-    },
-    error: (err) => {
-      console.error('Erro ao cadastrar matéria rápida:', err);
-      this.message.error('Não foi possível criar a matéria.');
-    }
-  });
-}
+  private formatarDataLocal(data: Date): string {
+    const ano = data.getFullYear();
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const dia = String(data.getDate()).padStart(2, '0');
 
-cadastrarCicloRapido(inputElement: HTMLInputElement): void {
-  const nomeCiclo = inputElement.value.trim();
-
-  if (!nomeCiclo) {
-    return;
+    return `${ano}-${mes}-${dia}`;
   }
 
-  this.cicloService.criar({ nome: nomeCiclo }).subscribe({
-    next: (cicloSalvo) => {
-      this.listaCiclos = [...this.listaCiclos, cicloSalvo];
-      this.validateForm.get('ciclo')?.setValue(cicloSalvo.id);
-      inputElement.value = '';
-      this.message.success('Ciclo criado com sucesso.');
-      this.cdr.detectChanges();
-    },
-    error: (err) => {
-      console.error('Erro ao cadastrar ciclo rápido:', err);
-      this.message.error('Não foi possível criar o ciclo.');
-    }
-  });
-}
+  private horaParaFormulario(hora?: string): Date | null {
+    if (!hora) return null;
 
+    const [horas = 0, minutos = 0, segundos = 0] = hora.split(':').map(Number);
+    const data = new Date();
+    data.setHours(horas, minutos, segundos, 0);
+    return data;
+  }
+
+  // Adicione este método dentro da classe RegistroListaComponent
+  cadastrarAssuntoRapido(inputElement: HTMLInputElement): void {
+    const nomeAssunto = inputElement.value.trim();
+    const materiaFormValue = this.validateForm.get('materia')?.value;
+
+    if (!nomeAssunto) {
+      return; // Se estiver em branco, ignora
+    }
+
+    // Garante que pegamos o ID correto da matéria
+    const materiaId =
+      materiaFormValue && typeof materiaFormValue === 'object'
+        ? materiaFormValue.id
+        : materiaFormValue;
+
+    if (!materiaId) {
+      console.warn('Selecione uma matéria antes de cadastrar um assunto.');
+      this.message.warning('Selecione uma matéria antes de criar o assunto.');
+      return;
+    }
+
+    // DTO esperado pelo Spring Boot (nome + materiaId)
+    const novoAssuntoPayload = {
+      nome: nomeAssunto,
+      materiaId: materiaId,
+    };
+
+    this.registroService.criarAssunto(novoAssuntoPayload).subscribe({
+      next: (assuntoSalvo) => {
+        // 1. Adiciona o novo assunto retornado do Java na lista da tela
+        this.listaAssuntos = [...this.listaAssuntos, assuntoSalvo];
+
+        // 2. 🔥 CORREÇÃO: Passamos apenas o ID 'assuntoSalvo.id' para bater com o [nzValue]="a.id" do HTML
+        this.validateForm.get('assunto')?.setValue(assuntoSalvo.id);
+
+        // 3. Limpa o input de texto do dropdown
+        inputElement.value = '';
+
+        // 4. Força o Angular a renderizar a alteração e selecionar o item
+        this.message.success('Assunto criado com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erro ao cadastrar assunto rápido:', err);
+        this.message.error('Não foi possível criar o assunto.');
+      },
+    });
+  }
+
+  cadastrarMateriaRapida(inputElement: HTMLInputElement): void {
+    const nomeMateria = inputElement.value.trim();
+
+    if (!nomeMateria) {
+      return; // Se estiver em branco, não faz nada
+    }
+
+    this.materiaService.criar({ nome: nomeMateria }).subscribe({
+      next: (materiaSalva) => {
+        // 1. Adiciona a nova matéria retornada do Java na lista da tela
+        this.listaMaterias = [...this.listaMaterias, materiaSalva];
+
+        // 2. Já seleciona ela automaticamente no formulário usando o ID
+        this.validateForm.get('materia')?.setValue(materiaSalva.id);
+
+        // 3. Limpa o campo de texto do dropdown
+        inputElement.value = '';
+
+        // 4. Força o Angular a renderizar a alteração na tela
+        this.message.success('Matéria criada com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erro ao cadastrar matéria rápida:', err);
+        this.message.error('Não foi possível criar a matéria.');
+      },
+    });
+  }
+
+  cadastrarCicloRapido(inputElement: HTMLInputElement): void {
+    const nomeCiclo = inputElement.value.trim();
+
+    if (!nomeCiclo) {
+      return;
+    }
+
+    this.cicloService.criar({ nome: nomeCiclo }).subscribe({
+      next: (cicloSalvo) => {
+        this.listaCiclos = [...this.listaCiclos, cicloSalvo];
+        this.validateForm.get('ciclo')?.setValue(cicloSalvo.id);
+        inputElement.value = '';
+        this.message.success('Ciclo criado com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erro ao cadastrar ciclo rápido:', err);
+        this.message.error('Não foi possível criar o ciclo.');
+      },
+    });
+  }
 }

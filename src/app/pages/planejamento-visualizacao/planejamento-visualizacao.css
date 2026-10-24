@@ -175,6 +175,14 @@
 .assunto-linha strong {
   padding-right: 16px;
 }
+.assunto-linha > div {
+  display: grid;
+  gap: 3px;
+}
+.assunto-linha small {
+  color: var(--text-muted, #64748b);
+  font-size: 12px;
+}
 .etapa-status,
 .aproveitamento {
   text-align: center;
@@ -182,6 +190,10 @@
 }
 .etapa-status.ativa {
   color: #16a34a;
+  font-weight: 800;
+}
+.etapa-status.andamento {
+  color: #d97706;
   font-weight: 800;
 }
 .grupo p,

@@ -76,6 +76,8 @@ export interface PlanejamentoItemEtapa {
   ordem?: number | null;
   concluida?: boolean | null;
   concluidaManualmente?: boolean | null;
+  iniciada?: boolean | null;
+  dataConcluida?: string | null;
 }
 
 export interface PlanejamentoItemEtapaDTO {
@@ -306,8 +308,8 @@ export class PlanejamentoService {
     grupoId: number,
     itemId: number,
     id: number,
-  ): Observable<PlanejamentoItemEtapa> {
-    return this.http.get<PlanejamentoItemEtapa>(
+  ): Observable<PlanejamentoItemEtapa | null> {
+    return this.http.get<PlanejamentoItemEtapa | null>(
       `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas/${id}`,
     );
   }
@@ -348,6 +350,27 @@ export class PlanejamentoService {
   ): Observable<void> {
     return this.http.delete<void>(
       `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas/${id}`,
+    );
+  }
+
+  buscarEtapaPorAssunto(
+    planejamentoId: number,
+    assuntoId: number,
+    tipoRegistroId: number,
+  ): Observable<PlanejamentoItemEtapa> {
+    return this.http.get<PlanejamentoItemEtapa>(
+      `${this.apiUrl}/${planejamentoId}/etapas-por-assunto?assuntoId=${assuntoId}&tipoRegistroId=${tipoRegistroId}`,
+    );
+  }
+
+  adicionarEtapaPorAssunto(
+    planejamentoId: number,
+    assuntoId: number,
+    tipoRegistroId: number,
+  ): Observable<PlanejamentoItemEtapa> {
+    return this.http.post<PlanejamentoItemEtapa>(
+      `${this.apiUrl}/${planejamentoId}/etapas-por-assunto`,
+      { assuntoId, tipoRegistroId },
     );
   }
 
