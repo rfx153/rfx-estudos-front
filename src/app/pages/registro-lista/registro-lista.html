@@ -60,18 +60,18 @@
             <nz-form-label>Ciclo / material guia</nz-form-label>
             <nz-form-control>
               <nz-select
-                formControlName="planejamento"
+                formControlName="ciclo"
                 nzShowSearch
                 nzAllowClear
                 nzPlaceHolder="Ciclo"
-                [nzDropdownRender]="renderPlanejamentoTemplate">
-                <nz-option *ngFor="let p of listaPlanejamentos" [nzLabel]="p.nome" [nzValue]="p.id"></nz-option>
+                [nzDropdownRender]="renderCicloTemplate">
+                <nz-option *ngFor="let ciclo of listaCiclos" [nzLabel]="ciclo.nome" [nzValue]="ciclo.id"></nz-option>
               </nz-select>
 
-              <ng-template #renderPlanejamentoTemplate>
+              <ng-template #renderCicloTemplate>
                 <div class="dropdown-wrapper">
-                  <input type="text" nz-input #inputPlanejamento placeholder="Novo ciclo..." />
-                  <a class="add-item-btn" (click)="cadastrarPlanejamentoRapido(inputPlanejamento)">
+                  <input type="text" nz-input #inputCiclo placeholder="Novo ciclo..." />
+                  <a class="add-item-btn" (click)="cadastrarCicloRapido(inputCiclo)">
                     <i nz-icon nzType="plus"></i> Criar
                   </a>
                 </div>
@@ -85,6 +85,26 @@
             <nz-form-control>
               <nz-date-picker formControlName="dataEstudo" style="width: 100%"></nz-date-picker>
             </nz-form-control>
+          </nz-form-item>
+        </div>
+      </div>
+
+      <div nz-row [nzGutter]="24">
+        <div nz-col [nzSpan]="16">
+          <nz-form-item>
+            <nz-form-label>Planejamento</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="planejamento" nzShowSearch nzAllowClear nzPlaceHolder="Selecione o planejamento">
+                <nz-option *ngFor="let planejamento of listaPlanejamentos" [nzLabel]="planejamento.nome" [nzValue]="planejamento.id"></nz-option>
+              </nz-select>
+              <small>A etapa será identificada pelo assunto e pelo tipo do registro.</small>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col [nzSpan]="8">
+          <nz-form-item>
+            <nz-form-label>Conclusão</nz-form-label>
+            <nz-form-control><label><input type="checkbox" formControlName="concluido" /> Sessão concluída</label></nz-form-control>
           </nz-form-item>
         </div>
       </div>
@@ -123,25 +143,6 @@
             <nz-form-label nzRequired>Tempo Estudado</nz-form-label>
             <nz-form-control nzErrorTip="Informe o tempo">
               <nz-time-picker formControlName="tempoEstudado" nzFormat="HH:mm" style="width: 100%"></nz-time-picker>
-            </nz-form-control>
-          </nz-form-item>
-        </div>
-      </div>
-
-      <div nz-row [nzGutter]="24">
-        <div nz-col [nzSpan]="8">
-          <nz-form-item>
-            <nz-form-label>Etapa do planejamento</nz-form-label>
-            <nz-form-control>
-              <input nz-input type="number" min="1" formControlName="planejamentoEtapa" placeholder="ID da etapa (opcional)" />
-            </nz-form-control>
-          </nz-form-item>
-        </div>
-        <div nz-col [nzSpan]="8">
-          <nz-form-item>
-            <nz-form-label>Conclusão</nz-form-label>
-            <nz-form-control>
-              <label><input type="checkbox" formControlName="concluido" /> Sessão concluída</label>
             </nz-form-control>
           </nz-form-item>
         </div>
@@ -198,7 +199,7 @@
           <nz-form-item>
             <nz-form-label>Observações Gerais</nz-form-label>
             <nz-form-control>
-              <textarea nz-input formControlName="observacoes" [nzAutosize]="{ minRows: 1, maxRows: 3 }"></textarea>
+              <textarea nz-input formControlName="observacoes" rows="2"></textarea>
             </nz-form-control>
           </nz-form-item>
         </div>

@@ -12,7 +12,7 @@
   "private": true,
   "packageManager": "npm@10.9.8",
   "dependencies": {
-    "@angular/animations": "^21.2.18",
+    "@angular/animations": "22.2.0",
     "@angular/common": "^22.0.0",
     "@angular/compiler": "^22.0.0",
     "@angular/core": "^22.0.0",
@@ -22,7 +22,7 @@
     "@angular/router": "^22.0.0",
     "@angular/ssr": "^22.0.6",
     "express": "^5.1.0",
-    "ng-zorro-antd": "^21.3.2",
+    "ng-zorro-antd": "^22.1.2",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

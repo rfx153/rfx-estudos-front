@@ -45,7 +45,8 @@
         <div class="history-meta">
           <nz-tag nzColor="purple">{{ registro.tipoRegistro?.nome || 'Registro' }}</nz-tag>
           <nz-tag nzColor="blue">{{ registro.materialTipo?.nome || 'Material' }}</nz-tag>
-          <span class="meta-pill">{{ registro.planejamento?.nome || 'Sem ciclo' }}</span>
+          <span class="meta-pill">Ciclo: {{ registro.ciclo?.nome || 'Não informado' }}</span>
+          <span class="meta-pill">Planejamento: {{ registro.planejamento?.nome || 'Não informado' }}</span>
         </div>
 
         <div class="history-stats">

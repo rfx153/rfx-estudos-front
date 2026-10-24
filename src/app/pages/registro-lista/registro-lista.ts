@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { RegistroService, Registro, Assunto, MaterialTipo, TipoRegistro } from '../../services/registro.service';
 import { MateriaService, Materia } from '../../services/materia.service';
 import { PlanejamentoService, Planejamento } from '../../services/planejamento.service';
+import { Ciclo, CicloService } from '../../services/ciclos.service';
 
 // Módulos do NG-ZORRO necessários para o formulário denso de registros
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -55,6 +56,7 @@ export class RegistroListaComponent implements OnInit {
   private registroService = inject(RegistroService);
   private materiaService = inject(MateriaService);
   private planejamentoService = inject(PlanejamentoService);
+  private cicloService = inject(CicloService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
   private iconService = inject(NzIconService);
@@ -66,6 +68,7 @@ export class RegistroListaComponent implements OnInit {
   totalRegistros = 0;
   listaMaterias: Materia[] = [];
   listaPlanejamentos: Planejamento[] = [];
+  listaCiclos: Ciclo[] = [];
   
   // Listas fictícias iniciais (ajuste conforme criar os services delas depois)
   listaAssuntos: Assunto[] = [] 
@@ -98,7 +101,7 @@ listaTiposRegistro: TipoRegistro[] = [];
       materia: [null, [Validators.required]],
       assunto: [null, [Validators.required]],
       planejamento: [null],
-      planejamentoEtapa: [null],
+      ciclo: [null],
       tipoRegistro: [null, [Validators.required]],
       concluido: [false],
       materialTipo: [null, [Validators.required]],
@@ -151,6 +154,13 @@ listaTiposRegistro: TipoRegistro[] = [];
       error: (err) => {
         console.error('Erro ao carregar planejamentos:', err);
       }
+    });
+    this.cicloService.listarTodos().subscribe({
+      next: ciclos => {
+        this.listaCiclos = ciclos;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Erro ao carregar ciclos:', err)
     });
     //listar os tipos de materias
     this.registroService.listarTiposMaterial().subscribe({
@@ -205,7 +215,7 @@ listaTiposRegistro: TipoRegistro[] = [];
       materia: formValue.materia ? { id: formValue.materia } as any : null,
       assunto: formValue.assunto ? { id: formValue.assunto } as any : null,
       planejamento: formValue.planejamento ? { id: formValue.planejamento } as any : null,
-      planejamentoEtapa: formValue.planejamentoEtapa ? { id: formValue.planejamentoEtapa } : null,
+      ciclo: formValue.ciclo ? { id: formValue.ciclo } as any : null,
       tipoRegistro: formValue.tipoRegistro ? { id: formValue.tipoRegistro } as any : null,
       // Se materialTipo também for apenas ID no formulário, converta aqui também:
       materialTipo: formValue.materialTipo && typeof formValue.materialTipo !== 'object' 
@@ -346,7 +356,7 @@ private prepararEdicaoSeNecessario(): void {
   this.validateForm.patchValue({
     materia: registro.materia?.id ?? null,
     planejamento: registro.planejamento?.id ?? null,
-    planejamentoEtapa: registro.planejamentoEtapa?.id ?? null,
+    ciclo: registro.ciclo?.id ?? null,
     tipoRegistro: registro.tipoRegistro?.id ?? null,
     concluido: registro.concluido ?? false,
     materialTipo: registro.materialTipo?.id ?? null,
@@ -487,24 +497,24 @@ cadastrarMateriaRapida(inputElement: HTMLInputElement): void {
   });
 }
 
-cadastrarPlanejamentoRapido(inputElement: HTMLInputElement): void {
-  const nomePlanejamento = inputElement.value.trim();
+cadastrarCicloRapido(inputElement: HTMLInputElement): void {
+  const nomeCiclo = inputElement.value.trim();
 
-  if (!nomePlanejamento) {
+  if (!nomeCiclo) {
     return;
   }
 
-  this.planejamentoService.criar({ nome: nomePlanejamento }).subscribe({
-    next: (planejamentoSalvo) => {
-      this.listaPlanejamentos = [...this.listaPlanejamentos, planejamentoSalvo];
-      this.validateForm.get('planejamento')?.setValue(planejamentoSalvo.id);
+  this.cicloService.criar({ nome: nomeCiclo }).subscribe({
+    next: (cicloSalvo) => {
+      this.listaCiclos = [...this.listaCiclos, cicloSalvo];
+      this.validateForm.get('ciclo')?.setValue(cicloSalvo.id);
       inputElement.value = '';
-      this.message.success('Planejamento criado com sucesso.');
+      this.message.success('Ciclo criado com sucesso.');
       this.cdr.detectChanges();
     },
     error: (err) => {
-      console.error('Erro ao cadastrar planejamento rápido:', err);
-      this.message.error('Não foi possível criar o planejamento.');
+      console.error('Erro ao cadastrar ciclo rápido:', err);
+      this.message.error('Não foi possível criar o ciclo.');
     }
   });
 }

@@ -7,7 +7,26 @@
 .planning-list-card:hover { border-color:#1677ff; box-shadow:0 0 0 2px rgba(22,119,255,.1); }
 .planning-list-card h3 { margin:0; color:var(--text,#0f172a); }
 .planning-list-card p { margin:6px 0 0; color:var(--text-muted,#64748b); }
-.planning-id { display:block; margin-bottom:5px; color:var(--text-muted,#64748b); font-size:12px; }
 .planning-loading,.planning-empty { padding:28px; text-align:center; color:var(--text-muted,#64748b); }
 
 .planning-list-card { text-decoration: none; color: inherit; }
+.card-actions { display:flex; align-items:center; gap:12px; }
+.edit-button,.remove-button { padding:6px 10px; border:1px solid var(--border,#e5e7eb); border-radius:6px; background:transparent; color:var(--text-muted,#64748b); cursor:pointer; }
+.edit-button:hover { border-color:#1677ff; color:#1677ff; }
+.remove-button { color:#dc2626; }
+.remove-button:hover:not(:disabled) { border-color:#dc2626; background:rgba(220,38,38,.05); }
+.remove-button:disabled { cursor:wait; opacity:.55; }
+.card-arrow { color:var(--text-muted,#64748b); font-size:25px; line-height:1; }
+.modal-backdrop { position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:20px; background:rgba(15,23,42,.45); }
+.edit-modal { width:min(460px,100%); padding:20px; border:1px solid var(--border,#e5e7eb); border-radius:12px; background:var(--surface,#fff); box-shadow:0 24px 70px rgba(15,23,42,.22); }
+.edit-modal header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
+.edit-modal h3 { margin:0; color:var(--text,#0f172a); }
+.edit-modal header p { margin:4px 0 0; color:var(--text-muted,#64748b); font-size:13px; }
+.modal-close { border:0; background:transparent; color:var(--text-muted,#64748b); cursor:pointer; font-size:24px; line-height:1; }
+.edit-modal form,.edit-modal label { display:grid; gap:7px; }
+.edit-modal form { gap:15px; }
+.edit-modal label { color:var(--text,#0f172a); font-size:13px; font-weight:700; }
+.edit-modal input,.edit-modal textarea { width:100%; padding:9px 10px; border:1px solid var(--border,#d1d5db); border-radius:6px; background:var(--surface,#fff); color:var(--text,#0f172a); font:inherit; font-weight:400; }
+.field-error { margin-top:-10px; color:#dc2626; }
+.modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:3px; }
+@media (max-width:600px) { .planning-list-page{padding:18px}.page-heading{flex-direction:column}.planning-list-card{align-items:flex-start}.card-actions{align-self:center}.planning-list-card p{max-width:220px} }

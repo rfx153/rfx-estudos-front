@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { map, shareReplay, tap } from 'rxjs/operators';
 import { Materia } from './materia.service';
 import { Planejamento } from './planejamento.service';
+import { Ciclo } from './ciclos.service';
 import { environment } from '../../environments/environment.development';
 
 // Interfaces espelhando o seu modelo Java
@@ -31,6 +32,7 @@ export interface Registro {
   concluido?: boolean;
   planejamentoEtapa?: { id?: number };
   planejamento?: Planejamento;
+  ciclo?: Ciclo;
   materialNome?: string;
   puntoParada?: string;
   questoesFeitas: number;

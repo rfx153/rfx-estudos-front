@@ -94,6 +94,11 @@ export class PlanejamentoDetalheComponent implements OnInit {
   etapaEditandoId?: number;
   carregandoEtapas = false;
   salvandoEtapa = false;
+  modalMateriaAberto = false;
+  modalGrupoAberto = false;
+  modalItemAberto = false;
+  modalEtapaAberto = false;
+  nomesAssuntosPorGrupo = new Map<number, string>();
 
   ngOnInit(): void {
     const parametroId = this.route.snapshot.paramMap.get('id');
@@ -174,6 +179,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     requisicao$.subscribe({
       next: () => {
         this.salvandoMateria = false;
+        this.modalMateriaAberto = false;
         this.cancelarEdicaoMateria();
         this.carregarMaterias();
         this.message.success(`Matéria ${editando ? 'atualizada' : 'adicionada'} com sucesso.`);
@@ -194,6 +200,18 @@ export class PlanejamentoDetalheComponent implements OnInit {
       peso: item.peso ?? null,
       ordem: item.ordem ?? null
     });
+    this.modalMateriaAberto = true;
+  }
+
+  abrirMateria(): void {
+    this.cancelarEdicaoMateria();
+    this.modalMateriaAberto = true;
+  }
+
+  fecharMateria(): void {
+    if (this.salvandoMateria) return;
+    this.modalMateriaAberto = false;
+    this.cancelarEdicaoMateria();
   }
 
   cancelarEdicaoMateria(): void {
@@ -225,7 +243,15 @@ export class PlanejamentoDetalheComponent implements OnInit {
 
   selecionarMateria(item: PlanejamentoMateria): void {
     if (!item.id) return;
+    if (this.materiaSelecionada?.id === item.id) {
+      this.materiaSelecionada = undefined;
+      this.grupoSelecionado = undefined;
+      this.itemSelecionado = undefined;
+      return;
+    }
     this.materiaSelecionada = item;
+    this.grupoSelecionado = undefined;
+    this.itemSelecionado = undefined;
     this.cancelarEdicaoGrupo();
     this.carregarGrupos();
   }
@@ -260,6 +286,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     request$.subscribe({
       next: () => {
         this.salvandoGrupo = false;
+        this.modalGrupoAberto = false;
         this.cancelarEdicaoGrupo();
         this.carregarGrupos();
         this.message.success(`Grupo ${editando ? 'atualizado' : 'adicionado'} com sucesso.`);
@@ -277,12 +304,29 @@ export class PlanejamentoDetalheComponent implements OnInit {
     this.grupoEditandoId = grupo.id;
     this.quantidadeItensGrupoEditando = 0;
     this.grupoForm.setValue({ tipo: grupo.tipo, nome: grupo.nome || '', peso: grupo.peso ?? null, ordem: grupo.ordem ?? null });
+    this.modalGrupoAberto = true;
     if (this.id && this.materiaSelecionada?.id) {
       this.service.listarItens(this.id, this.materiaSelecionada.id, grupo.id).subscribe({
         next: itens => this.quantidadeItensGrupoEditando = itens.length,
         error: erro => console.error('Erro ao verificar itens do grupo:', erro)
       });
     }
+  }
+
+  abrirGrupo(): void {
+    this.cancelarEdicaoGrupo();
+    this.modalGrupoAberto = true;
+  }
+
+  fecharGrupo(): void {
+    if (this.salvandoGrupo) return;
+    this.modalGrupoAberto = false;
+    this.cancelarEdicaoGrupo();
+  }
+
+  nomeDoGrupo(grupo: PlanejamentoGrupoAssunto): string {
+    if (grupo.tipo === 'BLOCO') return grupo.nome || 'Bloco sem nome';
+    return grupo.id ? this.nomesAssuntosPorGrupo.get(grupo.id) || 'Assunto' : 'Assunto';
   }
 
   cancelarEdicaoGrupo(): void {
@@ -301,7 +345,13 @@ export class PlanejamentoDetalheComponent implements OnInit {
 
   selecionarGrupo(grupo: PlanejamentoGrupoAssunto): void {
     if (!grupo.id || !this.materiaSelecionada?.materia.id) return;
+    if (this.grupoSelecionado?.id === grupo.id) {
+      this.grupoSelecionado = undefined;
+      this.itemSelecionado = undefined;
+      return;
+    }
     this.grupoSelecionado = grupo;
+    this.itemSelecionado = undefined;
     this.cancelarEdicaoItem();
     this.carregarItens();
     this.registroService.listarAssuntosPorMateria(this.materiaSelecionada.materia.id).subscribe({
@@ -330,7 +380,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
       ? this.service.atualizarItem(this.id, this.materiaSelecionada.id, this.grupoSelecionado.id, this.itemEditandoId, dados)
       : this.service.adicionarItem(this.id, this.materiaSelecionada.id, this.grupoSelecionado.id, dados);
     request$.subscribe({
-      next: () => { this.salvandoItem = false; this.cancelarEdicaoItem(); this.carregarItens(); this.message.success(`Item ${editando ? 'atualizado' : 'adicionado'} com sucesso.`); },
+      next: () => { this.salvandoItem = false; this.modalItemAberto = false; this.cancelarEdicaoItem(); this.carregarItens(); this.message.success(`Item ${editando ? 'atualizado' : 'adicionado'} com sucesso.`); },
       error: erro => { console.error('Erro ao salvar item:', erro); this.salvandoItem = false; this.message.error('Não foi possível salvar o item.'); }
     });
   }
@@ -339,6 +389,18 @@ export class PlanejamentoDetalheComponent implements OnInit {
     if (!item.id) return;
     this.itemEditandoId = item.id;
     this.itemForm.setValue({ assuntoId: item.assunto.id, peso: item.peso ?? null, ordem: item.ordem ?? null });
+    this.modalItemAberto = true;
+  }
+
+  abrirItem(): void {
+    this.cancelarEdicaoItem();
+    this.modalItemAberto = true;
+  }
+
+  fecharItem(): void {
+    if (this.salvandoItem) return;
+    this.modalItemAberto = false;
+    this.cancelarEdicaoItem();
   }
 
   cancelarEdicaoItem(): void {
@@ -362,6 +424,10 @@ export class PlanejamentoDetalheComponent implements OnInit {
 
   selecionarItem(item: PlanejamentoGrupoAssuntoItem): void {
     if (!item.id) return;
+    if (this.itemSelecionado?.id === item.id) {
+      this.itemSelecionado = undefined;
+      return;
+    }
     this.itemSelecionado = item;
     this.cancelarEdicaoEtapa();
     this.carregarEtapas();
@@ -392,7 +458,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
       ? this.service.atualizarEtapa(this.id, this.materiaSelecionada.id, this.grupoSelecionado.id, this.itemSelecionado.id, this.etapaEditandoId, dados)
       : this.service.adicionarEtapa(this.id, this.materiaSelecionada.id, this.grupoSelecionado.id, this.itemSelecionado.id, dados);
     request$.subscribe({
-      next: () => { this.salvandoEtapa = false; this.cancelarEdicaoEtapa(); this.carregarEtapas(); this.message.success(`Etapa ${editando ? 'atualizada' : 'adicionada'} com sucesso.`); },
+      next: () => { this.salvandoEtapa = false; this.modalEtapaAberto = false; this.cancelarEdicaoEtapa(); this.carregarEtapas(); this.message.success(`Etapa ${editando ? 'atualizada' : 'adicionada'} com sucesso.`); },
       error: erro => { console.error('Erro ao salvar etapa:', erro); this.salvandoEtapa = false; this.message.error('Não foi possível salvar a etapa.'); }
     });
   }
@@ -401,6 +467,18 @@ export class PlanejamentoDetalheComponent implements OnInit {
     if (!etapa.id) return;
     this.etapaEditandoId = etapa.id;
     this.etapaForm.setValue({ tipoRegistroId: etapa.tipoRegistro.id, ordem: etapa.ordem ?? null, concluida: !!etapa.concluida, concluidaManualmente: !!etapa.concluidaManualmente });
+    this.modalEtapaAberto = true;
+  }
+
+  abrirEtapa(): void {
+    this.cancelarEdicaoEtapa();
+    this.modalEtapaAberto = true;
+  }
+
+  fecharEtapa(): void {
+    if (this.salvandoEtapa) return;
+    this.modalEtapaAberto = false;
+    this.cancelarEdicaoEtapa();
   }
 
   cancelarEdicaoEtapa(): void {
@@ -466,7 +544,11 @@ export class PlanejamentoDetalheComponent implements OnInit {
       this.carregandoGrupos = false;
       this.cdr.detectChanges();
     })).subscribe({
-      next: grupos => { this.grupos = grupos; this.cdr.detectChanges(); },
+      next: grupos => {
+        this.grupos = grupos;
+        this.carregarNomesDosAssuntos(grupos);
+        this.cdr.detectChanges();
+      },
       error: erro => { console.error('Erro ao carregar grupos:', erro); this.message.error('Não foi possível carregar os grupos.'); }
     });
   }
@@ -480,6 +562,22 @@ export class PlanejamentoDetalheComponent implements OnInit {
     })).subscribe({
       next: itens => { this.itens = itens; this.cdr.detectChanges(); },
       error: erro => { console.error('Erro ao carregar itens:', erro); this.message.error('Não foi possível carregar os itens.'); }
+    });
+  }
+
+  private carregarNomesDosAssuntos(grupos: PlanejamentoGrupoAssunto[]): void {
+    this.nomesAssuntosPorGrupo.clear();
+    if (!this.id || !this.materiaSelecionada?.id) return;
+
+    grupos.filter(grupo => grupo.tipo === 'ASSUNTO' && grupo.id).forEach(grupo => {
+      this.service.listarItens(this.id!, this.materiaSelecionada!.id!, grupo.id!).subscribe({
+        next: itens => {
+          const nome = itens[0]?.assunto?.nome;
+          if (nome) this.nomesAssuntosPorGrupo.set(grupo.id!, nome);
+          this.cdr.detectChanges();
+        },
+        error: erro => console.error('Erro ao carregar nome do assunto:', erro)
+      });
     });
   }
 

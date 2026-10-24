@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { MateriaLista } from './materia-lista';
+import { MateriaListaComponent } from './materia-lista';
 
 describe('MateriaLista', () => {
-  let component: MateriaLista;
-  let fixture: ComponentFixture<MateriaLista>;
+  let component: MateriaListaComponent;
+  let fixture: ComponentFixture<MateriaListaComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MateriaLista],
+      imports: [MateriaListaComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(MateriaLista);
+    fixture = TestBed.createComponent(MateriaListaComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

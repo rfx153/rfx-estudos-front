@@ -21,7 +21,7 @@ export class App {
     const preferenciaSalva = localStorage.getItem('rfx-theme');
     this.modoEscuro = preferenciaSalva
       ? preferenciaSalva === 'dark'
-      : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      : window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
 
     this.aplicarTema();
   }

@@ -8,6 +8,7 @@ import { provideClientHydration } from '@angular/platform-browser';
 
 // Configurações Globais do NG-ZORRO
 import { NZ_I18N, pt_BR } from 'ng-zorro-antd/i18n';
+import { provideNzNativeDateAdapter } from 'ng-zorro-antd/core/time';
 import { registerLocaleData } from '@angular/common';
 import pt from '@angular/common/locales/pt';
 
@@ -21,6 +22,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(),
     provideHttpClient(), // <-- Permite que o Angular converse com o seu Java (API)
     provideAnimationsAsync(), // <-- Garante que os efeitos visuais do NG-ZORRO funcionem lisos
+    provideNzNativeDateAdapter({ locale: 'pt-BR', firstDayOfWeek: 0 }),
     { provide: NZ_I18N, useValue: pt_BR } // <-- Força os componentes do Zorro a falarem Português
   ]
 };

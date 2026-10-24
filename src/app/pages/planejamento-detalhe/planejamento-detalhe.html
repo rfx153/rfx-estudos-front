@@ -1,142 +1,81 @@
 <div class="planejamentos-page page-card">
   <header class="page-heading">
-    <div>
-      <h2>{{ id ? 'Editar planejamento' : 'Novo planejamento' }}</h2>
-      <p>Preencha apenas as informações cadastradas na tabela de planejamentos.</p>
-    </div>
+    <button type="button" class="back-button" (click)="voltar()">← Planejamentos</button>
+    <h2>{{ id ? (form.controls.nome.value || 'Editar planejamento') : 'Novo planejamento' }}</h2>
+    <p>{{ id ? 'Organize as matérias, os assuntos e as etapas.' : 'Informe os dados principais para começar.' }}</p>
   </header>
 
   <div class="planning-loading" *ngIf="carregando">Carregando planejamento...</div>
 
-  <form class="panel-form" nz-form [formGroup]="form" (ngSubmit)="salvar()" *ngIf="!carregando">
-    <nz-form-item>
-      <nz-form-label nzRequired>Nome</nz-form-label>
-      <nz-form-control nzErrorTip="Informe um nome de até 150 caracteres.">
-        <input nz-input formControlName="nome" maxlength="150" placeholder="Nome do planejamento" />
-      </nz-form-control>
-    </nz-form-item>
-
-    <nz-form-item>
-      <nz-form-label>Descrição</nz-form-label>
-      <nz-form-control>
-        <textarea nz-input formControlName="descricao" rows="5" placeholder="Descrição opcional"></textarea>
-      </nz-form-control>
-    </nz-form-item>
-
-    <div class="form-actions">
-      <button nz-button nzType="primary" [nzLoading]="salvando">Salvar</button>
-      <button nz-button type="button" (click)="voltar()">Cancelar</button>
-    </div>
+  <form class="new-planning-form" nz-form [formGroup]="form" (ngSubmit)="salvar()" *ngIf="!id && !carregando">
+    <nz-form-item><nz-form-label nzRequired>Nome</nz-form-label><nz-form-control nzErrorTip="Informe um nome de até 150 caracteres."><input nz-input formControlName="nome" maxlength="150" /></nz-form-control></nz-form-item>
+    <nz-form-item><nz-form-label>Descrição</nz-form-label><nz-form-control><textarea nz-input formControlName="descricao" rows="4"></textarea></nz-form-control></nz-form-item>
+    <div class="form-actions"><button nz-button type="button" (click)="voltar()">Cancelar</button><button nz-button nzType="primary" [nzLoading]="salvando">Criar planejamento</button></div>
   </form>
 
-  <section class="planning-section" *ngIf="id && !carregando">
-    <div class="section-heading">
-      <div>
-        <h3>Matérias do planejamento</h3>
-        <p>Adicione as matérias e defina, se necessário, o peso e a ordem.</p>
-      </div>
+  <section class="workspace" *ngIf="id && !carregando">
+    <div class="workspace-heading">
+      <div><h3>Matérias</h3><p>Abra uma matéria para gerenciar seu conteúdo.</p></div>
+      <button nz-button nzType="primary" type="button" (click)="abrirMateria()">+ Adicionar matéria</button>
     </div>
-
-    <form class="materia-form" nz-form [formGroup]="materiaForm" (ngSubmit)="salvarMateria()">
-      <nz-form-item>
-        <nz-form-label nzRequired>Matéria</nz-form-label>
-        <nz-form-control nzErrorTip="Selecione uma matéria.">
-          <nz-select formControlName="materiaId" nzPlaceHolder="Selecione a matéria">
-            <nz-option *ngFor="let materia of materiasDisponiveis()" [nzValue]="materia.id" [nzLabel]="materia.nome"></nz-option>
-          </nz-select>
-        </nz-form-control>
-      </nz-form-item>
-
-      <nz-form-item>
-        <nz-form-label>Peso</nz-form-label>
-        <nz-form-control nzErrorTip="Informe um valor de 1 a 5.">
-          <input nz-input type="number" min="1" max="5" formControlName="peso" placeholder="1 a 5" />
-        </nz-form-control>
-      </nz-form-item>
-
-      <nz-form-item>
-        <nz-form-label>Ordem</nz-form-label>
-        <nz-form-control nzErrorTip="Informe um número maior que zero.">
-          <input nz-input type="number" min="1" formControlName="ordem" placeholder="Ex.: 1" />
-        </nz-form-control>
-      </nz-form-item>
-
-      <div class="form-actions">
-        <button nz-button nzType="primary" [nzLoading]="salvandoMateria">
-          {{ materiaEditandoId ? 'Atualizar matéria' : 'Adicionar matéria' }}
-        </button>
-        <button nz-button type="button" *ngIf="materiaEditandoId" (click)="cancelarEdicaoMateria()">Cancelar</button>
-      </div>
-    </form>
-
     <div class="planning-loading" *ngIf="carregandoMaterias">Carregando matérias...</div>
-    <div class="empty-state" *ngIf="!carregandoMaterias && !materiasPlanejadas.length">Nenhuma matéria adicionada.</div>
+    <div class="empty-state" *ngIf="!carregandoMaterias && !materiasPlanejadas.length">Nenhuma matéria adicionada. Comece pelo botão acima.</div>
 
-    <div class="materias-planejadas" *ngIf="!carregandoMaterias && materiasPlanejadas.length">
-      <article class="materia-planejada" *ngFor="let item of materiasPlanejadas">
-        <div>
-          <h4>{{ item.materia.nome }}</h4>
-          <span>Peso: {{ item.peso ?? 'não definido' }} · Ordem: {{ item.ordem ?? 'não definida' }}</span>
+    <div class="accordion-list" *ngIf="!carregandoMaterias && materiasPlanejadas.length">
+      <article class="matter-card" *ngFor="let item of materiasPlanejadas" [class.open]="materiaSelecionada?.id === item.id">
+        <div class="accordion-header">
+          <button type="button" class="accordion-trigger" (click)="selecionarMateria(item)" [attr.aria-expanded]="materiaSelecionada?.id === item.id">
+            <span class="chevron" aria-hidden="true">›</span>
+            <span><strong>{{ item.materia.nome }}</strong><small>Ordem {{ item.ordem ?? 'não definida' }}<ng-container *ngIf="item.peso"> · Peso {{ item.peso }}</ng-container></small></span>
+          </button>
+          <div class="row-actions"><button type="button" (click)="editarMateria(item)">Editar</button><button type="button" class="danger" (click)="excluirMateria(item)">Remover</button></div>
         </div>
-        <div class="materia-actions">
-          <button nz-button nzType="link" type="button" (click)="selecionarMateria(item)">Grupos</button>
-          <button nz-button nzType="link" type="button" (click)="editarMateria(item)">Editar</button>
-          <button nz-button nzDanger nzType="link" type="button" (click)="excluirMateria(item)">Remover</button>
+
+        <div class="accordion-body" *ngIf="materiaSelecionada?.id === item.id">
+          <div class="content-heading"><div><h4>Blocos e assuntos</h4><p>Agrupe assuntos relacionados ou use um bloco individual.</p></div><button nz-button type="button" (click)="abrirGrupo()">+ Adicionar bloco</button></div>
+          <div class="inline-loading" *ngIf="carregandoGrupos">Carregando...</div>
+          <div class="subtle-empty" *ngIf="!carregandoGrupos && !grupos.length">Nenhum bloco adicionado.</div>
+
+          <div class="groups-list" *ngIf="!carregandoGrupos && grupos.length">
+            <article class="group-card" *ngFor="let grupo of grupos" [class.open]="grupoSelecionado?.id === grupo.id">
+              <div class="group-header">
+                <button type="button" class="group-trigger" (click)="selecionarGrupo(grupo)" [attr.aria-expanded]="grupoSelecionado?.id === grupo.id">
+                  <span class="chevron" aria-hidden="true">›</span><span><strong>{{ nomeDoGrupo(grupo) }}</strong><small>{{ grupo.tipo === 'BLOCO' ? 'Bloco' : 'Assunto' }}</small></span>
+                </button>
+                <div class="row-actions compact"><button type="button" (click)="editarGrupo(grupo)">Editar</button><button type="button" class="danger" (click)="excluirGrupo(grupo)">Remover</button></div>
+              </div>
+
+              <div class="group-body" *ngIf="grupoSelecionado?.id === grupo.id">
+                <div class="content-heading small"><h5>Assuntos</h5><button nz-button nzSize="small" type="button" (click)="abrirItem()" *ngIf="podeAdicionarItem()">+ Adicionar assunto</button></div>
+                <div class="inline-loading" *ngIf="carregandoItens">Carregando...</div>
+                <div class="subtle-empty" *ngIf="!carregandoItens && !itens.length">Nenhum assunto adicionado.</div>
+                <div class="topics-list" *ngIf="!carregandoItens && itens.length">
+                  <article class="topic-row" *ngFor="let assunto of itens" [class.selected]="itemSelecionado?.id === assunto.id">
+                    <button type="button" class="topic-main" (click)="selecionarItem(assunto)"><strong>{{ assunto.assunto.nome }}</strong><small>{{ itemSelecionado?.id === assunto.id ? 'Ocultar etapas' : 'Ver etapas' }}</small></button>
+                    <div class="row-actions compact"><button type="button" (click)="editarItem(assunto)">Editar</button><button type="button" class="danger" (click)="excluirItem(assunto)">Remover</button></div>
+                    <div class="stages-panel" *ngIf="itemSelecionado?.id === assunto.id">
+                      <div class="content-heading small"><h5>Etapas</h5><button nz-button nzSize="small" type="button" (click)="abrirEtapa()">+ Adicionar etapa</button></div>
+                      <div class="inline-loading" *ngIf="carregandoEtapas">Carregando...</div>
+                      <div class="stage-list" *ngIf="!carregandoEtapas && etapas.length">
+                        <div class="stage-chip" *ngFor="let etapa of etapas"><span [class.done]="etapa.concluida">{{ etapa.tipoRegistro.nome }} · {{ etapa.concluida ? 'Concluída' : 'Pendente' }}</span><button type="button" (click)="editarEtapa(etapa)">Editar</button><button type="button" class="danger" (click)="excluirEtapa(etapa)">×</button></div>
+                      </div>
+                      <div class="subtle-empty" *ngIf="!carregandoEtapas && !etapas.length">Nenhuma etapa adicionada.</div>
+                    </div>
+                  </article>
+                </div>
+              </div>
+            </article>
+          </div>
         </div>
       </article>
     </div>
   </section>
 
-  <section class="planning-section" *ngIf="materiaSelecionada">
-    <div class="section-heading">
-      <div>
-        <h3>Grupos de assuntos: {{ materiaSelecionada.materia.nome }}</h3>
-        <p>Um grupo pode ser um assunto ou um bloco nomeado.</p>
-      </div>
-    </div>
+  <div class="modal-backdrop" *ngIf="modalMateriaAberto" (click)="fecharMateria()"><section class="form-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()"><header><div><h3>{{ materiaEditandoId ? 'Editar matéria' : 'Adicionar matéria' }}</h3><p>Escolha a matéria e ajuste peso e ordem se necessário.</p></div><button type="button" class="modal-close" (click)="fecharMateria()">×</button></header><form nz-form [formGroup]="materiaForm" (ngSubmit)="salvarMateria()"><nz-form-item><nz-form-label nzRequired>Matéria</nz-form-label><nz-form-control nzErrorTip="Selecione uma matéria."><nz-select formControlName="materiaId" nzPlaceHolder="Selecione"><nz-option *ngFor="let materia of materiasDisponiveis()" [nzValue]="materia.id" [nzLabel]="materia.nome"></nz-option></nz-select></nz-form-control></nz-form-item><div class="form-grid"><nz-form-item><nz-form-label>Peso</nz-form-label><nz-form-control><input nz-input type="number" min="1" max="5" formControlName="peso" /></nz-form-control></nz-form-item><nz-form-item><nz-form-label>Ordem</nz-form-label><nz-form-control><input nz-input type="number" min="1" formControlName="ordem" /></nz-form-control></nz-form-item></div><div class="form-actions"><button nz-button type="button" (click)="fecharMateria()">Cancelar</button><button nz-button nzType="primary" [nzLoading]="salvandoMateria">Salvar</button></div></form></section></div>
 
-    <form class="grupo-form" nz-form [formGroup]="grupoForm" (ngSubmit)="salvarGrupo()">
-      <nz-form-item><nz-form-label nzRequired>Tipo</nz-form-label><nz-form-control><nz-select formControlName="tipo"><nz-option nzValue="ASSUNTO" nzLabel="Assunto" [nzDisabled]="!!grupoEditandoId && quantidadeItensGrupoEditando > 1"></nz-option><nz-option nzValue="BLOCO" nzLabel="Bloco"></nz-option></nz-select></nz-form-control></nz-form-item>
-      <nz-form-item *ngIf="grupoForm.controls.tipo.value === 'BLOCO'"><nz-form-label nzRequired>Nome do bloco</nz-form-label><nz-form-control><input nz-input formControlName="nome" maxlength="150" placeholder="Nome do bloco" /></nz-form-control></nz-form-item>
-      <nz-form-item><nz-form-label>Peso</nz-form-label><nz-form-control><input nz-input type="number" min="1" max="5" formControlName="peso" /></nz-form-control></nz-form-item>
-      <nz-form-item><nz-form-label>Ordem</nz-form-label><nz-form-control><input nz-input type="number" min="1" formControlName="ordem" /></nz-form-control></nz-form-item>
-      <div class="form-actions"><button nz-button nzType="primary" [nzLoading]="salvandoGrupo">{{ grupoEditandoId ? 'Atualizar grupo' : 'Adicionar grupo' }}</button><button nz-button type="button" *ngIf="grupoEditandoId" (click)="cancelarEdicaoGrupo()">Cancelar</button></div>
-    </form>
+  <div class="modal-backdrop" *ngIf="modalGrupoAberto" (click)="fecharGrupo()"><section class="form-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()"><header><div><h3>{{ grupoEditandoId ? 'Editar bloco' : 'Adicionar bloco' }}</h3><p>Defina como os assuntos serão agrupados.</p></div><button type="button" class="modal-close" (click)="fecharGrupo()">×</button></header><form nz-form [formGroup]="grupoForm" (ngSubmit)="salvarGrupo()"><nz-form-item><nz-form-label nzRequired>Tipo</nz-form-label><nz-form-control><nz-select formControlName="tipo"><nz-option nzValue="ASSUNTO" nzLabel="Assunto individual" [nzDisabled]="!!grupoEditandoId && quantidadeItensGrupoEditando > 1"></nz-option><nz-option nzValue="BLOCO" nzLabel="Bloco de assuntos"></nz-option></nz-select></nz-form-control></nz-form-item><nz-form-item *ngIf="grupoForm.controls.tipo.value === 'BLOCO'"><nz-form-label nzRequired>Nome do bloco</nz-form-label><nz-form-control><input nz-input formControlName="nome" maxlength="150" /></nz-form-control></nz-form-item><details><summary>Opções avançadas</summary><div class="form-grid"><nz-form-item><nz-form-label>Peso</nz-form-label><nz-form-control><input nz-input type="number" min="1" max="5" formControlName="peso" /></nz-form-control></nz-form-item><nz-form-item><nz-form-label>Ordem</nz-form-label><nz-form-control><input nz-input type="number" min="1" formControlName="ordem" /></nz-form-control></nz-form-item></div></details><div class="form-actions"><button nz-button type="button" (click)="fecharGrupo()">Cancelar</button><button nz-button nzType="primary" [nzLoading]="salvandoGrupo">Salvar</button></div></form></section></div>
 
-    <div class="planning-loading" *ngIf="carregandoGrupos">Carregando grupos...</div>
-    <div class="empty-state" *ngIf="!carregandoGrupos && !grupos.length">Nenhum grupo adicionado.</div>
-    <div class="materias-planejadas" *ngIf="!carregandoGrupos && grupos.length">
-      <article class="materia-planejada" *ngFor="let grupo of grupos">
-        <div><h4>{{ grupo.tipo === 'BLOCO' ? grupo.nome : 'Assunto' }}</h4><span>Tipo: {{ grupo.tipo }} · Peso: {{ grupo.peso ?? 'não definido' }} · Ordem: {{ grupo.ordem ?? 'não definida' }}</span></div>
-        <div class="materia-actions"><button nz-button nzType="link" type="button" (click)="selecionarGrupo(grupo)">Itens</button><button nz-button nzType="link" type="button" (click)="editarGrupo(grupo)">Editar</button><button nz-button nzDanger nzType="link" type="button" (click)="excluirGrupo(grupo)">Remover</button></div>
-      </article>
-    </div>
-  </section>
+  <div class="modal-backdrop" *ngIf="modalItemAberto" (click)="fecharItem()"><section class="form-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()"><header><div><h3>{{ itemEditandoId ? 'Editar assunto' : 'Adicionar assunto' }}</h3><p>Selecione um assunto de {{ materiaSelecionada?.materia?.nome }}.</p></div><button type="button" class="modal-close" (click)="fecharItem()">×</button></header><form nz-form [formGroup]="itemForm" (ngSubmit)="salvarItem()"><nz-form-item><nz-form-label nzRequired>Assunto</nz-form-label><nz-form-control nzErrorTip="Selecione um assunto."><nz-select formControlName="assuntoId" nzPlaceHolder="Selecione"><nz-option *ngFor="let assunto of assuntos" [nzValue]="assunto.id" [nzLabel]="assunto.nome"></nz-option></nz-select></nz-form-control></nz-form-item><details><summary>Opções avançadas</summary><div class="form-grid"><nz-form-item><nz-form-label>Peso</nz-form-label><nz-form-control><input nz-input type="number" min="1" max="5" formControlName="peso" /></nz-form-control></nz-form-item><nz-form-item><nz-form-label>Ordem</nz-form-label><nz-form-control><input nz-input type="number" min="1" formControlName="ordem" /></nz-form-control></nz-form-item></div></details><div class="form-actions"><button nz-button type="button" (click)="fecharItem()">Cancelar</button><button nz-button nzType="primary" [nzLoading]="salvandoItem">Salvar</button></div></form></section></div>
 
-  <section class="planning-section" *ngIf="grupoSelecionado">
-    <div class="section-heading"><div><h3>Itens: {{ grupoSelecionado.tipo === 'BLOCO' ? grupoSelecionado.nome : 'Assunto' }}</h3><p>Selecione os assuntos que pertencem a este grupo.</p></div></div>
-    <form class="grupo-form" nz-form [formGroup]="itemForm" (ngSubmit)="salvarItem()" *ngIf="podeAdicionarItem() || itemEditandoId; else limiteAssunto">
-      <nz-form-item><nz-form-label nzRequired>Assunto</nz-form-label><nz-form-control nzErrorTip="Selecione um assunto."><nz-select formControlName="assuntoId" nzPlaceHolder="Selecione o assunto"><nz-option *ngFor="let assunto of assuntos" [nzValue]="assunto.id" [nzLabel]="assunto.nome"></nz-option></nz-select></nz-form-control></nz-form-item>
-      <nz-form-item><nz-form-label>Peso</nz-form-label><nz-form-control><input nz-input type="number" min="1" max="5" formControlName="peso" /></nz-form-control></nz-form-item>
-      <nz-form-item><nz-form-label>Ordem</nz-form-label><nz-form-control><input nz-input type="number" min="1" formControlName="ordem" /></nz-form-control></nz-form-item>
-      <div class="form-actions"><button nz-button nzType="primary" [nzLoading]="salvandoItem">{{ itemEditandoId ? 'Atualizar item' : 'Adicionar item' }}</button><button nz-button type="button" *ngIf="itemEditandoId" (click)="cancelarEdicaoItem()">Cancelar</button></div>
-    </form>
-    <ng-template #limiteAssunto><div class="empty-state">Este grupo do tipo ASSUNTO já possui seu único item.</div></ng-template>
-    <div class="planning-loading" *ngIf="carregandoItens">Carregando itens...</div>
-    <div class="empty-state" *ngIf="!carregandoItens && !itens.length">Nenhum item adicionado.</div>
-    <div class="materias-planejadas" *ngIf="!carregandoItens && itens.length"><article class="materia-planejada" *ngFor="let item of itens"><div><h4>{{ item.assunto.nome }}</h4><span>Peso: {{ item.peso ?? 'não definido' }} · Ordem: {{ item.ordem ?? 'não definida' }}</span></div><div class="materia-actions"><button nz-button nzType="link" type="button" (click)="selecionarItem(item)">Etapas</button><button nz-button nzType="link" type="button" (click)="editarItem(item)">Editar</button><button nz-button nzDanger nzType="link" type="button" (click)="excluirItem(item)">Remover</button></div></article></div>
-  </section>
-
-  <section class="planning-section" *ngIf="itemSelecionado">
-    <div class="section-heading"><div><h3>Etapas: {{ itemSelecionado.assunto.nome }}</h3><p>Defina os tipos de registro e a conclusão de cada etapa.</p></div></div>
-    <form class="grupo-form" nz-form [formGroup]="etapaForm" (ngSubmit)="salvarEtapa()">
-      <nz-form-item><nz-form-label nzRequired>Tipo de registro</nz-form-label><nz-form-control nzErrorTip="Selecione um tipo."><nz-select formControlName="tipoRegistroId" nzPlaceHolder="Selecione o tipo"><nz-option *ngFor="let tipo of tiposRegistro" [nzValue]="tipo.id" [nzLabel]="tipo.nome"></nz-option></nz-select></nz-form-control></nz-form-item>
-      <nz-form-item><nz-form-label>Ordem</nz-form-label><nz-form-control><input nz-input type="number" min="1" formControlName="ordem" /></nz-form-control></nz-form-item>
-      <label class="checkbox-field"><input type="checkbox" formControlName="concluida" /> Concluída</label>
-      <label class="checkbox-field"><input type="checkbox" formControlName="concluidaManualmente" /> Concluída manualmente</label>
-      <div class="form-actions"><button nz-button nzType="primary" [nzLoading]="salvandoEtapa">{{ etapaEditandoId ? 'Atualizar etapa' : 'Adicionar etapa' }}</button><button nz-button type="button" *ngIf="etapaEditandoId" (click)="cancelarEdicaoEtapa()">Cancelar</button></div>
-    </form>
-    <div class="planning-loading" *ngIf="carregandoEtapas">Carregando etapas...</div><div class="empty-state" *ngIf="!carregandoEtapas && !etapas.length">Nenhuma etapa adicionada.</div>
-    <div class="materias-planejadas" *ngIf="!carregandoEtapas && etapas.length"><article class="materia-planejada" *ngFor="let etapa of etapas"><div><h4>{{ etapa.tipoRegistro.nome }}</h4><span>Ordem: {{ etapa.ordem ?? 'não definida' }} · {{ etapa.concluida ? 'Concluída' : 'Pendente' }}{{ etapa.concluidaManualmente ? ' manualmente' : '' }}</span></div><div class="materia-actions"><button nz-button nzType="link" type="button" (click)="editarEtapa(etapa)">Editar</button><button nz-button nzDanger nzType="link" type="button" (click)="excluirEtapa(etapa)">Remover</button></div></article></div>
-  </section>
+  <div class="modal-backdrop" *ngIf="modalEtapaAberto" (click)="fecharEtapa()"><section class="form-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()"><header><div><h3>{{ etapaEditandoId ? 'Editar etapa' : 'Adicionar etapa' }}</h3><p>Escolha o tipo de atividade deste assunto.</p></div><button type="button" class="modal-close" (click)="fecharEtapa()">×</button></header><form nz-form [formGroup]="etapaForm" (ngSubmit)="salvarEtapa()"><nz-form-item><nz-form-label nzRequired>Tipo</nz-form-label><nz-form-control><nz-select formControlName="tipoRegistroId" nzPlaceHolder="Selecione"><nz-option *ngFor="let tipo of tiposRegistro" [nzValue]="tipo.id" [nzLabel]="tipo.nome"></nz-option></nz-select></nz-form-control></nz-form-item><nz-form-item><nz-form-label>Ordem</nz-form-label><nz-form-control><input nz-input type="number" min="1" formControlName="ordem" /></nz-form-control></nz-form-item><label class="checkbox-field"><input type="checkbox" formControlName="concluida" /> Concluída</label><label class="checkbox-field"><input type="checkbox" formControlName="concluidaManualmente" /> Concluída manualmente</label><div class="form-actions"><button nz-button type="button" (click)="fecharEtapa()">Cancelar</button><button nz-button nzType="primary" [nzLoading]="salvandoEtapa">Salvar</button></div></form></section></div>
 </div>

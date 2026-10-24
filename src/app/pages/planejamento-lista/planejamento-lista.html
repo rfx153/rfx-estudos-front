@@ -13,10 +13,42 @@
   <div class="planning-list-grid" *ngIf="!carregando && planejamentos.length">
     <a class="planning-list-card" *ngFor="let planejamento of planejamentos" [routerLink]="['/planejamentos', planejamento.id]">
       <div>
-        <span class="planning-id">#{{ planejamento.id }}</span>
         <h3>{{ planejamento.nome }}</h3>
         <p>{{ planejamento.descricao || 'Sem descrição' }}</p>
       </div>
+      <div class="card-actions">
+        <button type="button" class="edit-button" (click)="editar($event, planejamento)">Editar</button>
+        <button type="button" class="remove-button" [disabled]="excluindoId === planejamento.id" (click)="remover($event, planejamento)">
+          {{ excluindoId === planejamento.id ? 'Removendo...' : 'Remover' }}
+        </button>
+        <span class="card-arrow" aria-hidden="true">›</span>
+      </div>
     </a>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="planejamentoEditando" (click)="fecharModal()">
+    <section class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-title" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <h3 id="edit-title">Editar planejamento</h3>
+          <p>Altere apenas as informações principais.</p>
+        </div>
+        <button type="button" class="modal-close" aria-label="Fechar" (click)="fecharModal()">×</button>
+      </header>
+
+      <form [formGroup]="editForm" (ngSubmit)="salvarEdicao()">
+        <label>Nome
+          <input formControlName="nome" maxlength="150" />
+        </label>
+        <small class="field-error" *ngIf="editForm.controls.nome.touched && editForm.controls.nome.invalid">Informe o nome do planejamento.</small>
+        <label>Descrição
+          <textarea formControlName="descricao" rows="3"></textarea>
+        </label>
+        <div class="modal-actions">
+          <button nz-button type="button" (click)="fecharModal()">Cancelar</button>
+          <button nz-button nzType="primary" [nzLoading]="salvando">Salvar</button>
+        </div>
+      </form>
+    </section>
   </div>
 </div>
