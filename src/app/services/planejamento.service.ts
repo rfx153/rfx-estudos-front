@@ -15,12 +15,27 @@ export interface Planejamento {
 export interface PlanejamentoMateria {
   id?: number;
   materia: Materia;
+  planejamentoGrupoMateria?: PlanejamentoGrupoMateria | null;
   peso?: number | null;
   ordem?: number | null;
 }
 
 export interface PlanejamentoMateriaDTO {
   materiaId: number;
+  planejamentoGrupoMateriaId?: number | null;
+  peso?: number | null;
+  ordem?: number | null;
+}
+
+export interface PlanejamentoGrupoMateria {
+  id?: number;
+  nome: string;
+  peso?: number | null;
+  ordem?: number | null;
+}
+
+export interface PlanejamentoGrupoMateriaDTO {
+  nome: string;
   peso?: number | null;
   ordem?: number | null;
 }
@@ -89,15 +104,50 @@ export class PlanejamentoService {
   }
 
   criar(planejamento: Planejamento): Observable<Planejamento> {
-    return this.http.post<Planejamento>(this.apiUrl, planejamento).pipe(tap(() => this.limparCache()));
+    return this.http
+      .post<Planejamento>(this.apiUrl, planejamento)
+      .pipe(tap(() => this.limparCache()));
   }
 
   atualizar(id: number, planejamento: Planejamento): Observable<Planejamento> {
-    return this.http.put<Planejamento>(`${this.apiUrl}/${id}`, planejamento).pipe(tap(() => this.limparCache()));
+    return this.http
+      .put<Planejamento>(`${this.apiUrl}/${id}`, planejamento)
+      .pipe(tap(() => this.limparCache()));
   }
 
   excluir(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(tap(() => this.limparCache()));
+  }
+
+  listarGruposMaterias(planejamentoId: number): Observable<PlanejamentoGrupoMateria[]> {
+    return this.http.get<PlanejamentoGrupoMateria[]>(
+      `${this.apiUrl}/${planejamentoId}/grupos-materias`,
+    );
+  }
+
+  adicionarGrupoMateria(
+    planejamentoId: number,
+    dados: PlanejamentoGrupoMateriaDTO,
+  ): Observable<PlanejamentoGrupoMateria> {
+    return this.http.post<PlanejamentoGrupoMateria>(
+      `${this.apiUrl}/${planejamentoId}/grupos-materias`,
+      dados,
+    );
+  }
+
+  atualizarGrupoMateria(
+    planejamentoId: number,
+    id: number,
+    dados: PlanejamentoGrupoMateriaDTO,
+  ): Observable<PlanejamentoGrupoMateria> {
+    return this.http.put<PlanejamentoGrupoMateria>(
+      `${this.apiUrl}/${planejamentoId}/grupos-materias/${id}`,
+      dados,
+    );
+  }
+
+  excluirGrupoMateria(planejamentoId: number, id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${planejamentoId}/grupos-materias/${id}`);
   }
 
   listarMaterias(planejamentoId: number): Observable<PlanejamentoMateria[]> {
@@ -108,76 +158,197 @@ export class PlanejamentoService {
     return this.http.get<PlanejamentoMateria>(`${this.apiUrl}/${planejamentoId}/materias/${id}`);
   }
 
-  adicionarMateria(planejamentoId: number, dados: PlanejamentoMateriaDTO): Observable<PlanejamentoMateria> {
+  adicionarMateria(
+    planejamentoId: number,
+    dados: PlanejamentoMateriaDTO,
+  ): Observable<PlanejamentoMateria> {
     return this.http.post<PlanejamentoMateria>(`${this.apiUrl}/${planejamentoId}/materias`, dados);
   }
 
-  atualizarMateria(planejamentoId: number, id: number, dados: PlanejamentoMateriaDTO): Observable<PlanejamentoMateria> {
-    return this.http.put<PlanejamentoMateria>(`${this.apiUrl}/${planejamentoId}/materias/${id}`, dados);
+  atualizarMateria(
+    planejamentoId: number,
+    id: number,
+    dados: PlanejamentoMateriaDTO,
+  ): Observable<PlanejamentoMateria> {
+    return this.http.put<PlanejamentoMateria>(
+      `${this.apiUrl}/${planejamentoId}/materias/${id}`,
+      dados,
+    );
   }
 
   excluirMateria(planejamentoId: number, id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${planejamentoId}/materias/${id}`);
   }
 
-  listarGrupos(planejamentoId: number, planejamentoMateriaId: number): Observable<PlanejamentoGrupoAssunto[]> {
-    return this.http.get<PlanejamentoGrupoAssunto[]>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos`);
+  listarGrupos(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+  ): Observable<PlanejamentoGrupoAssunto[]> {
+    return this.http.get<PlanejamentoGrupoAssunto[]>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos`,
+    );
   }
 
-  buscarGrupo(planejamentoId: number, planejamentoMateriaId: number, id: number): Observable<PlanejamentoGrupoAssunto> {
-    return this.http.get<PlanejamentoGrupoAssunto>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${id}`);
+  buscarGrupo(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+    id: number,
+  ): Observable<PlanejamentoGrupoAssunto> {
+    return this.http.get<PlanejamentoGrupoAssunto>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${id}`,
+    );
   }
 
-  adicionarGrupo(planejamentoId: number, planejamentoMateriaId: number, dados: PlanejamentoGrupoAssuntoDTO): Observable<PlanejamentoGrupoAssunto> {
-    return this.http.post<PlanejamentoGrupoAssunto>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos`, dados);
+  adicionarGrupo(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+    dados: PlanejamentoGrupoAssuntoDTO,
+  ): Observable<PlanejamentoGrupoAssunto> {
+    return this.http.post<PlanejamentoGrupoAssunto>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos`,
+      dados,
+    );
   }
 
-  atualizarGrupo(planejamentoId: number, planejamentoMateriaId: number, id: number, dados: PlanejamentoGrupoAssuntoDTO): Observable<PlanejamentoGrupoAssunto> {
-    return this.http.put<PlanejamentoGrupoAssunto>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${id}`, dados);
+  atualizarGrupo(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+    id: number,
+    dados: PlanejamentoGrupoAssuntoDTO,
+  ): Observable<PlanejamentoGrupoAssunto> {
+    return this.http.put<PlanejamentoGrupoAssunto>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${id}`,
+      dados,
+    );
   }
 
-  excluirGrupo(planejamentoId: number, planejamentoMateriaId: number, id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${id}`);
+  excluirGrupo(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+    id: number,
+  ): Observable<void> {
+    return this.http.delete<void>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${id}`,
+    );
   }
 
-  listarItens(planejamentoId: number, planejamentoMateriaId: number, grupoId: number): Observable<PlanejamentoGrupoAssuntoItem[]> {
-    return this.http.get<PlanejamentoGrupoAssuntoItem[]>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens`);
+  listarItens(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+    grupoId: number,
+  ): Observable<PlanejamentoGrupoAssuntoItem[]> {
+    return this.http.get<PlanejamentoGrupoAssuntoItem[]>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens`,
+    );
   }
 
-  buscarItem(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, id: number): Observable<PlanejamentoGrupoAssuntoItem> {
-    return this.http.get<PlanejamentoGrupoAssuntoItem>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${id}`);
+  buscarItem(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+    grupoId: number,
+    id: number,
+  ): Observable<PlanejamentoGrupoAssuntoItem> {
+    return this.http.get<PlanejamentoGrupoAssuntoItem>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${id}`,
+    );
   }
 
-  adicionarItem(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, dados: PlanejamentoGrupoAssuntoItemDTO): Observable<PlanejamentoGrupoAssuntoItem> {
-    return this.http.post<PlanejamentoGrupoAssuntoItem>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens`, dados);
+  adicionarItem(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+    grupoId: number,
+    dados: PlanejamentoGrupoAssuntoItemDTO,
+  ): Observable<PlanejamentoGrupoAssuntoItem> {
+    return this.http.post<PlanejamentoGrupoAssuntoItem>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens`,
+      dados,
+    );
   }
 
-  atualizarItem(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, id: number, dados: PlanejamentoGrupoAssuntoItemDTO): Observable<PlanejamentoGrupoAssuntoItem> {
-    return this.http.put<PlanejamentoGrupoAssuntoItem>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${id}`, dados);
+  atualizarItem(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+    grupoId: number,
+    id: number,
+    dados: PlanejamentoGrupoAssuntoItemDTO,
+  ): Observable<PlanejamentoGrupoAssuntoItem> {
+    return this.http.put<PlanejamentoGrupoAssuntoItem>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${id}`,
+      dados,
+    );
   }
 
-  excluirItem(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${id}`);
+  excluirItem(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+    grupoId: number,
+    id: number,
+  ): Observable<void> {
+    return this.http.delete<void>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${id}`,
+    );
   }
 
-  listarEtapas(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, itemId: number): Observable<PlanejamentoItemEtapa[]> {
-    return this.http.get<PlanejamentoItemEtapa[]>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas`);
+  listarEtapas(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+    grupoId: number,
+    itemId: number,
+  ): Observable<PlanejamentoItemEtapa[]> {
+    return this.http.get<PlanejamentoItemEtapa[]>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas`,
+    );
   }
 
-  buscarEtapa(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, itemId: number, id: number): Observable<PlanejamentoItemEtapa> {
-    return this.http.get<PlanejamentoItemEtapa>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas/${id}`);
+  buscarEtapa(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+    grupoId: number,
+    itemId: number,
+    id: number,
+  ): Observable<PlanejamentoItemEtapa> {
+    return this.http.get<PlanejamentoItemEtapa>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas/${id}`,
+    );
   }
 
-  adicionarEtapa(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, itemId: number, dados: PlanejamentoItemEtapaDTO): Observable<PlanejamentoItemEtapa> {
-    return this.http.post<PlanejamentoItemEtapa>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas`, dados);
+  adicionarEtapa(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+    grupoId: number,
+    itemId: number,
+    dados: PlanejamentoItemEtapaDTO,
+  ): Observable<PlanejamentoItemEtapa> {
+    return this.http.post<PlanejamentoItemEtapa>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas`,
+      dados,
+    );
   }
 
-  atualizarEtapa(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, itemId: number, id: number, dados: PlanejamentoItemEtapaDTO): Observable<PlanejamentoItemEtapa> {
-    return this.http.put<PlanejamentoItemEtapa>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas/${id}`, dados);
+  atualizarEtapa(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+    grupoId: number,
+    itemId: number,
+    id: number,
+    dados: PlanejamentoItemEtapaDTO,
+  ): Observable<PlanejamentoItemEtapa> {
+    return this.http.put<PlanejamentoItemEtapa>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas/${id}`,
+      dados,
+    );
   }
 
-  excluirEtapa(planejamentoId: number, planejamentoMateriaId: number, grupoId: number, itemId: number, id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas/${id}`);
+  excluirEtapa(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+    grupoId: number,
+    itemId: number,
+    id: number,
+  ): Observable<void> {
+    return this.http.delete<void>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${itemId}/etapas/${id}`,
+    );
   }
 
   private limparCache(): void {

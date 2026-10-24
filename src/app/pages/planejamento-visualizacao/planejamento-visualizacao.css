@@ -63,7 +63,10 @@
   color: #1677ff;
 }
 
-.item-arrow { font-size: 24px; line-height: 1; }
+.item-arrow {
+  font-size: 24px;
+  line-height: 1;
+}
 
 .back-link {
   display: inline-block;
@@ -73,7 +76,9 @@
   text-decoration: none;
 }
 
-.back-link:hover { color: #1677ff; }
+.back-link:hover {
+  color: #1677ff;
+}
 
 .materia {
   overflow: hidden;
@@ -105,20 +110,45 @@
   color: var(--text-muted, #64748b);
   font-size: 22px;
   line-height: 1;
-  transition: transform .15s ease;
+  transition: transform 0.15s ease;
 }
 
-.chevron.aberta { transform: rotate(180deg); }
+.chevron.aberta {
+  transform: rotate(180deg);
+}
 
 .assuntos {
   padding: 2px 18px 18px;
   border-top: 1px solid var(--border, #e5e7eb);
 }
 
-.grupo { padding-top: 16px; }
-.grupo + .grupo { margin-top: 4px; }
-.grupo h3 { margin: 0 0 8px; color: var(--text, #0f172a); font-size: 14px; }
-.assuntos-tabela { overflow-x: auto; }
+.bloco-materias {
+  display: grid;
+  gap: 10px;
+  padding: 12px 18px 18px;
+  border-top: 1px solid var(--border, #e5e7eb);
+  background: var(--surface-soft, #f8fafc);
+}
+
+.bloco-materias > p {
+  margin: 0;
+  color: var(--text-muted, #64748b);
+}
+
+.grupo {
+  padding-top: 16px;
+}
+.grupo + .grupo {
+  margin-top: 4px;
+}
+.grupo h3 {
+  margin: 0 0 8px;
+  color: var(--text, #0f172a);
+  font-size: 14px;
+}
+.assuntos-tabela {
+  overflow-x: auto;
+}
 
 .assunto-cabecalho,
 .assunto-linha {
@@ -142,13 +172,38 @@
   font-size: 14px;
 }
 
-.assunto-linha strong { padding-right: 16px; }
-.etapa-status, .aproveitamento { text-align: center; color: var(--text-muted, #94a3b8); }
-.etapa-status.ativa { color: #16a34a; font-weight: 800; }
-.grupo p, .empty-state, .loading-state { margin: 14px 0 0; color: var(--text-muted, #64748b); }
-.empty-state, .loading-state { padding: 18px; border: 1px dashed var(--border, #e5e7eb); border-radius: 8px; text-align: center; }
+.assunto-linha strong {
+  padding-right: 16px;
+}
+.etapa-status,
+.aproveitamento {
+  text-align: center;
+  color: var(--text-muted, #94a3b8);
+}
+.etapa-status.ativa {
+  color: #16a34a;
+  font-weight: 800;
+}
+.grupo p,
+.empty-state,
+.loading-state {
+  margin: 14px 0 0;
+  color: var(--text-muted, #64748b);
+}
+.empty-state,
+.loading-state {
+  padding: 18px;
+  border: 1px dashed var(--border, #e5e7eb);
+  border-radius: 8px;
+  text-align: center;
+}
 
 @media (max-width: 600px) {
-  .page-heading { flex-direction: column; }
-  .edit-link { width: 100%; text-align: center; }
+  .page-heading {
+    flex-direction: column;
+  }
+  .edit-link {
+    width: 100%;
+    text-align: center;
+  }
 }

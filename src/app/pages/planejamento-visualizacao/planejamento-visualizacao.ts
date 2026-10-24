@@ -7,9 +7,10 @@ import {
   Planejamento,
   PlanejamentoGrupoAssunto,
   PlanejamentoGrupoAssuntoItem,
+  PlanejamentoGrupoMateria,
   PlanejamentoItemEtapa,
   PlanejamentoMateria,
-  PlanejamentoService
+  PlanejamentoService,
 } from '../../services/planejamento.service';
 
 interface GrupoVisualizacao {
@@ -25,8 +26,16 @@ interface AssuntoVisualizacao {
 interface MateriaVisualizacao {
   id: number;
   nome: string;
+  grupoMateriaId?: number | null;
   grupos: GrupoVisualizacao[];
   aberta: boolean;
+}
+
+interface BlocoMateriaVisualizacao {
+  id: number;
+  nome: string;
+  materias: MateriaVisualizacao[];
+  aberto: boolean;
 }
 
 @Component({
@@ -34,7 +43,7 @@ interface MateriaVisualizacao {
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './planejamento-visualizacao.html',
-  styleUrl: './planejamento-visualizacao.css'
+  styleUrl: './planejamento-visualizacao.css',
 })
 export class PlanejamentoVisualizacaoComponent implements OnInit {
   private readonly service = inject(PlanejamentoService);
@@ -44,6 +53,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
   planejamento?: Planejamento;
   planejamentos: Planejamento[] = [];
   materias: MateriaVisualizacao[] = [];
+  blocosMaterias: BlocoMateriaVisualizacao[] = [];
   carregando = true;
   erro = false;
 
@@ -54,90 +64,140 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
       return;
     }
 
-    this.service.listarTodos().pipe(
-      timeout(8000),
-      finalize(() => {
-        this.carregando = false;
-        this.cdr.detectChanges();
-      })
-    ).subscribe({
-      next: planejamentos => {
-        this.planejamentos = planejamentos;
-        this.cdr.detectChanges();
-      },
-      error: erro => {
-        console.error('Erro ao carregar planejamento:', erro);
-        this.erro = true;
-        this.cdr.detectChanges();
-      }
-    });
+    this.service
+      .listarTodos()
+      .pipe(
+        timeout(8000),
+        finalize(() => {
+          this.carregando = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: (planejamentos) => {
+          this.planejamentos = planejamentos;
+          this.cdr.detectChanges();
+        },
+        error: (erro) => {
+          console.error('Erro ao carregar planejamento:', erro);
+          this.erro = true;
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   private carregarPlanejamento(id: number): void {
-    this.service.buscarPorId(id).pipe(
-      timeout(8000),
-      switchMap(planejamento => {
-        this.planejamento = planejamento;
-        return this.service.listarMaterias(id).pipe(timeout(8000));
-      }),
-      switchMap(materias => this.carregarMaterias(materias)),
-      finalize(() => {
-        this.carregando = false;
-        this.cdr.detectChanges();
-      })
-    ).subscribe({
-      next: materias => {
-        this.materias = materias;
-        this.cdr.detectChanges();
-      },
-      error: erro => {
-        console.error('Erro ao carregar planejamento:', erro);
-        this.erro = true;
-        this.cdr.detectChanges();
-      }
-    });
+    this.service
+      .buscarPorId(id)
+      .pipe(
+        timeout(8000),
+        switchMap((planejamento) => {
+          this.planejamento = planejamento;
+          return forkJoin({
+            gruposMaterias: this.service.listarGruposMaterias(id).pipe(timeout(8000)),
+            materias: this.service.listarMaterias(id).pipe(timeout(8000)),
+          });
+        }),
+        switchMap(({ gruposMaterias, materias }) => {
+          const materiasBasicas = this.criarMateriasBasicas(materias);
+          this.materias = materiasBasicas.filter((materia) => !materia.grupoMateriaId);
+          this.blocosMaterias = this.agruparMaterias(gruposMaterias, materiasBasicas);
+          this.carregando = false;
+          this.cdr.detectChanges();
+
+          return this.carregarMaterias(materias).pipe(
+            map((materiasVisualizacao) => ({
+              materias: materiasVisualizacao,
+              blocosMaterias: this.agruparMaterias(gruposMaterias, materiasVisualizacao),
+            })),
+          );
+        }),
+        finalize(() => {
+          this.carregando = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: ({ materias, blocosMaterias }) => {
+          this.materias = materias.filter((materia) => !materia.grupoMateriaId);
+          this.blocosMaterias = blocosMaterias;
+          this.cdr.detectChanges();
+        },
+        error: (erro) => {
+          console.error('Erro ao carregar planejamento:', erro);
+          this.erro = true;
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   alternarMateria(materia: MateriaVisualizacao): void {
     materia.aberta = !materia.aberta;
   }
 
+  alternarBlocoMateria(bloco: BlocoMateriaVisualizacao): void {
+    bloco.aberto = !bloco.aberto;
+  }
+
   temEtapa(assunto: AssuntoVisualizacao, tipo: string): boolean {
-    return assunto.etapas.some(etapa => etapa.toLocaleLowerCase('pt-BR').includes(tipo));
+    return assunto.etapas.some((etapa) => etapa.toLocaleLowerCase('pt-BR').includes(tipo));
   }
 
   private carregarMaterias(materias: PlanejamentoMateria[]) {
     if (!this.planejamento?.id || !materias.length) return of([] as MateriaVisualizacao[]);
 
-    return forkJoin(materias.map(materia => this.carregarGruposDaMateria(materia))).pipe(
-      map(materiasVisualizacao => materiasVisualizacao.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')))
+    return forkJoin(materias.map((materia) => this.carregarGruposDaMateria(materia))).pipe(
+      map((materiasVisualizacao) =>
+        materiasVisualizacao.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+      ),
     );
   }
 
   private carregarGruposDaMateria(materia: PlanejamentoMateria) {
     if (!this.planejamento?.id || !materia.id) {
-      return of({ id: materia.id ?? 0, nome: materia.materia.nome, grupos: [], aberta: false });
+      return of({
+        id: materia.id ?? 0,
+        nome: materia.materia.nome,
+        grupoMateriaId: materia.planejamentoGrupoMateria?.id,
+        grupos: [],
+        aberta: false,
+      });
     }
 
     return this.service.listarGrupos(this.planejamento.id, materia.id).pipe(
       timeout(8000),
-      switchMap(grupos => this.carregarGrupos(materia, grupos)),
-      catchError(() => of({ id: materia.id!, nome: materia.materia.nome, grupos: [], aberta: false }))
+      switchMap((grupos) => this.carregarGrupos(materia, grupos)),
+      catchError(() =>
+        of({
+          id: materia.id!,
+          nome: materia.materia.nome,
+          grupoMateriaId: materia.planejamentoGrupoMateria?.id,
+          grupos: [],
+          aberta: false,
+        }),
+      ),
     );
   }
 
   private carregarGrupos(materia: PlanejamentoMateria, grupos: PlanejamentoGrupoAssunto[]) {
     if (!this.planejamento?.id || !materia.id || !grupos.length) {
-      return of({ id: materia.id!, nome: materia.materia.nome, grupos: [], aberta: false });
-    }
-
-    return forkJoin(grupos.map(grupo => this.carregarItensDoGrupo(materia.id!, grupo))).pipe(
-      map(gruposVisualizacao => ({
+      return of({
         id: materia.id!,
         nome: materia.materia.nome,
+        grupoMateriaId: materia.planejamentoGrupoMateria?.id,
+        grupos: [],
+        aberta: false,
+      });
+    }
+
+    return forkJoin(grupos.map((grupo) => this.carregarItensDoGrupo(materia.id!, grupo))).pipe(
+      map((gruposVisualizacao) => ({
+        id: materia.id!,
+        nome: materia.materia.nome,
+        grupoMateriaId: materia.planejamentoGrupoMateria?.id,
         grupos: gruposVisualizacao,
-        aberta: false
-      }))
+        aberta: false,
+      })),
     );
   }
 
@@ -152,14 +212,20 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
         const itensOrdenados = itens.sort((a, b) => (a.ordem ?? 9999) - (b.ordem ?? 9999));
         if (!itensOrdenados.length) return of([] as AssuntoVisualizacao[]);
 
-        return forkJoin(itensOrdenados.map(item => this.carregarEtapasDoAssunto(materiaId, grupo.id!, item)));
+        return forkJoin(
+          itensOrdenados.map((item) => this.carregarEtapasDoAssunto(materiaId, grupo.id!, item)),
+        );
       }),
-      map(assuntos => ({ nome: this.nomeGrupo(grupo), assuntos })),
-      catchError(() => of({ nome: this.nomeGrupo(grupo), assuntos: [] }))
+      map((assuntos) => ({ nome: this.nomeGrupo(grupo), assuntos })),
+      catchError(() => of({ nome: this.nomeGrupo(grupo), assuntos: [] })),
     );
   }
 
-  private carregarEtapasDoAssunto(materiaId: number, grupoId: number, item: PlanejamentoGrupoAssuntoItem) {
+  private carregarEtapasDoAssunto(
+    materiaId: number,
+    grupoId: number,
+    item: PlanejamentoGrupoAssuntoItem,
+  ) {
     if (!this.planejamento?.id || !item.id) {
       return of({ nome: item.assunto.nome, etapas: [] });
     }
@@ -170,13 +236,39 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
         nome: item.assunto.nome,
         etapas: etapas
           .sort((a, b) => (a.ordem ?? 9999) - (b.ordem ?? 9999))
-          .map(etapa => etapa.tipoRegistro.nome)
+          .map((etapa) => etapa.tipoRegistro.nome),
       })),
-      catchError(() => of({ nome: item.assunto.nome, etapas: [] }))
+      catchError(() => of({ nome: item.assunto.nome, etapas: [] })),
     );
   }
 
   private nomeGrupo(grupo: PlanejamentoGrupoAssunto): string {
     return grupo.tipo === 'BLOCO' ? grupo.nome || 'Bloco sem nome' : 'Assuntos';
+  }
+
+  private agruparMaterias(
+    gruposMaterias: PlanejamentoGrupoMateria[],
+    materias: MateriaVisualizacao[],
+  ): BlocoMateriaVisualizacao[] {
+    return gruposMaterias
+      .map((grupo) => ({
+        id: grupo.id!,
+        nome: grupo.nome,
+        materias: materias.filter((materia) => materia.grupoMateriaId === grupo.id),
+        aberto: false,
+      }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  }
+
+  private criarMateriasBasicas(materias: PlanejamentoMateria[]): MateriaVisualizacao[] {
+    return materias
+      .map((materia) => ({
+        id: materia.id ?? 0,
+        nome: materia.materia.nome,
+        grupoMateriaId: materia.planejamentoGrupoMateria?.id,
+        grupos: [],
+        aberta: false,
+      }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   }
 }

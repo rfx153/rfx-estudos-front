@@ -3,61 +3,121 @@
     <div>
       <h2>Planejamento</h2>
       <p *ngIf="planejamento">{{ planejamento.nome }}</p>
-      <p *ngIf="!planejamento && !carregando">Escolha um planejamento para consultar seus assuntos.</p>
+      <p *ngIf="!planejamento && !carregando">
+        Escolha um planejamento para consultar seus assuntos.
+      </p>
     </div>
     <a class="edit-link" routerLink="/planejamentos">Editar planejamento</a>
   </header>
 
   <p class="loading-state" *ngIf="carregando">Carregando planejamento...</p>
   <p class="empty-state" *ngIf="erro">Não foi possível carregar o planejamento.</p>
-  <p class="empty-state" *ngIf="!carregando && !erro && !planejamento && !planejamentos.length">Nenhum planejamento cadastrado.</p>
-  <section class="planejamentos-lista" *ngIf="!carregando && !erro && !planejamento && planejamentos.length" aria-label="Planejamentos disponíveis">
-    <a class="planejamento-item" *ngFor="let item of planejamentos" [routerLink]="['/planejamento', item.id]">
+  <p class="empty-state" *ngIf="!carregando && !erro && !planejamento && !planejamentos.length">
+    Nenhum planejamento cadastrado.
+  </p>
+  <section
+    class="planejamentos-lista"
+    *ngIf="!carregando && !erro && !planejamento && planejamentos.length"
+    aria-label="Planejamentos disponíveis"
+  >
+    <a
+      class="planejamento-item"
+      *ngFor="let item of planejamentos"
+      [routerLink]="['/planejamento', item.id]"
+    >
       <span>{{ item.nome }}</span>
       <span class="item-arrow" aria-hidden="true">›</span>
     </a>
   </section>
-  <p class="empty-state" *ngIf="!carregando && !erro && planejamento && !materias.length">Este planejamento ainda não possui matérias.</p>
+  <p
+    class="empty-state"
+    *ngIf="!carregando && !erro && planejamento && !materias.length && !blocosMaterias.length"
+  >
+    Este planejamento ainda não possui matérias.
+  </p>
 
-  <a class="back-link" routerLink="/planejamento" *ngIf="!carregando && planejamento">← Todos os planejamentos</a>
-  <section class="materias-lista" *ngIf="!carregando && materias.length" aria-label="Matérias do planejamento">
-    <article class="materia" *ngFor="let materia of materias">
+  <a class="back-link" routerLink="/planejamento" *ngIf="!carregando && planejamento"
+    >← Todos os planejamentos</a
+  >
+  <section
+    class="materias-lista"
+    *ngIf="!carregando && (materias.length || blocosMaterias.length)"
+    aria-label="Matérias do planejamento"
+  >
+    <ng-template #materiaCard let-materia>
+      <article class="materia">
+        <button
+          type="button"
+          class="materia-trigger"
+          (click)="alternarMateria(materia)"
+          [attr.aria-expanded]="materia.aberta"
+        >
+          <span>{{ materia.nome }}</span>
+          <span class="chevron" [class.aberta]="materia.aberta" aria-hidden="true">⌄</span>
+        </button>
+
+        <div class="assuntos" *ngIf="materia.aberta">
+          <ng-container *ngIf="materia.grupos.length; else semAssuntos">
+            <div class="grupo" *ngFor="let grupo of materia.grupos">
+              <h3 *ngIf="grupo.nome !== 'Assuntos'">{{ grupo.nome }}</h3>
+              <div class="assuntos-tabela" *ngIf="grupo.assuntos.length">
+                <div class="assunto-cabecalho" aria-hidden="true">
+                  <span>Nome do assunto</span>
+                  <span>Assunto</span>
+                  <span>Questões</span>
+                  <span>Revisão</span>
+                  <span>Resumo</span>
+                  <span>Aproveitamento</span>
+                </div>
+                <div class="assunto-linha" *ngFor="let assunto of grupo.assuntos">
+                  <strong>{{ assunto.nome }}</strong>
+                  <span class="etapa-status" [class.ativa]="temEtapa(assunto, 'assunto')">{{
+                    temEtapa(assunto, 'assunto') ? '✓' : '—'
+                  }}</span>
+                  <span class="etapa-status" [class.ativa]="temEtapa(assunto, 'quest')">{{
+                    temEtapa(assunto, 'quest') ? '✓' : '—'
+                  }}</span>
+                  <span class="etapa-status" [class.ativa]="temEtapa(assunto, 'revis')">{{
+                    temEtapa(assunto, 'revis') ? '✓' : '—'
+                  }}</span>
+                  <span class="etapa-status" [class.ativa]="temEtapa(assunto, 'resum')">{{
+                    temEtapa(assunto, 'resum') ? '✓' : '—'
+                  }}</span>
+                  <span class="aproveitamento">—</span>
+                </div>
+              </div>
+              <p *ngIf="!grupo.assuntos.length">Nenhum assunto adicionado.</p>
+            </div>
+          </ng-container>
+          <ng-template #semAssuntos><p>Nenhum assunto adicionado.</p></ng-template>
+        </div>
+      </article>
+    </ng-template>
+
+    <article class="materia" *ngFor="let bloco of blocosMaterias">
       <button
         type="button"
         class="materia-trigger"
-        (click)="alternarMateria(materia)"
-        [attr.aria-expanded]="materia.aberta">
-        <span>{{ materia.nome }}</span>
-        <span class="chevron" [class.aberta]="materia.aberta" aria-hidden="true">⌄</span>
+        (click)="alternarBlocoMateria(bloco)"
+        [attr.aria-expanded]="bloco.aberto"
+      >
+        <span>{{ bloco.nome }}</span>
+        <span class="chevron" [class.aberta]="bloco.aberto" aria-hidden="true">⌄</span>
       </button>
-
-      <div class="assuntos" *ngIf="materia.aberta">
-        <ng-container *ngIf="materia.grupos.length; else semAssuntos">
-          <div class="grupo" *ngFor="let grupo of materia.grupos">
-            <h3 *ngIf="grupo.nome !== 'Assuntos'">{{ grupo.nome }}</h3>
-            <div class="assuntos-tabela" *ngIf="grupo.assuntos.length">
-              <div class="assunto-cabecalho" aria-hidden="true">
-                <span>Nome do assunto</span>
-                <span>Assunto</span>
-                <span>Questões</span>
-                <span>Revisão</span>
-                <span>Resumo</span>
-                <span>Aproveitamento</span>
-              </div>
-              <div class="assunto-linha" *ngFor="let assunto of grupo.assuntos">
-                <strong>{{ assunto.nome }}</strong>
-                <span class="etapa-status" [class.ativa]="temEtapa(assunto, 'assunto')">{{ temEtapa(assunto, 'assunto') ? '✓' : '—' }}</span>
-                <span class="etapa-status" [class.ativa]="temEtapa(assunto, 'quest')">{{ temEtapa(assunto, 'quest') ? '✓' : '—' }}</span>
-                <span class="etapa-status" [class.ativa]="temEtapa(assunto, 'revis')">{{ temEtapa(assunto, 'revis') ? '✓' : '—' }}</span>
-                <span class="etapa-status" [class.ativa]="temEtapa(assunto, 'resum')">{{ temEtapa(assunto, 'resum') ? '✓' : '—' }}</span>
-                <span class="aproveitamento">—</span>
-              </div>
-            </div>
-            <p *ngIf="!grupo.assuntos.length">Nenhum assunto adicionado.</p>
-          </div>
-        </ng-container>
-        <ng-template #semAssuntos><p>Nenhum assunto adicionado.</p></ng-template>
+      <div class="bloco-materias" *ngIf="bloco.aberto">
+        <p *ngIf="!bloco.materias.length">Nenhuma matéria adicionada.</p>
+        <ng-container
+          *ngFor="let materia of bloco.materias"
+          [ngTemplateOutlet]="materiaCard"
+          [ngTemplateOutletContext]="{ $implicit: materia }"
+        ></ng-container>
       </div>
     </article>
+
+    <ng-container
+      *ngFor="let materia of materias"
+      [ngTemplateOutlet]="materiaCard"
+      [ngTemplateOutletContext]="{ $implicit: materia }"
+    ></ng-container>
   </section>
 </div>

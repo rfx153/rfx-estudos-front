@@ -49,6 +49,12 @@
   align-items: flex-start;
   margin-bottom: 16px;
 }
+.workspace-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
 .workspace-heading h3,
 .content-heading h4,
 .content-heading h5 {
@@ -334,6 +340,9 @@
   .content-heading {
     align-items: flex-start;
     flex-direction: column;
+  }
+  .workspace-actions {
+    justify-content: flex-start;
   }
   .accordion-header,
   .group-header {

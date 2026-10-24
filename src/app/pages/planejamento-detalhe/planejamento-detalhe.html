@@ -40,23 +40,21 @@
     <div class="workspace-heading">
       <div>
         <h3>Matérias</h3>
-        <p>Abra uma matéria para gerenciar seu conteúdo.</p>
+        <p>Organize-as em blocos e abra uma matéria para gerenciar seu conteúdo.</p>
       </div>
-      <button nz-button nzType="primary" type="button" (click)="abrirMateria()">
-        + Adicionar matéria
-      </button>
+      <div class="workspace-actions">
+        <button nz-button nzType="primary" type="button" (click)="abrirMateria()">
+          + Adicionar item
+        </button>
+      </div>
     </div>
     <div class="planning-loading" *ngIf="carregandoMaterias">Carregando matérias...</div>
     <div class="empty-state" *ngIf="!carregandoMaterias && !materiasPlanejadas.length">
       Nenhuma matéria adicionada. Comece pelo botão acima.
     </div>
 
-    <div class="accordion-list" *ngIf="!carregandoMaterias && materiasPlanejadas.length">
-      <article
-        class="matter-card"
-        *ngFor="let item of materiasPlanejadas"
-        [class.open]="materiaSelecionada?.id === item.id"
-      >
+    <ng-template #materiaCard let-item>
+      <article class="matter-card" [class.open]="materiaSelecionada?.id === item.id">
         <div class="accordion-header">
           <button
             type="button"
@@ -69,7 +67,10 @@
               ><strong>{{ item.materia.nome }}</strong
               ><small
                 >Ordem {{ item.ordem ?? 'não definida'
-                }}<ng-container *ngIf="item.peso"> · Peso {{ item.peso }}</ng-container></small
+                }}<ng-container *ngIf="item.peso"> · Peso {{ item.peso }}</ng-container
+                ><ng-container *ngIf="item.planejamentoGrupoMateria">
+                  · {{ item.planejamentoGrupoMateria.nome }}</ng-container
+                ></small
               ></span
             >
           </button>
@@ -85,7 +86,9 @@
               <h4>Blocos e assuntos</h4>
               <p>Agrupe assuntos relacionados ou use um bloco individual.</p>
             </div>
-            <button nz-button type="button" (click)="abrirGrupo()">+ Adicionar bloco ou Matéria</button>
+            <button nz-button type="button" (click)="abrirGrupo()">
+              + Adicionar bloco ou Matéria
+            </button>
           </div>
           <div class="inline-loading" *ngIf="carregandoGrupos">Carregando...</div>
           <div class="subtle-empty" *ngIf="!carregandoGrupos && !grupos.length">
@@ -155,6 +158,66 @@
           </div>
         </div>
       </article>
+    </ng-template>
+
+    <div class="inline-loading" *ngIf="carregandoGruposMaterias">Carregando blocos...</div>
+    <div
+      class="accordion-list"
+      *ngIf="!carregandoGruposMaterias && (gruposMaterias.length || materiasSemGrupo().length)"
+    >
+      <article
+        class="matter-card"
+        *ngFor="let grupo of gruposMaterias"
+        [class.open]="grupoMateriaSelecionado?.id === grupo.id"
+      >
+        <div class="accordion-header">
+          <button
+            type="button"
+            class="accordion-trigger"
+            (click)="selecionarGrupoMateria(grupo)"
+            [attr.aria-expanded]="grupoMateriaSelecionado?.id === grupo.id"
+          >
+            <span class="chevron" aria-hidden="true">›</span>
+            <span
+              ><strong>{{ grupo.nome }}</strong
+              ><small>{{ materiasDoGrupo(grupo).length }} matéria(s)</small></span
+            >
+          </button>
+          <div class="row-actions">
+            <button type="button" (click)="abrirMateriaNoGrupo(grupo)">+ Matéria</button>
+            <button type="button" (click)="editarGrupoMateria(grupo)">Editar</button>
+            <button type="button" class="danger" (click)="excluirGrupoMateria(grupo)">
+              Remover
+            </button>
+          </div>
+        </div>
+        <div class="accordion-body" *ngIf="grupoMateriaSelecionado?.id === grupo.id">
+          <div class="content-heading small">
+            <div>
+              <h4>Matérias</h4>
+              <p>Abra uma matéria para organizar seus assuntos.</p>
+            </div>
+            <button nz-button nzSize="small" type="button" (click)="abrirMateriaNoGrupo(grupo)">
+              + Adicionar matéria
+            </button>
+          </div>
+          <div class="subtle-empty" *ngIf="!materiasDoGrupo(grupo).length">
+            Nenhuma matéria adicionada a este bloco.
+          </div>
+          <div class="accordion-list" *ngIf="materiasDoGrupo(grupo).length">
+            <ng-container
+              *ngFor="let materia of materiasDoGrupo(grupo)"
+              [ngTemplateOutlet]="materiaCard"
+              [ngTemplateOutletContext]="{ $implicit: materia }"
+            ></ng-container>
+          </div>
+        </div>
+      </article>
+      <ng-container
+        *ngFor="let materia of materiasSemGrupo()"
+        [ngTemplateOutlet]="materiaCard"
+        [ngTemplateOutletContext]="{ $implicit: materia }"
+      ></ng-container>
     </div>
   </section>
 
@@ -162,13 +225,24 @@
     <section class="form-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
       <header>
         <div>
-          <h3>{{ materiaEditandoId ? 'Editar matéria' : 'Adicionar matéria' }}</h3>
-          <p>Escolha a matéria e ajuste peso e ordem se necessário.</p>
+          <h3>{{ materiaEditandoId ? 'Editar matéria' : 'Adicionar item' }}</h3>
+          <p>Escolha se deseja adicionar uma matéria ou um bloco de matérias.</p>
         </div>
         <button type="button" class="modal-close" (click)="fecharMateria()">×</button>
       </header>
       <form nz-form [formGroup]="materiaForm" (ngSubmit)="salvarMateria()">
         <nz-form-item
+          *ngIf="!materiaEditandoId && !materiaForm.controls.planejamentoGrupoMateriaId.value"
+        >
+          <nz-form-label nzRequired>Tipo</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="tipo">
+              <nz-option nzValue="MATERIA" nzLabel="Matéria"></nz-option>
+              <nz-option nzValue="BLOCO" nzLabel="Bloco de matérias"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item *ngIf="materiaForm.controls.tipo.value === 'MATERIA'"
           ><nz-form-label nzRequired>Matéria</nz-form-label
           ><nz-form-control nzErrorTip="Selecione uma matéria."
             ><nz-select formControlName="materiaId" nzPlaceHolder="Selecione"
@@ -176,6 +250,24 @@
                 *ngFor="let materia of materiasDisponiveis()"
                 [nzValue]="materia.id"
                 [nzLabel]="materia.nome"
+              ></nz-option></nz-select></nz-form-control
+        ></nz-form-item>
+        <nz-form-item *ngIf="materiaForm.controls.tipo.value === 'BLOCO'"
+          ><nz-form-label nzRequired>Nome do bloco</nz-form-label
+          ><nz-form-control nzErrorTip="Informe um nome de até 150 caracteres."
+            ><input nz-input formControlName="nomeBloco" maxlength="150" /></nz-form-control
+        ></nz-form-item>
+        <nz-form-item *ngIf="materiaForm.controls.tipo.value === 'MATERIA'"
+          ><nz-form-label>Bloco de matérias</nz-form-label
+          ><nz-form-control
+            ><nz-select
+              formControlName="planejamentoGrupoMateriaId"
+              nzAllowClear
+              nzPlaceHolder="Sem bloco"
+              ><nz-option
+                *ngFor="let grupo of gruposMaterias"
+                [nzValue]="grupo.id"
+                [nzLabel]="grupo.nome"
               ></nz-option></nz-select></nz-form-control
         ></nz-form-item>
         <div class="form-grid">
@@ -197,6 +289,53 @@
         <div class="form-actions">
           <button nz-button type="button" (click)="fecharMateria()">Cancelar</button
           ><button nz-button nzType="primary" [nzLoading]="salvandoMateria">Salvar</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="modalGrupoMateriaAberto" (click)="fecharGrupoMateria()">
+    <section class="form-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <h3>
+            {{
+              grupoMateriaEditandoId ? 'Editar bloco de matérias' : 'Adicionar bloco de matérias'
+            }}
+          </h3>
+          <p>Use um bloco para reunir matérias relacionadas no planejamento.</p>
+        </div>
+        <button type="button" class="modal-close" (click)="fecharGrupoMateria()">×</button>
+      </header>
+      <form nz-form [formGroup]="grupoMateriaForm" (ngSubmit)="salvarGrupoMateria()">
+        <nz-form-item
+          ><nz-form-label nzRequired>Nome do bloco</nz-form-label
+          ><nz-form-control nzErrorTip="Informe um nome de até 150 caracteres."
+            ><input nz-input formControlName="nome" maxlength="150" /></nz-form-control
+        ></nz-form-item>
+        <details>
+          <summary>Opções avançadas</summary>
+          <div class="form-grid">
+            <nz-form-item
+              ><nz-form-label>Peso</nz-form-label
+              ><nz-form-control
+                ><input
+                  nz-input
+                  type="number"
+                  min="1"
+                  max="5"
+                  formControlName="peso" /></nz-form-control
+            ></nz-form-item>
+            <nz-form-item
+              ><nz-form-label>Ordem</nz-form-label
+              ><nz-form-control
+                ><input nz-input type="number" min="1" formControlName="ordem" /></nz-form-control
+            ></nz-form-item>
+          </div>
+        </details>
+        <div class="form-actions">
+          <button nz-button type="button" (click)="fecharGrupoMateria()">Cancelar</button>
+          <button nz-button nzType="primary" [nzLoading]="salvandoGrupoMateria">Salvar</button>
         </div>
       </form>
     </section>

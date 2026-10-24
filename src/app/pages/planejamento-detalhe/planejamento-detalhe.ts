@@ -14,6 +14,8 @@ import {
   Planejamento,
   PlanejamentoMateria,
   PlanejamentoMateriaDTO,
+  PlanejamentoGrupoMateria,
+  PlanejamentoGrupoMateriaDTO,
   PlanejamentoGrupoAssunto,
   PlanejamentoGrupoAssuntoDTO,
   PlanejamentoGrupoAssuntoTipo,
@@ -53,7 +55,15 @@ export class PlanejamentoDetalheComponent implements OnInit {
     descricao: [''],
   });
   readonly materiaForm = this.fb.group({
-    materiaId: [null as number | null, Validators.required],
+    tipo: ['MATERIA' as 'MATERIA' | 'BLOCO', Validators.required],
+    materiaId: [null as number | null],
+    nomeBloco: ['', Validators.maxLength(150)],
+    planejamentoGrupoMateriaId: [null as number | null],
+    peso: [null as number | null, [Validators.min(1), Validators.max(5)]],
+    ordem: [null as number | null, Validators.min(1)],
+  });
+  readonly grupoMateriaForm = this.fb.group({
+    nome: ['', [Validators.required, Validators.maxLength(150)]],
     peso: [null as number | null, [Validators.min(1), Validators.max(5)]],
     ordem: [null as number | null, Validators.min(1)],
   });
@@ -83,6 +93,11 @@ export class PlanejamentoDetalheComponent implements OnInit {
   materiaEditandoId?: number;
   materias: Materia[] = [];
   materiasPlanejadas: PlanejamentoMateria[] = [];
+  gruposMaterias: PlanejamentoGrupoMateria[] = [];
+  carregandoGruposMaterias = false;
+  salvandoGrupoMateria = false;
+  grupoMateriaEditandoId?: number;
+  grupoMateriaSelecionado?: PlanejamentoGrupoMateria;
   materiaSelecionada?: PlanejamentoMateria;
   grupos: PlanejamentoGrupoAssunto[] = [];
   grupoEditandoId?: number;
@@ -102,6 +117,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
   carregandoEtapas = false;
   salvandoEtapa = false;
   modalMateriaAberto = false;
+  modalGrupoMateriaAberto = false;
   modalGrupoAberto = false;
   modalItemAberto = false;
   modalEtapasAberto = false;
@@ -120,6 +136,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     }
 
     this.carregar();
+    this.carregarGruposMaterias();
     this.carregarMaterias();
     this.materiaService.listarTodas().subscribe({
       next: (materias) => {
@@ -168,13 +185,45 @@ export class PlanejamentoDetalheComponent implements OnInit {
 
   salvarMateria(): void {
     if (!this.id) return;
-    if (this.materiaForm.invalid) {
+    const tipo = this.materiaForm.controls.tipo.value!;
+    const materiaId = this.materiaForm.controls.materiaId.value;
+    const nomeBloco = this.materiaForm.controls.nomeBloco.value?.trim();
+    if (
+      this.materiaForm.invalid ||
+      (tipo === 'MATERIA' && !materiaId) ||
+      (tipo === 'BLOCO' && (!nomeBloco || nomeBloco.length > 150))
+    ) {
       this.materiaForm.markAllAsTouched();
       return;
     }
 
+    if (tipo === 'BLOCO') {
+      const dados: PlanejamentoGrupoMateriaDTO = {
+        nome: nomeBloco!,
+        peso: this.materiaForm.controls.peso.value,
+        ordem: this.materiaForm.controls.ordem.value,
+      };
+      this.salvandoMateria = true;
+      this.service.adicionarGrupoMateria(this.id, dados).subscribe({
+        next: () => {
+          this.salvandoMateria = false;
+          this.modalMateriaAberto = false;
+          this.cancelarEdicaoMateria();
+          this.carregarGruposMaterias();
+          this.message.success('Bloco de matérias adicionado com sucesso.');
+        },
+        error: (erro) => {
+          console.error('Erro ao salvar bloco de matérias:', erro);
+          this.salvandoMateria = false;
+          this.message.error('Não foi possível salvar o bloco de matérias.');
+        },
+      });
+      return;
+    }
+
     const dados: PlanejamentoMateriaDTO = {
-      materiaId: this.materiaForm.controls.materiaId.value!,
+      materiaId: materiaId!,
+      planejamentoGrupoMateriaId: this.materiaForm.controls.planejamentoGrupoMateriaId.value,
       peso: this.materiaForm.controls.peso.value,
       ordem: this.materiaForm.controls.ordem.value,
     };
@@ -204,7 +253,10 @@ export class PlanejamentoDetalheComponent implements OnInit {
     if (!item.id || !item.materia.id) return;
     this.materiaEditandoId = item.id;
     this.materiaForm.setValue({
+      tipo: 'MATERIA',
       materiaId: item.materia.id,
+      nomeBloco: '',
+      planejamentoGrupoMateriaId: item.planejamentoGrupoMateria?.id ?? null,
       peso: item.peso ?? null,
       ordem: item.ordem ?? null,
     });
@@ -216,6 +268,13 @@ export class PlanejamentoDetalheComponent implements OnInit {
     this.modalMateriaAberto = true;
   }
 
+  abrirMateriaNoGrupo(grupo: PlanejamentoGrupoMateria): void {
+    if (!grupo.id) return;
+    this.cancelarEdicaoMateria();
+    this.materiaForm.patchValue({ tipo: 'MATERIA', planejamentoGrupoMateriaId: grupo.id });
+    this.modalMateriaAberto = true;
+  }
+
   fecharMateria(): void {
     if (this.salvandoMateria) return;
     this.modalMateriaAberto = false;
@@ -224,7 +283,105 @@ export class PlanejamentoDetalheComponent implements OnInit {
 
   cancelarEdicaoMateria(): void {
     this.materiaEditandoId = undefined;
-    this.materiaForm.reset({ materiaId: null, peso: null, ordem: null });
+    this.materiaForm.reset({
+      tipo: 'MATERIA',
+      materiaId: null,
+      nomeBloco: '',
+      planejamentoGrupoMateriaId: null,
+      peso: null,
+      ordem: null,
+    });
+  }
+
+  salvarGrupoMateria(): void {
+    if (!this.id || this.grupoMateriaForm.invalid) {
+      this.grupoMateriaForm.markAllAsTouched();
+      return;
+    }
+
+    const dados: PlanejamentoGrupoMateriaDTO = {
+      nome: this.grupoMateriaForm.controls.nome.value!.trim(),
+      peso: this.grupoMateriaForm.controls.peso.value,
+      ordem: this.grupoMateriaForm.controls.ordem.value,
+    };
+    const editando = !!this.grupoMateriaEditandoId;
+    this.salvandoGrupoMateria = true;
+    const requisicao$ = this.grupoMateriaEditandoId
+      ? this.service.atualizarGrupoMateria(this.id, this.grupoMateriaEditandoId, dados)
+      : this.service.adicionarGrupoMateria(this.id, dados);
+
+    requisicao$.subscribe({
+      next: () => {
+        this.salvandoGrupoMateria = false;
+        this.modalGrupoMateriaAberto = false;
+        this.cancelarEdicaoGrupoMateria();
+        this.carregarGruposMaterias();
+        this.message.success(
+          `Bloco de matérias ${editando ? 'atualizado' : 'adicionado'} com sucesso.`,
+        );
+      },
+      error: (erro) => {
+        console.error('Erro ao salvar bloco de matérias:', erro);
+        this.salvandoGrupoMateria = false;
+        this.message.error('Não foi possível salvar o bloco de matérias.');
+      },
+    });
+  }
+
+  abrirGrupoMateria(): void {
+    this.cancelarEdicaoGrupoMateria();
+    this.modalGrupoMateriaAberto = true;
+  }
+
+  editarGrupoMateria(grupo: PlanejamentoGrupoMateria): void {
+    if (!grupo.id) return;
+    this.grupoMateriaEditandoId = grupo.id;
+    this.grupoMateriaForm.setValue({
+      nome: grupo.nome,
+      peso: grupo.peso ?? null,
+      ordem: grupo.ordem ?? null,
+    });
+    this.modalGrupoMateriaAberto = true;
+  }
+
+  fecharGrupoMateria(): void {
+    if (this.salvandoGrupoMateria) return;
+    this.modalGrupoMateriaAberto = false;
+    this.cancelarEdicaoGrupoMateria();
+  }
+
+  cancelarEdicaoGrupoMateria(): void {
+    this.grupoMateriaEditandoId = undefined;
+    this.grupoMateriaForm.reset({ nome: '', peso: null, ordem: null });
+  }
+
+  excluirGrupoMateria(grupo: PlanejamentoGrupoMateria): void {
+    if (!this.id || !grupo.id || !window.confirm(`Remover o bloco "${grupo.nome}"?`)) return;
+    this.service.excluirGrupoMateria(this.id, grupo.id).subscribe({
+      next: () => {
+        this.message.success('Bloco de matérias removido.');
+        this.carregarGruposMaterias();
+      },
+      error: (erro) => {
+        console.error('Erro ao remover bloco de matérias:', erro);
+        this.message.error('Remova ou mova as matérias deste bloco antes de excluí-lo.');
+      },
+    });
+  }
+
+  materiasDoGrupo(grupo: PlanejamentoGrupoMateria): PlanejamentoMateria[] {
+    return this.materiasPlanejadas.filter(
+      (materia) => materia.planejamentoGrupoMateria?.id === grupo.id,
+    );
+  }
+
+  materiasSemGrupo(): PlanejamentoMateria[] {
+    return this.materiasPlanejadas.filter((materia) => !materia.planejamentoGrupoMateria?.id);
+  }
+
+  selecionarGrupoMateria(grupo: PlanejamentoGrupoMateria): void {
+    this.grupoMateriaSelecionado =
+      this.grupoMateriaSelecionado?.id === grupo.id ? undefined : grupo;
   }
 
   excluirMateria(item: PlanejamentoMateria): void {
@@ -698,6 +855,29 @@ export class PlanejamentoDetalheComponent implements OnInit {
         error: (erro) => {
           console.error('Erro ao carregar matérias do planejamento:', erro);
           this.message.error('Não foi possível carregar as matérias do planejamento.');
+        },
+      });
+  }
+
+  private carregarGruposMaterias(): void {
+    if (!this.id) return;
+    this.carregandoGruposMaterias = true;
+    this.service
+      .listarGruposMaterias(this.id)
+      .pipe(
+        finalize(() => {
+          this.carregandoGruposMaterias = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: (grupos) => {
+          this.gruposMaterias = grupos;
+          this.cdr.detectChanges();
+        },
+        error: (erro) => {
+          console.error('Erro ao carregar blocos de matérias:', erro);
+          this.message.error('Não foi possível carregar os blocos de matérias.');
         },
       });
   }
