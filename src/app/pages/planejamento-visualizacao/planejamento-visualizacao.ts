@@ -5,6 +5,7 @@ import { forkJoin, of } from 'rxjs';
 import { catchError, finalize, map, switchMap, timeout } from 'rxjs/operators';
 import {
   Planejamento,
+  PlanejamentoAproveitamento,
   PlanejamentoGrupoAssunto,
   PlanejamentoGrupoAssuntoItem,
   PlanejamentoGrupoMateria,
@@ -21,6 +22,8 @@ interface GrupoVisualizacao {
 interface AssuntoVisualizacao {
   nome: string;
   etapas: EtapaVisualizacao[];
+  questoesFeitas: number;
+  questoesAcertadas: number;
 }
 
 interface EtapaVisualizacao {
@@ -103,16 +106,20 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
           return forkJoin({
             gruposMaterias: this.service.listarGruposMaterias(id).pipe(timeout(8000)),
             materias: this.service.listarMaterias(id).pipe(timeout(8000)),
+            aproveitamentos: this.service.listarAproveitamentos(id).pipe(timeout(8000)),
           });
         }),
-        switchMap(({ gruposMaterias, materias }) => {
+        switchMap(({ gruposMaterias, materias, aproveitamentos }) => {
+          const aproveitamentosPorAssunto = new Map(
+            aproveitamentos.map((aproveitamento) => [aproveitamento.assuntoId, aproveitamento]),
+          );
           const materiasBasicas = this.criarMateriasBasicas(materias);
           this.materias = materiasBasicas.filter((materia) => !materia.grupoMateriaId);
           this.blocosMaterias = this.agruparMaterias(gruposMaterias, materiasBasicas);
           this.carregando = false;
           this.cdr.detectChanges();
 
-          return this.carregarMaterias(materias).pipe(
+          return this.carregarMaterias(materias, aproveitamentosPorAssunto).pipe(
             map((materiasVisualizacao) => ({
               materias: materiasVisualizacao,
               blocosMaterias: this.agruparMaterias(gruposMaterias, materiasVisualizacao),
@@ -159,23 +166,39 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     return !!this.etapaPorTipo(assunto, tipo)?.concluida;
   }
 
-  dataConclusao(assunto: AssuntoVisualizacao): string | null {
-    return (
-      assunto.etapas.find((etapa) => etapa.concluida && etapa.dataConcluida)?.dataConcluida ?? null
-    );
+  dataConclusaoDaEtapa(assunto: AssuntoVisualizacao, tipo: string): string | null {
+    return this.etapaPorTipo(assunto, tipo)?.dataConcluida ?? null;
   }
 
-  private carregarMaterias(materias: PlanejamentoMateria[]) {
+  aproveitamento(assunto: AssuntoVisualizacao): string {
+    if (!assunto.questoesFeitas) return '—';
+    return `${Math.round((assunto.questoesAcertadas / assunto.questoesFeitas) * 100)}%`;
+  }
+
+  detalhesAproveitamento(assunto: AssuntoVisualizacao): string | null {
+    if (!assunto.questoesFeitas) return null;
+    return `${assunto.questoesAcertadas} acertos de ${assunto.questoesFeitas} questões`;
+  }
+
+  private carregarMaterias(
+    materias: PlanejamentoMateria[],
+    aproveitamentosPorAssunto: Map<number, PlanejamentoAproveitamento>,
+  ) {
     if (!this.planejamento?.id || !materias.length) return of([] as MateriaVisualizacao[]);
 
-    return forkJoin(materias.map((materia) => this.carregarGruposDaMateria(materia))).pipe(
+    return forkJoin(
+      materias.map((materia) => this.carregarGruposDaMateria(materia, aproveitamentosPorAssunto)),
+    ).pipe(
       map((materiasVisualizacao) =>
         materiasVisualizacao.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
       ),
     );
   }
 
-  private carregarGruposDaMateria(materia: PlanejamentoMateria) {
+  private carregarGruposDaMateria(
+    materia: PlanejamentoMateria,
+    aproveitamentosPorAssunto: Map<number, PlanejamentoAproveitamento>,
+  ) {
     if (!this.planejamento?.id || !materia.id) {
       return of({
         id: materia.id ?? 0,
@@ -188,7 +211,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
 
     return this.service.listarGrupos(this.planejamento.id, materia.id).pipe(
       timeout(8000),
-      switchMap((grupos) => this.carregarGrupos(materia, grupos)),
+      switchMap((grupos) => this.carregarGrupos(materia, grupos, aproveitamentosPorAssunto)),
       catchError(() =>
         of({
           id: materia.id!,
@@ -201,7 +224,11 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     );
   }
 
-  private carregarGrupos(materia: PlanejamentoMateria, grupos: PlanejamentoGrupoAssunto[]) {
+  private carregarGrupos(
+    materia: PlanejamentoMateria,
+    grupos: PlanejamentoGrupoAssunto[],
+    aproveitamentosPorAssunto: Map<number, PlanejamentoAproveitamento>,
+  ) {
     if (!this.planejamento?.id || !materia.id || !grupos.length) {
       return of({
         id: materia.id!,
@@ -212,7 +239,11 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
       });
     }
 
-    return forkJoin(grupos.map((grupo) => this.carregarItensDoGrupo(materia.id!, grupo))).pipe(
+    return forkJoin(
+      grupos.map((grupo) =>
+        this.carregarItensDoGrupo(materia.id!, grupo, aproveitamentosPorAssunto),
+      ),
+    ).pipe(
       map((gruposVisualizacao) => ({
         id: materia.id!,
         nome: materia.materia.nome,
@@ -223,7 +254,11 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     );
   }
 
-  private carregarItensDoGrupo(materiaId: number, grupo: PlanejamentoGrupoAssunto) {
+  private carregarItensDoGrupo(
+    materiaId: number,
+    grupo: PlanejamentoGrupoAssunto,
+    aproveitamentosPorAssunto: Map<number, PlanejamentoAproveitamento>,
+  ) {
     if (!this.planejamento?.id || !grupo.id) {
       return of({ nome: this.nomeGrupo(grupo), assuntos: [] });
     }
@@ -235,7 +270,9 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
         if (!itensOrdenados.length) return of([] as AssuntoVisualizacao[]);
 
         return forkJoin(
-          itensOrdenados.map((item) => this.carregarEtapasDoAssunto(materiaId, grupo.id!, item)),
+          itensOrdenados.map((item) =>
+            this.carregarEtapasDoAssunto(materiaId, grupo.id!, item, aproveitamentosPorAssunto),
+          ),
         );
       }),
       map((assuntos) => ({ nome: this.nomeGrupo(grupo), assuntos })),
@@ -247,15 +284,23 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     materiaId: number,
     grupoId: number,
     item: PlanejamentoGrupoAssuntoItem,
+    aproveitamentosPorAssunto: Map<number, PlanejamentoAproveitamento>,
   ) {
     if (!this.planejamento?.id || !item.id) {
-      return of({ nome: item.assunto.nome, etapas: [] });
+      return of({
+        nome: item.assunto.nome,
+        etapas: [],
+        questoesFeitas: 0,
+        questoesAcertadas: 0,
+      });
     }
 
     return this.service.listarEtapas(this.planejamento.id, materiaId, grupoId, item.id).pipe(
       timeout(8000),
       map((etapas: PlanejamentoItemEtapa[]) => ({
         nome: item.assunto.nome,
+        questoesFeitas: aproveitamentosPorAssunto.get(item.assunto.id)?.questoesFeitas ?? 0,
+        questoesAcertadas: aproveitamentosPorAssunto.get(item.assunto.id)?.questoesAcertadas ?? 0,
         etapas: etapas
           .sort((a, b) => (a.ordem ?? 9999) - (b.ordem ?? 9999))
           .map((etapa) => ({
@@ -265,7 +310,14 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
             dataConcluida: etapa.dataConcluida,
           })),
       })),
-      catchError(() => of({ nome: item.assunto.nome, etapas: [] })),
+      catchError(() =>
+        of({
+          nome: item.assunto.nome,
+          etapas: [],
+          questoesFeitas: aproveitamentosPorAssunto.get(item.assunto.id)?.questoesFeitas ?? 0,
+          questoesAcertadas: aproveitamentosPorAssunto.get(item.assunto.id)?.questoesAcertadas ?? 0,
+        }),
+      ),
     );
   }
 

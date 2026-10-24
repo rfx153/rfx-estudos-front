@@ -87,6 +87,12 @@ export interface PlanejamentoItemEtapaDTO {
   concluidaManualmente?: boolean;
 }
 
+export interface PlanejamentoAproveitamento {
+  assuntoId: number;
+  questoesFeitas: number;
+  questoesAcertadas: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PlanejamentoService {
   private readonly http = inject(HttpClient);
@@ -103,6 +109,12 @@ export class PlanejamentoService {
 
   buscarPorId(id: number): Observable<Planejamento> {
     return this.http.get<Planejamento>(`${this.apiUrl}/${id}`);
+  }
+
+  listarAproveitamentos(planejamentoId: number): Observable<PlanejamentoAproveitamento[]> {
+    return this.http.get<PlanejamentoAproveitamento[]>(
+      `${this.apiUrl}/${planejamentoId}/aproveitamentos`,
+    );
   }
 
   criar(planejamento: Planejamento): Observable<Planejamento> {

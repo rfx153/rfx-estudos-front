@@ -188,6 +188,16 @@
   text-align: center;
   color: var(--text-muted, #94a3b8);
 }
+.etapa-status {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+}
+.etapa-status small {
+  color: inherit;
+  font-size: 10px;
+  font-weight: 400;
+}
 .etapa-status.ativa {
   color: #16a34a;
   font-weight: 800;
