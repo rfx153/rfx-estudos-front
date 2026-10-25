@@ -488,12 +488,21 @@ export class PlanejamentoDetalheComponent implements OnInit {
         )
       : this.service.adicionarGrupo(this.id, this.materiaSelecionada.id, dados);
     request$.subscribe({
-      next: () => {
+      next: (grupo) => {
         this.salvandoGrupo = false;
         this.modalGrupoAberto = false;
         this.cancelarEdicaoGrupo();
         this.carregarGrupos();
+        if (!editando && tipo === 'ASSUNTO') {
+          this.grupos = [...this.grupos, grupo];
+          this.grupoSelecionado = grupo;
+          this.itemSelecionado = undefined;
+          this.itens = [];
+          this.carregarItens();
+          this.carregarAssuntosDaMateria(() => this.abrirItem());
+        }
         this.message.success(`Grupo ${editando ? 'atualizado' : 'adicionado'} com sucesso.`);
+        this.cdr.detectChanges();
       },
       error: (erro) => {
         console.error('Erro ao salvar grupo:', erro);
@@ -575,13 +584,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     this.itemSelecionado = undefined;
     this.cancelarEdicaoItem();
     this.carregarItens();
-    this.registroService.listarAssuntosPorMateria(this.materiaSelecionada.materia.id).subscribe({
-      next: (assuntos) => {
-        this.assuntos = assuntos;
-        this.cdr.detectChanges();
-      },
-      error: (erro) => console.error('Erro ao carregar assuntos:', erro),
-    });
+    this.carregarAssuntosDaMateria();
   }
 
   salvarItem(): void {
@@ -980,6 +983,24 @@ export class PlanejamentoDetalheComponent implements OnInit {
           this.message.error('Não foi possível carregar os itens.');
         },
       });
+  }
+
+  private carregarAssuntosDaMateria(aoCarregar?: () => void): void {
+    const materiaId = this.materiaSelecionada?.materia.id;
+    if (!materiaId) return;
+
+    this.registroService.listarAssuntosPorMateria(materiaId).subscribe({
+      next: (assuntos) => {
+        this.assuntos = assuntos;
+        aoCarregar?.();
+        this.cdr.detectChanges();
+      },
+      error: (erro) => {
+        console.error('Erro ao carregar assuntos:', erro);
+        this.message.error('Não foi possível carregar os assuntos da matéria.');
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   private carregarNomesDosAssuntos(grupos: PlanejamentoGrupoAssunto[]): void {

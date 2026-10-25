@@ -27,7 +27,7 @@ export interface Registro {
   id?: number;
   materia: Materia;
   assunto: Assunto;
-  materialTipo: MaterialTipo;
+  materialTipo?: MaterialTipo | null;
   tipoRegistro?: TipoRegistro;
   concluido?: boolean;
   planejamentoEtapa?: { id?: number };

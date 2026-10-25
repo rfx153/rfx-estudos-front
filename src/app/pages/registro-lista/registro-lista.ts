@@ -118,7 +118,7 @@ export class RegistroListaComponent implements OnInit {
       ciclo: [null],
       tipoRegistro: [null, [Validators.required]],
       concluido: [false],
-      materialTipo: [null, [Validators.required]],
+      materialTipo: [null],
       materialNome: [null],
       puntoParada: [null],
       questoesFeitas: [0],

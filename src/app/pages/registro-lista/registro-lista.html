@@ -124,9 +124,9 @@
         </div>
         <div nz-col [nzSpan]="6">
           <nz-form-item>
-            <nz-form-label nzRequired>Tipo de Material</nz-form-label>
+            <nz-form-label>Tipo de Material</nz-form-label>
             <nz-form-control>
-              <nz-select formControlName="materialTipo" nzPlaceHolder="Ex: PDF, Vídeo...">
+              <nz-select formControlName="materialTipo" nzAllowClear nzPlaceHolder="Ex: PDF, Vídeo...">
                 <nz-option *ngFor="let t of listaTiposMaterial" [nzLabel]="t.nome" [nzValue]="t.id"></nz-option>
               </nz-select>
             </nz-form-control>
