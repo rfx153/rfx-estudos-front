@@ -275,6 +275,19 @@
 .form-modal nz-form-item {
   margin-bottom: 13px;
 }
+.quick-create {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border-top: 1px solid var(--border, #e5e7eb);
+}
+.quick-create input {
+  min-width: 0;
+  flex: 1;
+}
+.quick-create button {
+  flex: 0 0 auto;
+}
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

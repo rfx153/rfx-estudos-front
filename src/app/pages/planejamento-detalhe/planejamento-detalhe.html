@@ -245,13 +245,25 @@
         <nz-form-item *ngIf="materiaForm.controls.tipo.value === 'MATERIA'"
           ><nz-form-label nzRequired>Matéria</nz-form-label
           ><nz-form-control nzErrorTip="Selecione uma matéria."
-            ><nz-select formControlName="materiaId" nzPlaceHolder="Selecione"
+            ><nz-select
+              formControlName="materiaId"
+              nzPlaceHolder="Selecione"
+              nzShowSearch
+              [nzDropdownRender]="criarMateriaTemplate"
               ><nz-option
                 *ngFor="let materia of materiasDisponiveis()"
                 [nzValue]="materia.id"
                 [nzLabel]="materia.nome"
               ></nz-option></nz-select></nz-form-control
         ></nz-form-item>
+        <ng-template #criarMateriaTemplate>
+          <div class="quick-create" (click)="$event.stopPropagation()">
+            <input nz-input #novaMateria placeholder="Nome da nova matéria" (keydown.enter)="cadastrarMateriaRapida(novaMateria); $event.preventDefault()" />
+            <button nz-button nzType="link" type="button" [disabled]="criandoMateria" (click)="cadastrarMateriaRapida(novaMateria)">
+              {{ criandoMateria ? 'Criando...' : 'Criar' }}
+            </button>
+          </div>
+        </ng-template>
         <nz-form-item *ngIf="materiaForm.controls.tipo.value === 'BLOCO'"
           ><nz-form-label nzRequired>Nome do bloco</nz-form-label
           ><nz-form-control nzErrorTip="Informe um nome de até 150 caracteres."
@@ -409,13 +421,25 @@
         <nz-form-item
           ><nz-form-label nzRequired>Assunto</nz-form-label
           ><nz-form-control nzErrorTip="Selecione um assunto."
-            ><nz-select formControlName="assuntoId" nzPlaceHolder="Selecione"
+            ><nz-select
+              formControlName="assuntoId"
+              nzPlaceHolder="Selecione"
+              nzShowSearch
+              [nzDropdownRender]="criarAssuntoTemplate"
               ><nz-option
                 *ngFor="let assunto of assuntos"
                 [nzValue]="assunto.id"
                 [nzLabel]="assunto.nome"
               ></nz-option></nz-select></nz-form-control
         ></nz-form-item>
+        <ng-template #criarAssuntoTemplate>
+          <div class="quick-create" (click)="$event.stopPropagation()">
+            <input nz-input #novoAssunto placeholder="Nome do novo assunto" (keydown.enter)="cadastrarAssuntoRapido(novoAssunto); $event.preventDefault()" />
+            <button nz-button nzType="link" type="button" [disabled]="criandoAssunto" (click)="cadastrarAssuntoRapido(novoAssunto)">
+              {{ criandoAssunto ? 'Criando...' : 'Criar' }}
+            </button>
+          </div>
+        </ng-template>
         <details>
           <summary>Opções avançadas</summary>
           <div class="form-grid">

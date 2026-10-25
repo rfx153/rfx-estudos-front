@@ -90,6 +90,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
   salvando = false;
   carregandoMaterias = false;
   salvandoMateria = false;
+  criandoMateria = false;
   materiaEditandoId?: number;
   materias: Materia[] = [];
   materiasPlanejadas: PlanejamentoMateria[] = [];
@@ -110,6 +111,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
   itemEditandoId?: number;
   carregandoItens = false;
   salvandoItem = false;
+  criandoAssunto = false;
   itemSelecionado?: PlanejamentoGrupoAssuntoItem;
   etapas: PlanejamentoItemEtapa[] = [];
   tiposRegistro: TipoRegistro[] = [];
@@ -413,6 +415,31 @@ export class PlanejamentoDetalheComponent implements OnInit {
     return this.materias.filter((materia) => !idsAdicionados.has(materia.id));
   }
 
+  cadastrarMateriaRapida(inputElement: HTMLInputElement): void {
+    const nome = inputElement.value.trim();
+    if (!nome || this.criandoMateria) return;
+
+    this.criandoMateria = true;
+    this.materiaService.criar({ nome }).subscribe({
+      next: (materia) => {
+        this.materias = [...this.materias, materia].sort((a, b) =>
+          a.nome.localeCompare(b.nome, 'pt-BR'),
+        );
+        this.materiaForm.controls.materiaId.setValue(materia.id ?? null);
+        inputElement.value = '';
+        this.criandoMateria = false;
+        this.message.success('Matéria criada com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: (erro) => {
+        console.error('Erro ao criar matéria:', erro);
+        this.criandoMateria = false;
+        this.message.error('Não foi possível criar a matéria.');
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
   selecionarMateria(item: PlanejamentoMateria): void {
     if (!item.id) return;
     if (this.materiaSelecionada?.id === item.id) {
@@ -604,6 +631,32 @@ export class PlanejamentoDetalheComponent implements OnInit {
         console.error('Erro ao salvar item:', erro);
         this.salvandoItem = false;
         this.message.error('Não foi possível salvar o item.');
+      },
+    });
+  }
+
+  cadastrarAssuntoRapido(inputElement: HTMLInputElement): void {
+    const nome = inputElement.value.trim();
+    const materiaId = this.materiaSelecionada?.materia.id;
+    if (!nome || !materiaId || this.criandoAssunto) return;
+
+    this.criandoAssunto = true;
+    this.registroService.criarAssunto({ nome, materiaId }).subscribe({
+      next: (assunto) => {
+        this.assuntos = [...this.assuntos, assunto].sort((a, b) =>
+          a.nome.localeCompare(b.nome, 'pt-BR'),
+        );
+        this.itemForm.controls.assuntoId.setValue(assunto.id);
+        inputElement.value = '';
+        this.criandoAssunto = false;
+        this.message.success('Assunto criado com sucesso.');
+        this.cdr.detectChanges();
+      },
+      error: (erro) => {
+        console.error('Erro ao criar assunto:', erro);
+        this.criandoAssunto = false;
+        this.message.error('Não foi possível criar o assunto.');
+        this.cdr.detectChanges();
       },
     });
   }
