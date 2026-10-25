@@ -53,6 +53,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
   readonly form = this.fb.group({
     nome: ['', [Validators.required, Validators.maxLength(150)]],
     descricao: [''],
+    dataFimPrevista: [null as string | null],
   });
   readonly materiaForm = this.fb.group({
     tipo: ['MATERIA' as 'MATERIA' | 'BLOCO', Validators.required],
@@ -161,6 +162,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     const planejamento: Planejamento = {
       nome: this.form.controls.nome.value!.trim(),
       descricao: this.form.controls.descricao.value?.trim() || null,
+      dataFimPrevista: this.form.controls.dataFimPrevista.value || null,
     };
 
     this.salvando = true;
@@ -882,6 +884,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
           this.form.patchValue({
             nome: planejamento.nome,
             descricao: planejamento.descricao || '',
+            dataFimPrevista: planejamento.dataFimPrevista || null,
           });
           this.cdr.detectChanges();
         },

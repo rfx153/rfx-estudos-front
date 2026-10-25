@@ -10,6 +10,7 @@ export interface Planejamento {
   id?: number;
   nome: string;
   descricao?: string | null;
+  dataFimPrevista?: string | null;
 }
 
 export interface PlanejamentoMateria {

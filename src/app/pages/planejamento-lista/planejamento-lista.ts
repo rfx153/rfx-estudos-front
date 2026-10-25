@@ -28,7 +28,8 @@ export class PlanejamentoListaComponent implements OnInit {
   planejamentoEditando?: Planejamento;
   readonly editForm = this.fb.group({
     nome: ['', [Validators.required, Validators.maxLength(150)]],
-    descricao: ['']
+    descricao: [''],
+    dataFimPrevista: [null as string | null]
   });
 
   ngOnInit(): void {
@@ -57,7 +58,11 @@ export class PlanejamentoListaComponent implements OnInit {
     evento.preventDefault();
     evento.stopPropagation();
     this.planejamentoEditando = planejamento;
-    this.editForm.setValue({ nome: planejamento.nome, descricao: planejamento.descricao || '' });
+    this.editForm.setValue({
+      nome: planejamento.nome,
+      descricao: planejamento.descricao || '',
+      dataFimPrevista: planejamento.dataFimPrevista || null
+    });
   }
 
   remover(evento: Event, planejamento: Planejamento): void {
@@ -85,7 +90,7 @@ export class PlanejamentoListaComponent implements OnInit {
   fecharModal(): void {
     if (this.salvando) return;
     this.planejamentoEditando = undefined;
-    this.editForm.reset({ nome: '', descricao: '' });
+    this.editForm.reset({ nome: '', descricao: '', dataFimPrevista: null });
   }
 
   salvarEdicao(): void {
@@ -97,7 +102,8 @@ export class PlanejamentoListaComponent implements OnInit {
     const id = this.planejamentoEditando.id;
     const dados: Planejamento = {
       nome: this.editForm.controls.nome.value!.trim(),
-      descricao: this.editForm.controls.descricao.value?.trim() || null
+      descricao: this.editForm.controls.descricao.value?.trim() || null,
+      dataFimPrevista: this.editForm.controls.dataFimPrevista.value || null
     };
     this.salvando = true;
     this.service.atualizar(id, dados).pipe(finalize(() => {

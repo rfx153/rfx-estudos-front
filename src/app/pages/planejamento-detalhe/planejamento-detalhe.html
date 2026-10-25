@@ -30,6 +30,10 @@
       ><nz-form-control>
         <textarea nz-input formControlName="descricao" rows="4"></textarea></nz-form-control
     ></nz-form-item>
+    <nz-form-item
+      ><nz-form-label>Data fim prevista</nz-form-label
+      ><nz-form-control><input nz-input type="date" formControlName="dataFimPrevista" /></nz-form-control
+    ></nz-form-item>
     <div class="form-actions">
       <button nz-button type="button" (click)="voltar()">Cancelar</button
       ><button nz-button nzType="primary" [nzLoading]="salvando">Criar planejamento</button>

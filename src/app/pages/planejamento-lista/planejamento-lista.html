@@ -15,6 +15,9 @@
       <div>
         <h3>{{ planejamento.nome }}</h3>
         <p>{{ planejamento.descricao || 'Sem descrição' }}</p>
+        <small class="planning-deadline" *ngIf="planejamento.dataFimPrevista">
+          Fim previsto: {{ planejamento.dataFimPrevista | date: 'dd/MM/yyyy' }}
+        </small>
       </div>
       <div class="card-actions">
         <button type="button" class="edit-button" (click)="editar($event, planejamento)">Editar</button>
@@ -43,6 +46,9 @@
         <small class="field-error" *ngIf="editForm.controls.nome.touched && editForm.controls.nome.invalid">Informe o nome do planejamento.</small>
         <label>Descrição
           <textarea formControlName="descricao" rows="3"></textarea>
+        </label>
+        <label>Data fim prevista
+          <input type="date" formControlName="dataFimPrevista" />
         </label>
         <div class="modal-actions">
           <button nz-button type="button" (click)="fecharModal()">Cancelar</button>

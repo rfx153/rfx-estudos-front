@@ -135,17 +135,6 @@
   color: var(--text-muted, #64748b);
 }
 
-.grupo {
-  padding-top: 16px;
-}
-.grupo + .grupo {
-  margin-top: 4px;
-}
-.grupo h3 {
-  margin: 0 0 8px;
-  color: var(--text, #0f172a);
-  font-size: 14px;
-}
 .assuntos-tabela {
   overflow-x: auto;
 }
@@ -162,6 +151,22 @@
   color: var(--text-muted, #64748b);
   font-size: 12px;
   font-weight: 700;
+}
+.grupo-linha,
+.grupo-vazio {
+  min-width: 720px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border, #e5e7eb);
+}
+.grupo-linha {
+  background: var(--surface-soft, #f8fafc);
+  color: var(--text, #0f172a);
+  font-size: 13px;
+  font-weight: 700;
+}
+.grupo-vazio {
+  color: var(--text-muted, #64748b);
+  font-size: 13px;
 }
 
 .assunto-linha {
@@ -206,7 +211,6 @@
   color: #d97706;
   font-weight: 800;
 }
-.grupo p,
 .empty-state,
 .loading-state {
   margin: 14px 0 0;

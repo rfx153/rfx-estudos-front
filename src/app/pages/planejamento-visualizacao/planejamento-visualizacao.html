@@ -58,91 +58,41 @@
 
         <div class="assuntos" *ngIf="materia.aberta">
           <ng-container *ngIf="materia.grupos.length; else semAssuntos">
-            <div class="grupo" *ngFor="let grupo of materia.grupos">
-              <h3 *ngIf="grupo.nome !== 'Assuntos'">{{ grupo.nome }}</h3>
-              <div class="assuntos-tabela" *ngIf="grupo.assuntos.length">
-                <div class="assunto-cabecalho" aria-hidden="true">
-                  <span>Nome do assunto</span>
-                  <span>Assunto</span>
-                  <span>Questões</span>
-                  <span>Revisão</span>
-                  <span>Resumo</span>
-                  <span>Aproveitamento</span>
+            <div class="assuntos-tabela">
+              <div class="assunto-cabecalho" aria-hidden="true">
+                <span>Nome do assunto</span>
+                <span>Assunto</span>
+                <span>Questões</span>
+                <span>Revisão</span>
+                <span>Resumo</span>
+                <span>Aproveitamento</span>
+              </div>
+              <ng-container *ngFor="let grupo of materia.grupos">
+                <div class="grupo-linha" *ngIf="grupo.nome !== 'Assuntos'">
+                  {{ grupo.nome }}
                 </div>
                 <div class="assunto-linha" *ngFor="let assunto of grupo.assuntos">
-                  <div>
-                    <strong>{{ assunto.nome }}</strong>
-                  </div>
-                  <span
-                    class="etapa-status"
-                    [class.ativa]="etapaConcluida(assunto, 'assunto')"
-                    [class.andamento]="etapaEmAndamento(assunto, 'assunto')"
-                  >
-                    <span>{{
-                      etapaConcluida(assunto, 'assunto')
-                        ? '✓'
-                        : etapaEmAndamento(assunto, 'assunto')
-                          ? '◔'
-                          : '—'
-                    }}</span>
-                    <small *ngIf="dataConclusaoDaEtapa(assunto, 'assunto')">
-                      {{ dataConclusaoDaEtapa(assunto, 'assunto') | date: 'dd/MM/yy' }}
-                    </small>
+                  <div><strong>{{ assunto.nome }}</strong></div>
+                  <span class="etapa-status" [class.ativa]="etapaConcluida(assunto, 'assunto')" [class.andamento]="etapaEmAndamento(assunto, 'assunto')">
+                    <span>{{ etapaConcluida(assunto, 'assunto') ? '✓' : etapaEmAndamento(assunto, 'assunto') ? '◔' : '—' }}</span>
+                    <small *ngIf="dataConclusaoDaEtapa(assunto, 'assunto')">{{ dataConclusaoDaEtapa(assunto, 'assunto') | date: 'dd/MM/yy' }}</small>
                   </span>
-                  <span
-                    class="etapa-status"
-                    [class.ativa]="etapaConcluida(assunto, 'quest')"
-                    [class.andamento]="etapaEmAndamento(assunto, 'quest')"
-                  >
-                    <span>{{
-                      etapaConcluida(assunto, 'quest')
-                        ? '✓'
-                        : etapaEmAndamento(assunto, 'quest')
-                          ? '◔'
-                          : '—'
-                    }}</span>
-                    <small *ngIf="dataConclusaoDaEtapa(assunto, 'quest')">
-                      {{ dataConclusaoDaEtapa(assunto, 'quest') | date: 'dd/MM/yy' }}
-                    </small>
+                  <span class="etapa-status" [class.ativa]="etapaConcluida(assunto, 'quest')" [class.andamento]="etapaEmAndamento(assunto, 'quest')">
+                    <span>{{ etapaConcluida(assunto, 'quest') ? '✓' : etapaEmAndamento(assunto, 'quest') ? '◔' : '—' }}</span>
+                    <small *ngIf="dataConclusaoDaEtapa(assunto, 'quest')">{{ dataConclusaoDaEtapa(assunto, 'quest') | date: 'dd/MM/yy' }}</small>
                   </span>
-                  <span
-                    class="etapa-status"
-                    [class.ativa]="etapaConcluida(assunto, 'revis')"
-                    [class.andamento]="etapaEmAndamento(assunto, 'revis')"
-                  >
-                    <span>{{
-                      etapaConcluida(assunto, 'revis')
-                        ? '✓'
-                        : etapaEmAndamento(assunto, 'revis')
-                          ? '◔'
-                          : '—'
-                    }}</span>
-                    <small *ngIf="dataConclusaoDaEtapa(assunto, 'revis')">
-                      {{ dataConclusaoDaEtapa(assunto, 'revis') | date: 'dd/MM/yy' }}
-                    </small>
+                  <span class="etapa-status" [class.ativa]="etapaConcluida(assunto, 'revis')" [class.andamento]="etapaEmAndamento(assunto, 'revis')">
+                    <span>{{ etapaConcluida(assunto, 'revis') ? '✓' : etapaEmAndamento(assunto, 'revis') ? '◔' : '—' }}</span>
+                    <small *ngIf="dataConclusaoDaEtapa(assunto, 'revis')">{{ dataConclusaoDaEtapa(assunto, 'revis') | date: 'dd/MM/yy' }}</small>
                   </span>
-                  <span
-                    class="etapa-status"
-                    [class.ativa]="etapaConcluida(assunto, 'resum')"
-                    [class.andamento]="etapaEmAndamento(assunto, 'resum')"
-                  >
-                    <span>{{
-                      etapaConcluida(assunto, 'resum')
-                        ? '✓'
-                        : etapaEmAndamento(assunto, 'resum')
-                          ? '◔'
-                          : '—'
-                    }}</span>
-                    <small *ngIf="dataConclusaoDaEtapa(assunto, 'resum')">
-                      {{ dataConclusaoDaEtapa(assunto, 'resum') | date: 'dd/MM/yy' }}
-                    </small>
+                  <span class="etapa-status" [class.ativa]="etapaConcluida(assunto, 'resum')" [class.andamento]="etapaEmAndamento(assunto, 'resum')">
+                    <span>{{ etapaConcluida(assunto, 'resum') ? '✓' : etapaEmAndamento(assunto, 'resum') ? '◔' : '—' }}</span>
+                    <small *ngIf="dataConclusaoDaEtapa(assunto, 'resum')">{{ dataConclusaoDaEtapa(assunto, 'resum') | date: 'dd/MM/yy' }}</small>
                   </span>
-                  <span class="aproveitamento" [attr.title]="detalhesAproveitamento(assunto)">
-                    {{ aproveitamento(assunto) }}
-                  </span>
+                  <span class="aproveitamento" [attr.title]="detalhesAproveitamento(assunto)">{{ aproveitamento(assunto) }}</span>
                 </div>
-              </div>
-              <p *ngIf="!grupo.assuntos.length">Nenhum assunto adicionado.</p>
+                <div class="grupo-vazio" *ngIf="!grupo.assuntos.length">Nenhum assunto adicionado.</div>
+              </ng-container>
             </div>
           </ng-container>
           <ng-template #semAssuntos><p>Nenhum assunto adicionado.</p></ng-template>
