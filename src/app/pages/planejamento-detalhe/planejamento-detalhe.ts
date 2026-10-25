@@ -7,7 +7,7 @@ import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzSelectModule } from 'ng-zorro-antd/select';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin, Observable, switchMap } from 'rxjs';
 import { Materia, MateriaService } from '../../services/materia.service';
 import { Assunto, RegistroService, TipoRegistro } from '../../services/registro.service';
 import {
@@ -57,7 +57,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
   });
   readonly materiaForm = this.fb.group({
     tipo: ['MATERIA' as 'MATERIA' | 'BLOCO', Validators.required],
-    materiaId: [null as number | null],
+    materiaIds: [[] as number[]],
     nomeBloco: ['', Validators.maxLength(150)],
     planejamentoGrupoMateriaId: [null as number | null],
     peso: [null as number | null, [Validators.min(1), Validators.max(5)]],
@@ -75,7 +75,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     ordem: [null as number | null, Validators.min(1)],
   });
   readonly itemForm = this.fb.group({
-    assuntoId: [null as number | null, Validators.required],
+    assuntoIds: [[] as number[], Validators.required],
     peso: [null as number | null, [Validators.min(1), Validators.max(5)]],
     ordem: [null as number | null, Validators.min(1)],
   });
@@ -109,6 +109,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
   grupoSelecionado?: PlanejamentoGrupoAssunto;
   itens: PlanejamentoGrupoAssuntoItem[] = [];
   assuntos: Assunto[] = [];
+  assuntoIdsCadastrados = new Set<number>();
   itemEditandoId?: number;
   carregandoItens = false;
   salvandoItem = false;
@@ -190,11 +191,11 @@ export class PlanejamentoDetalheComponent implements OnInit {
   salvarMateria(): void {
     if (!this.id) return;
     const tipo = this.materiaForm.controls.tipo.value!;
-    const materiaId = this.materiaForm.controls.materiaId.value;
+    const materiaIds = this.materiaForm.controls.materiaIds.value ?? [];
     const nomeBloco = this.materiaForm.controls.nomeBloco.value?.trim();
     if (
       this.materiaForm.invalid ||
-      (tipo === 'MATERIA' && !materiaId) ||
+      (tipo === 'MATERIA' && !materiaIds.length) ||
       (tipo === 'BLOCO' && (!nomeBloco || nomeBloco.length > 150))
     ) {
       this.materiaForm.markAllAsTouched();
@@ -225,17 +226,27 @@ export class PlanejamentoDetalheComponent implements OnInit {
       return;
     }
 
-    const dados: PlanejamentoMateriaDTO = {
-      materiaId: materiaId!,
+    if (this.materiaEditandoId && materiaIds.length !== 1) {
+      this.message.warning('Na edição, selecione apenas uma matéria.');
+      return;
+    }
+
+    const criarDados = (materiaId: number): PlanejamentoMateriaDTO => ({
+      materiaId,
       planejamentoGrupoMateriaId: this.materiaForm.controls.planejamentoGrupoMateriaId.value,
       peso: this.materiaForm.controls.peso.value,
       ordem: this.materiaForm.controls.ordem.value,
-    };
+    });
     const editando = !!this.materiaEditandoId;
     this.salvandoMateria = true;
-    const requisicao$ = this.materiaEditandoId
-      ? this.service.atualizarMateria(this.id, this.materiaEditandoId, dados)
-      : this.service.adicionarMateria(this.id, dados);
+    const requisicao$: Observable<PlanejamentoMateria | PlanejamentoMateria[]> =
+      this.materiaEditandoId
+        ? this.service.atualizarMateria(this.id, this.materiaEditandoId, criarDados(materiaIds[0]))
+        : forkJoin(
+            materiaIds.map((materiaId) =>
+              this.service.adicionarMateria(this.id!, criarDados(materiaId)),
+            ),
+          );
 
     requisicao$.subscribe({
       next: () => {
@@ -243,7 +254,11 @@ export class PlanejamentoDetalheComponent implements OnInit {
         this.modalMateriaAberto = false;
         this.cancelarEdicaoMateria();
         this.carregarMaterias();
-        this.message.success(`Matéria ${editando ? 'atualizada' : 'adicionada'} com sucesso.`);
+        this.message.success(
+          editando
+            ? 'Matéria atualizada com sucesso.'
+            : `${materiaIds.length} matéria(s) adicionada(s) com sucesso.`,
+        );
       },
       error: (erro) => {
         console.error('Erro ao salvar matéria do planejamento:', erro);
@@ -258,7 +273,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     this.materiaEditandoId = item.id;
     this.materiaForm.setValue({
       tipo: 'MATERIA',
-      materiaId: item.materia.id,
+      materiaIds: [item.materia.id],
       nomeBloco: '',
       planejamentoGrupoMateriaId: item.planejamentoGrupoMateria?.id ?? null,
       peso: item.peso ?? null,
@@ -289,7 +304,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     this.materiaEditandoId = undefined;
     this.materiaForm.reset({
       tipo: 'MATERIA',
-      materiaId: null,
+      materiaIds: [],
       nomeBloco: '',
       planejamentoGrupoMateriaId: null,
       peso: null,
@@ -427,7 +442,9 @@ export class PlanejamentoDetalheComponent implements OnInit {
         this.materias = [...this.materias, materia].sort((a, b) =>
           a.nome.localeCompare(b.nome, 'pt-BR'),
         );
-        this.materiaForm.controls.materiaId.setValue(materia.id ?? null);
+        this.materiaForm.controls.materiaIds.setValue(
+          materia.id ? [...(this.materiaForm.controls.materiaIds.value ?? []), materia.id] : [],
+        );
         inputElement.value = '';
         this.criandoMateria = false;
         this.message.success('Matéria criada com sucesso.');
@@ -603,34 +620,64 @@ export class PlanejamentoDetalheComponent implements OnInit {
       this.message.warning('Um grupo do tipo ASSUNTO pode possuir somente um item.');
       return;
     }
-    const dados: PlanejamentoGrupoAssuntoItemDTO = {
-      assuntoId: this.itemForm.controls.assuntoId.value!,
+    const assuntoIds = this.itemForm.controls.assuntoIds.value ?? [];
+    if (!assuntoIds.length) {
+      this.itemForm.markAllAsTouched();
+      return;
+    }
+    if (this.itemEditandoId && assuntoIds.length !== 1) {
+      this.message.warning('Na edição, selecione apenas um assunto.');
+      return;
+    }
+    const criarDados = (assuntoId: number): PlanejamentoGrupoAssuntoItemDTO => ({
+      assuntoId,
       peso: this.itemForm.controls.peso.value,
       ordem: this.itemForm.controls.ordem.value,
-    };
+    });
+    const adicionarNoGrupo = (grupoId: number, assuntoId: number) =>
+      this.service.adicionarItem(
+        this.id!,
+        this.materiaSelecionada!.id!,
+        grupoId,
+        criarDados(assuntoId),
+      );
     const editando = !!this.itemEditandoId;
     this.salvandoItem = true;
-    const request$ = this.itemEditandoId
-      ? this.service.atualizarItem(
-          this.id,
-          this.materiaSelecionada.id,
-          this.grupoSelecionado.id,
-          this.itemEditandoId,
-          dados,
-        )
-      : this.service.adicionarItem(
-          this.id,
-          this.materiaSelecionada.id,
-          this.grupoSelecionado.id,
-          dados,
-        );
+    const request$: Observable<PlanejamentoGrupoAssuntoItem | PlanejamentoGrupoAssuntoItem[]> =
+      this.itemEditandoId
+        ? this.service.atualizarItem(
+            this.id,
+            this.materiaSelecionada.id,
+            this.grupoSelecionado.id,
+            this.itemEditandoId,
+            criarDados(assuntoIds[0]),
+          )
+        : this.grupoSelecionado.tipo === 'ASSUNTO'
+          ? forkJoin([
+              adicionarNoGrupo(this.grupoSelecionado.id, assuntoIds[0]),
+              ...assuntoIds.slice(1).map((assuntoId) =>
+                this.service
+                  .adicionarGrupo(this.id!, this.materiaSelecionada!.id!, { tipo: 'ASSUNTO' })
+                  .pipe(switchMap((grupo) => adicionarNoGrupo(grupo.id!, assuntoId))),
+              ),
+            ])
+        : forkJoin(
+            assuntoIds.map((assuntoId) =>
+              adicionarNoGrupo(this.grupoSelecionado!.id!, assuntoId),
+            ),
+          );
     request$.subscribe({
       next: () => {
         this.salvandoItem = false;
         this.modalItemAberto = false;
         this.cancelarEdicaoItem();
         this.carregarItens();
-        this.message.success(`Item ${editando ? 'atualizado' : 'adicionado'} com sucesso.`);
+        this.carregarGrupos();
+        this.message.success(
+          editando
+            ? 'Assunto atualizado com sucesso.'
+            : `${assuntoIds.length} assunto(s) adicionado(s) com sucesso.`,
+        );
       },
       error: (erro) => {
         console.error('Erro ao salvar item:', erro);
@@ -651,7 +698,12 @@ export class PlanejamentoDetalheComponent implements OnInit {
         this.assuntos = [...this.assuntos, assunto].sort((a, b) =>
           a.nome.localeCompare(b.nome, 'pt-BR'),
         );
-        this.itemForm.controls.assuntoId.setValue(assunto.id);
+        if (assunto.id) {
+          this.itemForm.controls.assuntoIds.setValue([
+            ...(this.itemForm.controls.assuntoIds.value ?? []),
+            assunto.id,
+          ]);
+        }
         inputElement.value = '';
         this.criandoAssunto = false;
         this.message.success('Assunto criado com sucesso.');
@@ -670,7 +722,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     if (!item.id) return;
     this.itemEditandoId = item.id;
     this.itemForm.setValue({
-      assuntoId: item.assunto.id,
+      assuntoIds: [item.assunto.id],
       peso: item.peso ?? null,
       ordem: item.ordem ?? null,
     });
@@ -690,7 +742,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
 
   cancelarEdicaoItem(): void {
     this.itemEditandoId = undefined;
-    this.itemForm.reset({ assuntoId: null, peso: null, ordem: null });
+    this.itemForm.reset({ assuntoIds: [], peso: null, ordem: null });
   }
 
   excluirItem(item: PlanejamentoGrupoAssuntoItem): void {
@@ -719,6 +771,16 @@ export class PlanejamentoDetalheComponent implements OnInit {
   podeAdicionarItem(): boolean {
     return (
       this.grupoSelecionado?.tipo !== 'ASSUNTO' || !!this.itemEditandoId || this.itens.length === 0
+    );
+  }
+
+  assuntosDisponiveis(): Assunto[] {
+    return this.assuntos.filter(
+      (assunto) =>
+        assunto.id === this.itemSelecionado?.assunto.id ||
+        assunto.id === this.itemForm.controls.assuntoIds.value?.[0] ||
+        !assunto.id ||
+        !this.assuntoIdsCadastrados.has(assunto.id),
     );
   }
 
@@ -956,6 +1018,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
         next: (grupos) => {
           this.grupos = grupos;
           this.carregarNomesDosAssuntos(grupos);
+          this.carregarAssuntosCadastrados(grupos);
           this.cdr.detectChanges();
         },
         error: (erro) => {
@@ -1022,6 +1085,31 @@ export class PlanejamentoDetalheComponent implements OnInit {
           error: (erro) => console.error('Erro ao carregar nome do assunto:', erro),
         });
       });
+  }
+
+  private carregarAssuntosCadastrados(grupos: PlanejamentoGrupoAssunto[]): void {
+    if (!this.id || !this.materiaSelecionada?.id) return;
+
+    const consultas = grupos
+      .filter((grupo) => grupo.id)
+      .map((grupo) => this.service.listarItens(this.id!, this.materiaSelecionada!.id!, grupo.id!));
+
+    if (!consultas.length) {
+      this.assuntoIdsCadastrados = new Set();
+      return;
+    }
+
+    forkJoin(consultas).subscribe({
+      next: (itensPorGrupo) => {
+        this.assuntoIdsCadastrados = new Set(
+          itensPorGrupo.flatMap((itens) =>
+            itens.map((item) => item.assunto.id).filter((id): id is number => !!id),
+          ),
+        );
+        this.cdr.detectChanges();
+      },
+      error: (erro) => console.error('Erro ao carregar assuntos já cadastrados:', erro),
+    });
   }
 
   private carregarEtapas(): void {

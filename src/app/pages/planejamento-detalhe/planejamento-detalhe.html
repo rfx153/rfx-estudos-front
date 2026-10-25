@@ -230,7 +230,7 @@
       <header>
         <div>
           <h3>{{ materiaEditandoId ? 'Editar matéria' : 'Adicionar item' }}</h3>
-          <p>Escolha se deseja adicionar uma matéria ou um bloco de matérias.</p>
+          <p>Selecione uma ou várias matérias, ou crie um bloco de matérias.</p>
         </div>
         <button type="button" class="modal-close" (click)="fecharMateria()">×</button>
       </header>
@@ -247,11 +247,12 @@
           </nz-form-control>
         </nz-form-item>
         <nz-form-item *ngIf="materiaForm.controls.tipo.value === 'MATERIA'"
-          ><nz-form-label nzRequired>Matéria</nz-form-label
-          ><nz-form-control nzErrorTip="Selecione uma matéria."
+          ><nz-form-label nzRequired>Matérias</nz-form-label
+          ><nz-form-control nzErrorTip="Selecione ao menos uma matéria."
             ><nz-select
-              formControlName="materiaId"
-              nzPlaceHolder="Selecione"
+              formControlName="materiaIds"
+              nzMode="multiple"
+              nzPlaceHolder="Selecione uma ou mais matérias"
               nzShowSearch
               [nzDropdownRender]="criarMateriaTemplate"
               ><nz-option
@@ -417,21 +418,29 @@
       <header>
         <div>
           <h3>{{ itemEditandoId ? 'Editar assunto' : 'Adicionar assunto' }}</h3>
-          <p>Selecione um assunto de {{ materiaSelecionada?.materia?.nome }}.</p>
+          <p>
+            <ng-container *ngIf="grupoSelecionado?.tipo === 'BLOCO'; else assuntoIndividual">
+              Selecione um ou mais assuntos de {{ materiaSelecionada?.materia?.nome }}.
+            </ng-container>
+            <ng-template #assuntoIndividual>
+              Cada assunto selecionado será adicionado como um assunto individual.
+            </ng-template>
+          </p>
         </div>
         <button type="button" class="modal-close" (click)="fecharItem()">×</button>
       </header>
       <form nz-form [formGroup]="itemForm" (ngSubmit)="salvarItem()">
         <nz-form-item
-          ><nz-form-label nzRequired>Assunto</nz-form-label
-          ><nz-form-control nzErrorTip="Selecione um assunto."
+          ><nz-form-label nzRequired>Assuntos</nz-form-label
+          ><nz-form-control nzErrorTip="Selecione ao menos um assunto."
             ><nz-select
-              formControlName="assuntoId"
-              nzPlaceHolder="Selecione"
+              formControlName="assuntoIds"
+              nzMode="multiple"
+              nzPlaceHolder="Selecione um ou mais assuntos"
               nzShowSearch
               [nzDropdownRender]="criarAssuntoTemplate"
               ><nz-option
-                *ngFor="let assunto of assuntos"
+                *ngFor="let assunto of assuntosDisponiveis()"
                 [nzValue]="assunto.id"
                 [nzLabel]="assunto.nome"
               ></nz-option></nz-select></nz-form-control
