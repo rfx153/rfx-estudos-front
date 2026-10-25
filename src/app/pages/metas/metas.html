@@ -1,0 +1,76 @@
+<section class="metas-page">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">Acompanhamento</p>
+      <h1>Metas de estudo</h1>
+      <p>O progresso é calculado automaticamente a partir dos registros salvos.</p>
+    </div>
+    <button class="primary nova-meta" type="button" (click)="abrirCriacao()">+ Nova meta semanal</button>
+  </header>
+
+  <section class="periodo-card" aria-label="Período das metas">
+    <div class="periodo-controles">
+      <button type="button" (click)="navegar(-1)" aria-label="Período anterior">‹</button>
+      <div>
+        <div class="periodo-seletor">
+          <button type="button" [class.ativo]="periodo === 'SEMANAL'" (click)="mudarPeriodo('SEMANAL')">Semana</button>
+          <button type="button" [class.ativo]="periodo === 'MENSAL'" (click)="mudarPeriodo('MENSAL')">Mês</button>
+        </div>
+        <h2>{{ tituloPeriodo }}</h2>
+      </div>
+      <button type="button" (click)="navegar(1)" aria-label="Próximo período">›</button>
+    </div>
+  </section>
+
+  <p *ngIf="erro" class="mensagem erro">{{ erro }}</p>
+  <p *ngIf="carregando" class="mensagem">Carregando metas...</p>
+
+  <section *ngIf="!carregando" class="metas-lista">
+    <article *ngFor="let meta of resumo" class="meta-item">
+      <div class="meta-cabecalho">
+        <div>
+          <h2>{{ meta.materiaNome }}</h2>
+          <p><strong>Falta: {{ formatarDuracao(restante(meta)) }}</strong> · Meta definida: {{ formatarDuracao(meta.metaPeriodoMinutos) }}</p>
+        </div>
+        <div class="acoes">
+          <a routerLink="/novo-registro">Iniciar</a>
+          <button type="button" (click)="editar(meta)">Editar</button>
+          <button type="button" class="remover" (click)="excluir(meta)">Remover</button>
+        </div>
+      </div>
+      <div class="barra" [attr.aria-label]="porcentagem(meta).toFixed(1) + '% concluído'">
+        <span [style.width.%]="porcentagem(meta)"></span>
+        <strong>{{ porcentagem(meta) | number:'1.0-1' }}%</strong>
+      </div>
+      <small>{{ formatarDuracao(meta.tempoRealizadoMinutos) }} estudados no período</small>
+    </article>
+    <p *ngIf="!resumo.length" class="vazio">Nenhuma meta cadastrada. Adicione uma meta semanal para começar.</p>
+  </section>
+
+  <div *ngIf="modalAberto" class="modal-fundo" (click)="cancelarEdicao()">
+    <form class="modal" (ngSubmit)="salvar()" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <p class="eyebrow">Configuração</p>
+          <h2>{{ metaEmEdicao ? 'Editar meta semanal' : 'Nova meta semanal' }}</h2>
+        </div>
+        <button type="button" class="fechar" (click)="cancelarEdicao()" aria-label="Fechar">×</button>
+      </header>
+      <label>Matéria
+        <select name="materia" [(ngModel)]="formulario.materiaId" required>
+          <option [ngValue]="null">Selecione a matéria</option>
+          <option *ngFor="let materia of materiasSemMeta" [ngValue]="materia.id">{{ materia.nome }}</option>
+        </select>
+      </label>
+      <div class="duracao">
+        <label>Horas<input type="number" name="horas" min="0" step="1" [(ngModel)]="formulario.horas" /></label>
+        <label>Minutos<input type="number" name="minutos" min="0" max="59" step="1" [(ngModel)]="formulario.minutos" /></label>
+      </div>
+      <p class="modal-ajuda">A meta mensal será calculada automaticamente a partir desta meta semanal.</p>
+      <footer>
+        <button type="button" (click)="cancelarEdicao()">Cancelar</button>
+        <button class="primary" type="submit" [disabled]="salvando">{{ salvando ? 'Salvando...' : 'Salvar meta' }}</button>
+      </footer>
+    </form>
+  </div>
+</section>

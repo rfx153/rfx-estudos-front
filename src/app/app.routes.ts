@@ -9,6 +9,7 @@ import { PlanejamentoDetalheComponent } from './pages/planejamento-detalhe/plane
 import { PlanejamentoVisualizacaoComponent } from './pages/planejamento-visualizacao/planejamento-visualizacao';
 import { MetodologiaComponent } from './pages/metodologia/metodologia';
 import { CaminhoComponent } from './pages/caminho/caminho';
+import { MetasComponent } from './pages/metas/metas';
 
 export const routes: Routes = [
   { path: '', component: InicioComponent },
@@ -21,6 +22,7 @@ export const routes: Routes = [
   { path: 'planejamento/:id', component: PlanejamentoVisualizacaoComponent },
   { path: 'metodologia', component: MetodologiaComponent },
   { path: 'caminho', component: CaminhoComponent },
+  { path: 'metas', component: MetasComponent },
   { path: 'materias', component: MateriaListaComponent },
   { path: '**', redirectTo: '' } // Rota coringa para evitar erros 404
 ];
