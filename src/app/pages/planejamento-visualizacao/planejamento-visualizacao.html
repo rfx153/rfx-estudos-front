@@ -52,7 +52,13 @@
           (click)="alternarMateria(materia)"
           [attr.aria-expanded]="materia.aberta"
         >
-          <span>{{ materia.nome }}</span>
+          <span>
+            <strong>{{ materia.nome }}</strong>
+            <small
+              >Peso na prova: {{ materia.peso ?? 'não informado' }} · Dificuldade:
+              {{ rotuloDificuldade(materia.dificuldade) }}</small
+            >
+          </span>
           <span class="chevron" [class.aberta]="materia.aberta" aria-hidden="true">⌄</span>
         </button>
 
@@ -62,10 +68,11 @@
               <div class="assunto-cabecalho" aria-hidden="true">
                 <span>Nome do assunto</span>
                 <span>Assunto</span>
+                <span>Resumo</span>
                 <span>Questões</span>
                 <span>Revisão</span>
-                <span>Resumo</span>
-                <span>Aproveitamento</span>
+                <span>Peso na prova</span>
+                <span>Dificuldade</span>
               </div>
               <ng-container *ngFor="let grupo of materia.grupos">
                 <div class="grupo-linha" *ngIf="grupo.nome !== 'Assuntos'">
@@ -73,23 +80,37 @@
                 </div>
                 <div class="assunto-linha" *ngFor="let assunto of grupo.assuntos">
                   <div><strong>{{ assunto.nome }}</strong></div>
-                  <span class="etapa-status" [class.ativa]="etapaConcluida(assunto, 'assunto')" [class.andamento]="etapaEmAndamento(assunto, 'assunto')">
-                    <span>{{ etapaConcluida(assunto, 'assunto') ? '✓' : etapaEmAndamento(assunto, 'assunto') ? '◔' : '—' }}</span>
+                  <div class="etapa-status" [class.ativa]="etapaConcluida(assunto, 'assunto')" [class.andamento]="etapaEmAndamento(assunto, 'assunto')" [class.salvando]="etapaSendoSalva(assunto, 'assunto')">
+                    <select aria-label="Status de Assunto" [value]="statusEtapa(assunto, 'assunto')" [disabled]="etapaSendoSalva(assunto, 'assunto')" (change)="alterarStatusEtapa(assunto, 'assunto', $any($event.target).value)">
+                      <option value="NAO_INICIADO">Não iniciado</option><option value="EM_ANDAMENTO">Em andamento</option><option value="CONCLUIDO">Concluído</option>
+                    </select>
                     <small *ngIf="dataConclusaoDaEtapa(assunto, 'assunto')">{{ dataConclusaoDaEtapa(assunto, 'assunto') | date: 'dd/MM/yy' }}</small>
-                  </span>
-                  <span class="etapa-status" [class.ativa]="etapaConcluida(assunto, 'quest')" [class.andamento]="etapaEmAndamento(assunto, 'quest')">
-                    <span>{{ etapaConcluida(assunto, 'quest') ? '✓' : etapaEmAndamento(assunto, 'quest') ? '◔' : '—' }}</span>
-                    <small *ngIf="dataConclusaoDaEtapa(assunto, 'quest')">{{ dataConclusaoDaEtapa(assunto, 'quest') | date: 'dd/MM/yy' }}</small>
-                  </span>
-                  <span class="etapa-status" [class.ativa]="etapaConcluida(assunto, 'revis')" [class.andamento]="etapaEmAndamento(assunto, 'revis')">
-                    <span>{{ etapaConcluida(assunto, 'revis') ? '✓' : etapaEmAndamento(assunto, 'revis') ? '◔' : '—' }}</span>
-                    <small *ngIf="dataConclusaoDaEtapa(assunto, 'revis')">{{ dataConclusaoDaEtapa(assunto, 'revis') | date: 'dd/MM/yy' }}</small>
-                  </span>
-                  <span class="etapa-status" [class.ativa]="etapaConcluida(assunto, 'resum')" [class.andamento]="etapaEmAndamento(assunto, 'resum')">
-                    <span>{{ etapaConcluida(assunto, 'resum') ? '✓' : etapaEmAndamento(assunto, 'resum') ? '◔' : '—' }}</span>
+                  </div>
+                  <div class="etapa-status" [class.ativa]="etapaConcluida(assunto, 'resum')" [class.andamento]="etapaEmAndamento(assunto, 'resum')" [class.salvando]="etapaSendoSalva(assunto, 'resum')">
+                    <select aria-label="Status de Resumo" [value]="statusEtapa(assunto, 'resum')" [disabled]="etapaSendoSalva(assunto, 'resum')" (change)="alterarStatusEtapa(assunto, 'resum', $any($event.target).value)">
+                      <option value="NAO_INICIADO">Não iniciado</option><option value="EM_ANDAMENTO">Em andamento</option><option value="CONCLUIDO">Concluído</option>
+                    </select>
                     <small *ngIf="dataConclusaoDaEtapa(assunto, 'resum')">{{ dataConclusaoDaEtapa(assunto, 'resum') | date: 'dd/MM/yy' }}</small>
-                  </span>
-                  <span class="aproveitamento" [attr.title]="detalhesAproveitamento(assunto)">{{ aproveitamento(assunto) }}</span>
+                  </div>
+                  <div class="etapa-status" [class.ativa]="etapaConcluida(assunto, 'quest')" [class.andamento]="etapaEmAndamento(assunto, 'quest')" [class.salvando]="etapaSendoSalva(assunto, 'quest')">
+                    <select aria-label="Status de Questões" [value]="statusEtapa(assunto, 'quest')" [disabled]="etapaSendoSalva(assunto, 'quest')" (change)="alterarStatusEtapa(assunto, 'quest', $any($event.target).value)">
+                      <option value="NAO_INICIADO">Não iniciado</option><option value="EM_ANDAMENTO">Em andamento</option><option value="CONCLUIDO">Concluído</option>
+                    </select>
+                    <small *ngIf="dataConclusaoDaEtapa(assunto, 'quest')">{{ dataConclusaoDaEtapa(assunto, 'quest') | date: 'dd/MM/yy' }}</small>
+                    <small class="desempenho" [attr.title]="detalhesAproveitamento(assunto)"
+                      >Desempenho: {{ aproveitamento(assunto) }}<ng-container *ngIf="assunto.questoesFeitas">
+                        · {{ assunto.questoesAcertadas }}/{{ assunto.questoesFeitas }}</ng-container
+                      ></small
+                    >
+                  </div>
+                  <div class="etapa-status" [class.ativa]="etapaConcluida(assunto, 'revis')" [class.andamento]="etapaEmAndamento(assunto, 'revis')" [class.salvando]="etapaSendoSalva(assunto, 'revis')">
+                    <select aria-label="Status de Revisão" [value]="statusEtapa(assunto, 'revis')" [disabled]="etapaSendoSalva(assunto, 'revis')" (change)="alterarStatusEtapa(assunto, 'revis', $any($event.target).value)">
+                      <option value="NAO_INICIADO">Não iniciado</option><option value="EM_ANDAMENTO">Em andamento</option><option value="CONCLUIDO">Concluído</option>
+                    </select>
+                    <small *ngIf="dataConclusaoDaEtapa(assunto, 'revis')">{{ dataConclusaoDaEtapa(assunto, 'revis') | date: 'dd/MM/yy' }}</small>
+                  </div>
+                  <span class="peso-prova">{{ assunto.peso ?? '—' }}</span>
+                  <span class="dificuldade">{{ rotuloDificuldade(assunto.dificuldade) }}</span>
                 </div>
                 <div class="grupo-vazio" *ngIf="!grupo.assuntos.length">Nenhum assunto adicionado.</div>
               </ng-container>
@@ -107,7 +128,7 @@
         (click)="alternarBlocoMateria(bloco)"
         [attr.aria-expanded]="bloco.aberto"
       >
-        <span>{{ bloco.nome }}</span>
+        <span><strong>{{ bloco.nome }}</strong></span>
         <span class="chevron" [class.aberta]="bloco.aberto" aria-hidden="true">⌄</span>
       </button>
       <div class="bloco-materias" *ngIf="bloco.aberto">

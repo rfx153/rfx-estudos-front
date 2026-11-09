@@ -11,7 +11,7 @@ import {
 } from '../../services/registro.service';
 import { MateriaService, Materia } from '../../services/materia.service';
 import { PlanejamentoService, Planejamento } from '../../services/planejamento.service';
-import { Ciclo, CicloService } from '../../services/ciclos.service';
+import { MaterialGuia, MaterialGuiaService } from '../../services/material-guia.service';
 
 // Módulos do NG-ZORRO necessários para o formulário denso de registros
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -67,7 +67,7 @@ export class RegistroListaComponent implements OnInit {
   private registroService = inject(RegistroService);
   private materiaService = inject(MateriaService);
   private planejamentoService = inject(PlanejamentoService);
-  private cicloService = inject(CicloService);
+  private materialGuiaService = inject(MaterialGuiaService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
   private iconService = inject(NzIconService);
@@ -80,7 +80,7 @@ export class RegistroListaComponent implements OnInit {
   totalRegistros = 0;
   listaMaterias: Materia[] = [];
   listaPlanejamentos: Planejamento[] = [];
-  listaCiclos: Ciclo[] = [];
+  listaMateriaisGuia: MaterialGuia[] = [];
 
   // Listas fictícias iniciais (ajuste conforme criar os services delas depois)
   listaAssuntos: Assunto[] = [];
@@ -115,7 +115,7 @@ export class RegistroListaComponent implements OnInit {
       materia: [null, [Validators.required]],
       assunto: [null, [Validators.required]],
       planejamento: [null],
-      ciclo: [null],
+      materialGuia: [null],
       tipoRegistro: [null, [Validators.required]],
       concluido: [false],
       materialTipo: [null],
@@ -169,12 +169,12 @@ export class RegistroListaComponent implements OnInit {
         console.error('Erro ao carregar planejamentos:', err);
       },
     });
-    this.cicloService.listarTodos().subscribe({
-      next: (ciclos) => {
-        this.listaCiclos = ciclos;
+    this.materialGuiaService.listarTodos().subscribe({
+      next: (materiaisGuia) => {
+        this.listaMateriaisGuia = materiaisGuia;
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Erro ao carregar ciclos:', err),
+      error: (err) => console.error('Erro ao carregar materiais-guia:', err),
     });
     //listar os tipos de materias
     this.registroService.listarTiposMaterial().subscribe({
@@ -229,7 +229,7 @@ export class RegistroListaComponent implements OnInit {
         materia: formValue.materia ? ({ id: formValue.materia } as any) : null,
         assunto: formValue.assunto ? ({ id: formValue.assunto } as any) : null,
         planejamento: formValue.planejamento ? ({ id: formValue.planejamento } as any) : null,
-        ciclo: formValue.ciclo ? ({ id: formValue.ciclo } as any) : null,
+        materialGuia: formValue.materialGuia ? ({ id: formValue.materialGuia } as any) : null,
         tipoRegistro: formValue.tipoRegistro ? ({ id: formValue.tipoRegistro } as any) : null,
         // Se materialTipo também for apenas ID no formulário, converta aqui também:
         materialTipo:
@@ -429,7 +429,7 @@ export class RegistroListaComponent implements OnInit {
       {
         materia: registro.materia?.id ?? null,
         planejamento: registro.planejamento?.id ?? null,
-        ciclo: registro.ciclo?.id ?? null,
+        materialGuia: registro.materialGuia?.id ?? null,
         tipoRegistro: registro.tipoRegistro?.id ?? null,
         concluido: registro.concluido ?? false,
         materialTipo: registro.materialTipo?.id ?? null,
@@ -576,24 +576,24 @@ export class RegistroListaComponent implements OnInit {
     });
   }
 
-  cadastrarCicloRapido(inputElement: HTMLInputElement): void {
-    const nomeCiclo = inputElement.value.trim();
+  cadastrarMaterialGuiaRapido(inputElement: HTMLInputElement): void {
+    const nomeMaterialGuia = inputElement.value.trim();
 
-    if (!nomeCiclo) {
+    if (!nomeMaterialGuia) {
       return;
     }
 
-    this.cicloService.criar({ nome: nomeCiclo }).subscribe({
-      next: (cicloSalvo) => {
-        this.listaCiclos = [...this.listaCiclos, cicloSalvo];
-        this.validateForm.get('ciclo')?.setValue(cicloSalvo.id);
+    this.materialGuiaService.criar({ nome: nomeMaterialGuia }).subscribe({
+      next: (materialGuiaSalvo) => {
+        this.listaMateriaisGuia = [...this.listaMateriaisGuia, materialGuiaSalvo];
+        this.validateForm.get('materialGuia')?.setValue(materialGuiaSalvo.id);
         inputElement.value = '';
-        this.message.success('Ciclo criado com sucesso.');
+        this.message.success('Material-guia criado com sucesso.');
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Erro ao cadastrar ciclo rápido:', err);
-        this.message.error('Não foi possível criar o ciclo.');
+        console.error('Erro ao cadastrar material-guia rápido:', err);
+        this.message.error('Não foi possível criar o material-guia.');
       },
     });
   }

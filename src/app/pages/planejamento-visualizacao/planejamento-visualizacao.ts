@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { NzMessageService } from 'ng-zorro-antd/message';
 import { forkJoin, of } from 'rxjs';
 import { catchError, finalize, map, switchMap, timeout } from 'rxjs/operators';
+import { RegistroService, TipoRegistro } from '../../services/registro.service';
 import {
   Planejamento,
   PlanejamentoAproveitamento,
@@ -20,22 +22,35 @@ interface GrupoVisualizacao {
 }
 
 interface AssuntoVisualizacao {
+  id: number;
   nome: string;
+  peso?: number | null;
+  dificuldade?: number | null;
+  materiaPlanejamentoId: number;
+  grupoId: number;
+  itemId: number;
   etapas: EtapaVisualizacao[];
   questoesFeitas: number;
   questoesAcertadas: number;
 }
 
 interface EtapaVisualizacao {
+  id?: number;
+  tipoRegistroId: number;
   nome: string;
+  ordem?: number | null;
   iniciada: boolean;
   concluida: boolean;
   dataConcluida?: string | null;
 }
 
+type StatusEtapa = 'NAO_INICIADO' | 'EM_ANDAMENTO' | 'CONCLUIDO';
+
 interface MateriaVisualizacao {
   id: number;
   nome: string;
+  peso?: number | null;
+  dificuldade?: number | null;
   grupoMateriaId?: number | null;
   grupos: GrupoVisualizacao[];
   aberta: boolean;
@@ -57,6 +72,8 @@ interface BlocoMateriaVisualizacao {
 })
 export class PlanejamentoVisualizacaoComponent implements OnInit {
   private readonly service = inject(PlanejamentoService);
+  private readonly registroService = inject(RegistroService);
+  private readonly message = inject(NzMessageService);
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -66,8 +83,15 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
   blocosMaterias: BlocoMateriaVisualizacao[] = [];
   carregando = true;
   erro = false;
+  tiposRegistro: TipoRegistro[] = [];
+  etapasSendoSalvas = new Set<string>();
 
   ngOnInit(): void {
+    this.registroService.listarTiposRegistro().subscribe({
+      next: (tipos) => (this.tiposRegistro = tipos),
+      error: (erro) => console.error('Erro ao carregar tipos de registro:', erro),
+    });
+
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (Number.isInteger(id) && id > 0) {
       this.carregarPlanejamento(id);
@@ -170,6 +194,94 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     return this.etapaPorTipo(assunto, tipo)?.dataConcluida ?? null;
   }
 
+  alterarStatusEtapa(
+    assunto: AssuntoVisualizacao,
+    tipo: string,
+    novoStatus: StatusEtapa | string,
+  ): void {
+    if (!this.planejamento?.id || this.etapaSendoSalva(assunto, tipo)) return;
+    if (!['NAO_INICIADO', 'EM_ANDAMENTO', 'CONCLUIDO'].includes(novoStatus)) return;
+
+    const etapaAtual = this.etapaPorTipo(assunto, tipo);
+    if (!etapaAtual && novoStatus === 'NAO_INICIADO') return;
+    const tipoRegistro = etapaAtual
+      ? undefined
+      : this.tiposRegistro.find((item) =>
+          item.nome.toLocaleLowerCase('pt-BR').includes(tipo.toLocaleLowerCase('pt-BR')),
+        );
+
+    if (!etapaAtual && !tipoRegistro) {
+      this.message.warning('O tipo desta etapa ainda não está cadastrado.');
+      return;
+    }
+
+    const chave = this.chaveEtapa(assunto, tipo);
+    const concluida = novoStatus === 'CONCLUIDO';
+    const iniciada = novoStatus !== 'NAO_INICIADO';
+    this.etapasSendoSalvas.add(chave);
+
+    const requisicao$ = etapaAtual?.id
+      ? this.service.atualizarEtapa(
+          this.planejamento.id,
+          assunto.materiaPlanejamentoId,
+          assunto.grupoId,
+          assunto.itemId,
+          etapaAtual.id,
+          {
+            tipoRegistroId: etapaAtual.tipoRegistroId,
+            ordem: etapaAtual.ordem,
+            iniciada,
+            concluida,
+            concluidaManualmente: concluida,
+          },
+        )
+      : this.service.adicionarEtapa(
+          this.planejamento.id,
+          assunto.materiaPlanejamentoId,
+          assunto.grupoId,
+          assunto.itemId,
+          {
+            tipoRegistroId: tipoRegistro!.id,
+            ordem: assunto.etapas.length + 1,
+            iniciada,
+            concluida,
+            concluidaManualmente: concluida,
+          },
+        );
+
+    requisicao$
+      .pipe(
+        finalize(() => {
+          this.etapasSendoSalvas.delete(chave);
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: (etapaSalva) => {
+          const etapaVisualizacao = this.mapearEtapa(etapaSalva);
+          const indice = assunto.etapas.findIndex((etapa) => etapa.id === etapaSalva.id);
+          if (indice >= 0) assunto.etapas[indice] = etapaVisualizacao;
+          else assunto.etapas.push(etapaVisualizacao);
+          this.cdr.detectChanges();
+        },
+        error: (erro) => {
+          console.error('Erro ao atualizar etapa:', erro);
+          this.message.error('Não foi possível atualizar esta etapa.');
+        },
+      });
+  }
+
+  etapaSendoSalva(assunto: AssuntoVisualizacao, tipo: string): boolean {
+    return this.etapasSendoSalvas.has(this.chaveEtapa(assunto, tipo));
+  }
+
+  statusEtapa(assunto: AssuntoVisualizacao, tipo: string): StatusEtapa {
+    const etapa = this.etapaPorTipo(assunto, tipo);
+    if (etapa?.concluida) return 'CONCLUIDO';
+    if (etapa?.iniciada) return 'EM_ANDAMENTO';
+    return 'NAO_INICIADO';
+  }
+
   aproveitamento(assunto: AssuntoVisualizacao): string {
     if (!assunto.questoesFeitas) return '—';
     return `${Math.round((assunto.questoesAcertadas / assunto.questoesFeitas) * 100)}%`;
@@ -178,6 +290,12 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
   detalhesAproveitamento(assunto: AssuntoVisualizacao): string | null {
     if (!assunto.questoesFeitas) return null;
     return `${assunto.questoesAcertadas} acertos de ${assunto.questoesFeitas} questões`;
+  }
+
+  rotuloDificuldade(valor?: number | null): string {
+    return ['Não informada', 'Muito fácil', 'Fácil', 'Média', 'Difícil', 'Muito difícil'][
+      valor ?? 0
+    ] ?? 'Não informada';
   }
 
   private carregarMaterias(
@@ -203,6 +321,8 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
       return of({
         id: materia.id ?? 0,
         nome: materia.materia.nome,
+        peso: materia.peso,
+        dificuldade: materia.dificuldade,
         grupoMateriaId: materia.planejamentoGrupoMateria?.id,
         grupos: [],
         aberta: false,
@@ -216,6 +336,8 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
         of({
           id: materia.id!,
           nome: materia.materia.nome,
+          peso: materia.peso,
+          dificuldade: materia.dificuldade,
           grupoMateriaId: materia.planejamentoGrupoMateria?.id,
           grupos: [],
           aberta: false,
@@ -233,6 +355,8 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
       return of({
         id: materia.id!,
         nome: materia.materia.nome,
+        peso: materia.peso,
+        dificuldade: materia.dificuldade,
         grupoMateriaId: materia.planejamentoGrupoMateria?.id,
         grupos: [],
         aberta: false,
@@ -247,6 +371,8 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
       map((gruposVisualizacao) => ({
         id: materia.id!,
         nome: materia.materia.nome,
+        peso: materia.peso,
+        dificuldade: materia.dificuldade,
         grupoMateriaId: materia.planejamentoGrupoMateria?.id,
         grupos: gruposVisualizacao,
         aberta: false,
@@ -288,7 +414,13 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
   ) {
     if (!this.planejamento?.id || !item.id) {
       return of({
+        id: item.assunto.id,
         nome: item.assunto.nome,
+        peso: item.peso,
+        dificuldade: item.dificuldade,
+        materiaPlanejamentoId: materiaId,
+        grupoId,
+        itemId: item.id ?? 0,
         etapas: [],
         questoesFeitas: 0,
         questoesAcertadas: 0,
@@ -298,21 +430,28 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     return this.service.listarEtapas(this.planejamento.id, materiaId, grupoId, item.id).pipe(
       timeout(8000),
       map((etapas: PlanejamentoItemEtapa[]) => ({
+        id: item.assunto.id,
         nome: item.assunto.nome,
+        peso: item.peso,
+        dificuldade: item.dificuldade,
+        materiaPlanejamentoId: materiaId,
+        grupoId,
+        itemId: item.id!,
         questoesFeitas: aproveitamentosPorAssunto.get(item.assunto.id)?.questoesFeitas ?? 0,
         questoesAcertadas: aproveitamentosPorAssunto.get(item.assunto.id)?.questoesAcertadas ?? 0,
         etapas: etapas
           .sort((a, b) => (a.ordem ?? 9999) - (b.ordem ?? 9999))
-          .map((etapa) => ({
-            nome: etapa.tipoRegistro.nome,
-            iniciada: !!etapa.iniciada,
-            concluida: !!etapa.concluida,
-            dataConcluida: etapa.dataConcluida,
-          })),
+          .map((etapa) => this.mapearEtapa(etapa)),
       })),
       catchError(() =>
         of({
+          id: item.assunto.id,
           nome: item.assunto.nome,
+          peso: item.peso,
+          dificuldade: item.dificuldade,
+          materiaPlanejamentoId: materiaId,
+          grupoId,
+          itemId: item.id!,
           etapas: [],
           questoesFeitas: aproveitamentosPorAssunto.get(item.assunto.id)?.questoesFeitas ?? 0,
           questoesAcertadas: aproveitamentosPorAssunto.get(item.assunto.id)?.questoesAcertadas ?? 0,
@@ -327,6 +466,22 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
 
   private etapaPorTipo(assunto: AssuntoVisualizacao, tipo: string): EtapaVisualizacao | undefined {
     return assunto.etapas.find((etapa) => etapa.nome.toLocaleLowerCase('pt-BR').includes(tipo));
+  }
+
+  private mapearEtapa(etapa: PlanejamentoItemEtapa): EtapaVisualizacao {
+    return {
+      id: etapa.id,
+      tipoRegistroId: etapa.tipoRegistro.id,
+      nome: etapa.tipoRegistro.nome,
+      ordem: etapa.ordem,
+      iniciada: !!etapa.iniciada,
+      concluida: !!etapa.concluida,
+      dataConcluida: etapa.dataConcluida,
+    };
+  }
+
+  private chaveEtapa(assunto: AssuntoVisualizacao, tipo: string): string {
+    return `${assunto.itemId}:${tipo}`;
   }
 
   private agruparMaterias(
@@ -348,6 +503,8 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
       .map((materia) => ({
         id: materia.id ?? 0,
         nome: materia.materia.nome,
+        peso: materia.peso,
+        dificuldade: materia.dificuldade,
         grupoMateriaId: materia.planejamentoGrupoMateria?.id,
         grupos: [],
         aberta: false,

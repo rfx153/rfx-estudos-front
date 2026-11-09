@@ -57,21 +57,21 @@
       </div>
         <div nz-col [nzSpan]="6">
           <nz-form-item>
-            <nz-form-label>Ciclo / material guia</nz-form-label>
+            <nz-form-label>Material-guia</nz-form-label>
             <nz-form-control>
               <nz-select
-                formControlName="ciclo"
+                formControlName="materialGuia"
                 nzShowSearch
                 nzAllowClear
-                nzPlaceHolder="Ciclo"
-                [nzDropdownRender]="renderCicloTemplate">
-                <nz-option *ngFor="let ciclo of listaCiclos" [nzLabel]="ciclo.nome" [nzValue]="ciclo.id"></nz-option>
+                nzPlaceHolder="Material-guia"
+                [nzDropdownRender]="renderMaterialGuiaTemplate">
+                <nz-option *ngFor="let materialGuia of listaMateriaisGuia" [nzLabel]="materialGuia.nome" [nzValue]="materialGuia.id"></nz-option>
               </nz-select>
 
-              <ng-template #renderCicloTemplate>
+              <ng-template #renderMaterialGuiaTemplate>
                 <div class="dropdown-wrapper">
-                  <input type="text" nz-input #inputCiclo placeholder="Novo ciclo..." />
-                  <a class="add-item-btn" (click)="cadastrarCicloRapido(inputCiclo)">
+                  <input type="text" nz-input #inputMaterialGuia placeholder="Novo material-guia..." />
+                  <a class="add-item-btn" (click)="cadastrarMaterialGuiaRapido(inputMaterialGuia)">
                     <i nz-icon nzType="plus"></i> Criar
                   </a>
                 </div>

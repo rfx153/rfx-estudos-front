@@ -71,8 +71,10 @@
               ><strong>{{ item.materia.nome }}</strong
               ><small
                 >Ordem {{ item.ordem ?? 'não definida'
-                }}<ng-container *ngIf="item.peso"> · Peso {{ item.peso }}</ng-container
-                ><ng-container *ngIf="item.planejamentoGrupoMateria">
+                }} · Peso na prova {{ item.peso ?? 'não informado' }}
+                · Dificuldade {{ rotuloDificuldade(item.dificuldade) }}<ng-container
+                  *ngIf="item.planejamentoGrupoMateria"
+                >
                   · {{ item.planejamentoGrupoMateria.nome }}</ng-container
                 ></small
               ></span
@@ -147,7 +149,10 @@
                   <article class="topic-row" *ngFor="let assunto of itens">
                     <button type="button" class="topic-main" (click)="abrirEtapas(assunto)">
                       <strong>{{ assunto.assunto.nome }}</strong
-                      ><small>Gerenciar etapas</small>
+                      ><small
+                        >Peso {{ assunto.peso ?? 'não informado' }} · Dificuldade
+                        {{ rotuloDificuldade(assunto.dificuldade) }}</small
+                      >
                     </button>
                     <div class="row-actions compact">
                       <button type="button" (click)="editarItem(assunto)">Editar</button
@@ -289,14 +294,25 @@
         ></nz-form-item>
         <div class="form-grid">
           <nz-form-item
-            ><nz-form-label>Peso</nz-form-label
+            ><nz-form-label>Peso na prova</nz-form-label
             ><nz-form-control
               ><input
                 nz-input
                 type="number"
                 min="1"
                 max="5"
+                placeholder="De 1 a 5"
                 formControlName="peso" /></nz-form-control></nz-form-item
+          ><nz-form-item
+            ><nz-form-label>Dificuldade da matéria</nz-form-label
+            ><nz-form-control
+              ><nz-select formControlName="dificuldade" nzAllowClear nzPlaceHolder="Selecione"
+                ><nz-option [nzValue]="1" nzLabel="1 — Muito fácil"></nz-option
+                ><nz-option [nzValue]="2" nzLabel="2 — Fácil"></nz-option
+                ><nz-option [nzValue]="3" nzLabel="3 — Média"></nz-option
+                ><nz-option [nzValue]="4" nzLabel="4 — Difícil"></nz-option
+                ><nz-option [nzValue]="5" nzLabel="5 — Muito difícil"></nz-option></nz-select></nz-form-control
+          ></nz-form-item
           ><nz-form-item
             ><nz-form-label>Ordem</nz-form-label
             ><nz-form-control
@@ -466,6 +482,16 @@
                   max="5"
                   formControlName="peso" /></nz-form-control></nz-form-item
             ><nz-form-item
+              ><nz-form-label>Dificuldade</nz-form-label
+              ><nz-form-control
+                ><nz-select formControlName="dificuldade" nzAllowClear nzPlaceHolder="Selecione"
+                  ><nz-option [nzValue]="1" nzLabel="1 — Muito fácil"></nz-option
+                  ><nz-option [nzValue]="2" nzLabel="2 — Fácil"></nz-option
+                  ><nz-option [nzValue]="3" nzLabel="3 — Média"></nz-option
+                  ><nz-option [nzValue]="4" nzLabel="4 — Difícil"></nz-option
+                  ><nz-option [nzValue]="5" nzLabel="5 — Muito difícil"></nz-option></nz-select></nz-form-control
+            ></nz-form-item
+            ><nz-form-item
               ><nz-form-label>Ordem</nz-form-label
               ><nz-form-control
                 ><input nz-input type="number" min="1" formControlName="ordem" /></nz-form-control
@@ -561,9 +587,6 @@
               formControlName="ordem" /></nz-form-control></nz-form-item
         ><label class="checkbox-field"
           ><input type="checkbox" formControlName="concluida" /> Concluída</label
-        ><label class="checkbox-field"
-          ><input type="checkbox" formControlName="concluidaManualmente" /> Concluída
-          manualmente</label
         >
         <div class="form-actions">
           <button nz-button type="button" (click)="fecharEtapa()">Cancelar</button

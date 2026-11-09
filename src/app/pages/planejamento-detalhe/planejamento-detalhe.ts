@@ -61,6 +61,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     nomeBloco: ['', Validators.maxLength(150)],
     planejamentoGrupoMateriaId: [null as number | null],
     peso: [null as number | null, [Validators.min(1), Validators.max(5)]],
+    dificuldade: [null as number | null, [Validators.min(1), Validators.max(5)]],
     ordem: [null as number | null, Validators.min(1)],
   });
   readonly grupoMateriaForm = this.fb.group({
@@ -77,13 +78,13 @@ export class PlanejamentoDetalheComponent implements OnInit {
   readonly itemForm = this.fb.group({
     assuntoIds: [[] as number[], Validators.required],
     peso: [null as number | null, [Validators.min(1), Validators.max(5)]],
+    dificuldade: [null as number | null, [Validators.min(1), Validators.max(5)]],
     ordem: [null as number | null, Validators.min(1)],
   });
   readonly etapaForm = this.fb.group({
     tipoRegistroId: [null as number | null, Validators.required],
     ordem: [null as number | null, Validators.min(1)],
     concluida: [false],
-    concluidaManualmente: [false],
   });
 
   id?: number;
@@ -188,6 +189,12 @@ export class PlanejamentoDetalheComponent implements OnInit {
     this.router.navigate(['/planejamentos']);
   }
 
+  rotuloDificuldade(valor?: number | null): string {
+    return ['Não informada', 'Muito fácil', 'Fácil', 'Média', 'Difícil', 'Muito difícil'][
+      valor ?? 0
+    ] ?? 'Não informada';
+  }
+
   salvarMateria(): void {
     if (!this.id) return;
     const tipo = this.materiaForm.controls.tipo.value!;
@@ -235,6 +242,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
       materiaId,
       planejamentoGrupoMateriaId: this.materiaForm.controls.planejamentoGrupoMateriaId.value,
       peso: this.materiaForm.controls.peso.value,
+      dificuldade: this.materiaForm.controls.dificuldade.value,
       ordem: this.materiaForm.controls.ordem.value,
     });
     const editando = !!this.materiaEditandoId;
@@ -277,6 +285,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
       nomeBloco: '',
       planejamentoGrupoMateriaId: item.planejamentoGrupoMateria?.id ?? null,
       peso: item.peso ?? null,
+      dificuldade: item.dificuldade ?? null,
       ordem: item.ordem ?? null,
     });
     this.modalMateriaAberto = true;
@@ -308,6 +317,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
       nomeBloco: '',
       planejamentoGrupoMateriaId: null,
       peso: null,
+      dificuldade: null,
       ordem: null,
     });
   }
@@ -632,6 +642,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     const criarDados = (assuntoId: number): PlanejamentoGrupoAssuntoItemDTO => ({
       assuntoId,
       peso: this.itemForm.controls.peso.value,
+      dificuldade: this.itemForm.controls.dificuldade.value,
       ordem: this.itemForm.controls.ordem.value,
     });
     const adicionarNoGrupo = (grupoId: number, assuntoId: number) =>
@@ -724,6 +735,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     this.itemForm.setValue({
       assuntoIds: [item.assunto.id],
       peso: item.peso ?? null,
+      dificuldade: item.dificuldade ?? null,
       ordem: item.ordem ?? null,
     });
     this.modalItemAberto = true;
@@ -742,7 +754,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
 
   cancelarEdicaoItem(): void {
     this.itemEditandoId = undefined;
-    this.itemForm.reset({ assuntoIds: [], peso: null, ordem: null });
+    this.itemForm.reset({ assuntoIds: [], peso: null, dificuldade: null, ordem: null });
   }
 
   excluirItem(item: PlanejamentoGrupoAssuntoItem): void {
@@ -812,18 +824,12 @@ export class PlanejamentoDetalheComponent implements OnInit {
       this.etapaForm.markAllAsTouched();
       return;
     }
-    if (
-      this.etapaForm.controls.concluidaManualmente.value &&
-      !this.etapaForm.controls.concluida.value
-    ) {
-      this.message.warning('Uma etapa manualmente concluída também deve estar concluída.');
-      return;
-    }
+    const concluida = this.etapaForm.controls.concluida.value!;
     const dados: PlanejamentoItemEtapaDTO = {
       tipoRegistroId: this.etapaForm.controls.tipoRegistroId.value!,
       ordem: this.etapaForm.controls.ordem.value,
-      concluida: this.etapaForm.controls.concluida.value!,
-      concluidaManualmente: this.etapaForm.controls.concluidaManualmente.value!,
+      concluida,
+      concluidaManualmente: concluida,
     };
     const editando = !!this.etapaEditandoId;
     this.salvandoEtapa = true;
@@ -866,7 +872,6 @@ export class PlanejamentoDetalheComponent implements OnInit {
       tipoRegistroId: etapa.tipoRegistro.id,
       ordem: etapa.ordem ?? null,
       concluida: !!etapa.concluida,
-      concluidaManualmente: !!etapa.concluidaManualmente,
     });
     this.modalEtapaAberto = true;
   }
@@ -889,7 +894,6 @@ export class PlanejamentoDetalheComponent implements OnInit {
       tipoRegistroId: null,
       ordem: null,
       concluida: false,
-      concluidaManualmente: false,
     });
   }
 

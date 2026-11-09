@@ -18,6 +18,7 @@ export interface PlanejamentoMateria {
   materia: Materia;
   planejamentoGrupoMateria?: PlanejamentoGrupoMateria | null;
   peso?: number | null;
+  dificuldade?: number | null;
   ordem?: number | null;
 }
 
@@ -25,6 +26,7 @@ export interface PlanejamentoMateriaDTO {
   materiaId: number;
   planejamentoGrupoMateriaId?: number | null;
   peso?: number | null;
+  dificuldade?: number | null;
   ordem?: number | null;
 }
 
@@ -62,12 +64,14 @@ export interface PlanejamentoGrupoAssuntoItem {
   id?: number;
   assunto: Assunto;
   peso?: number | null;
+  dificuldade?: number | null;
   ordem?: number | null;
 }
 
 export interface PlanejamentoGrupoAssuntoItemDTO {
   assuntoId: number;
   peso?: number | null;
+  dificuldade?: number | null;
   ordem?: number | null;
 }
 
@@ -84,6 +88,7 @@ export interface PlanejamentoItemEtapa {
 export interface PlanejamentoItemEtapaDTO {
   tipoRegistroId: number;
   ordem?: number | null;
+  iniciada?: boolean;
   concluida?: boolean;
   concluidaManualmente?: boolean;
 }

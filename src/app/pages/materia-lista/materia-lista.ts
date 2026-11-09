@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { MateriaService, Materia } from '../../services/materia.service';
 import { Categoria, CategoriaService } from '../../services/categoria.service';
 import { Assunto, RegistroService, TipoRegistro } from '../../services/registro.service';
-import { Ciclo, CicloService } from '../../services/ciclos.service';
+import { MaterialGuia, MaterialGuiaService } from '../../services/material-guia.service';
 import { TipoRegistroService } from '../../services/tipo-registro.service';
 
 // Módulos do NG-ZORRO
@@ -43,7 +43,7 @@ export class MateriaListaComponent implements OnInit {
   private materiaService = inject(MateriaService);
   private categoriaService = inject(CategoriaService);
   private registroService = inject(RegistroService);
-  private cicloService = inject(CicloService);
+  private materialGuiaService = inject(MaterialGuiaService);
   private tipoRegistroService = inject(TipoRegistroService);
   private fb = inject(FormBuilder); 
   private iconService = inject(NzIconService); // 🔥 Injetamos o serviço de ícones aqui
@@ -51,7 +51,7 @@ export class MateriaListaComponent implements OnInit {
  private cdr = inject(ChangeDetectorRef); // 🔥 Injetamos o detector de mudanças aqui
   listaMaterias: Materia[] = [];
   listaCategorias: Categoria[] = [];
-  listaPlanejamentos: Ciclo[] = [];
+  listaMateriaisGuia: MaterialGuia[] = [];
   listaTiposRegistro: TipoRegistro[] = [];
   categoriaSelecionadaId: number | null = null;
   materiaSelecionadaId: number | null = null;
@@ -62,23 +62,23 @@ export class MateriaListaComponent implements OnInit {
   nomeAssuntoEdicao = '';
   nomeAssuntoNovo = '';
   carregando = true;
-  planejamentosCarregando = true;
+  materiaisGuiaCarregando = true;
   salvando = false;
-  salvandoPlanejamento = false;
+  salvandoMaterialGuia = false;
   salvandoCategoria = false;
   salvandoTipoRegistro = false;
   salvandoAssunto = false;
   editandoId: number | null = null;
   categoriaEditandoId: number | null = null;
-  planejamentoEditandoId: number | null = null;
+  materialGuiaEditandoId: number | null = null;
   tipoRegistroEditandoId: number | null = null;
   nomeCategoriaEdicao = '';
-  nomePlanejamentoEdicao = '';
+  nomeMaterialGuiaEdicao = '';
   nomeTipoRegistroEdicao = '';
   excluindo = false;
   formularioEdicao = { nome: '', categorias: [] as number[] };
   validateForm!: FormGroup;
-  planejamentoForm!: FormGroup;
+  materialGuiaForm!: FormGroup;
   categoriaForm!: FormGroup;
   tipoRegistroForm!: FormGroup;
   paginaMateriasAtual = 1;
@@ -96,7 +96,7 @@ export class MateriaListaComponent implements OnInit {
       nome: [null, [Validators.required]],
       categorias: [[], [Validators.required]]
     });
-    this.planejamentoForm = this.fb.group({
+    this.materialGuiaForm = this.fb.group({
       nome: [null, [Validators.required]]
     });
     this.categoriaForm = this.fb.group({
@@ -106,7 +106,7 @@ export class MateriaListaComponent implements OnInit {
       nome: [null, [Validators.required]]
     });
     this.obterCategorias();
-    this.obterPlanejamentos();
+    this.obterMateriaisGuia();
     this.obterTiposRegistro();
   }
 
@@ -153,17 +153,17 @@ export class MateriaListaComponent implements OnInit {
     this.fecharAssuntosSelecionados();
   }
 
-  obterPlanejamentos(): void {
-    this.planejamentosCarregando = true;
-    this.cicloService.listarTodos().subscribe({
-      next: planejamentos => {
-        this.listaPlanejamentos = planejamentos;
-        this.planejamentosCarregando = false;
+  obterMateriaisGuia(): void {
+    this.materiaisGuiaCarregando = true;
+    this.materialGuiaService.listarTodos().subscribe({
+      next: materiaisGuia => {
+        this.listaMateriaisGuia = materiaisGuia;
+        this.materiaisGuiaCarregando = false;
         this.cdr.detectChanges();
       },
       error: erro => {
-        console.error('Erro ao buscar planejamentos:', erro);
-        this.planejamentosCarregando = false;
+        console.error('Erro ao buscar materiais-guia:', erro);
+        this.materiaisGuiaCarregando = false;
         this.cdr.detectChanges();
       }
     });
@@ -179,30 +179,30 @@ export class MateriaListaComponent implements OnInit {
     });
   }
 
-  submitPlanejamento(): void {
-    if (this.planejamentoForm.invalid) {
-      this.planejamentoForm.markAllAsTouched();
-      this.message.warning('Informe o nome do planejamento antes de salvar.');
+  submitMaterialGuia(): void {
+    if (this.materialGuiaForm.invalid) {
+      this.materialGuiaForm.markAllAsTouched();
+      this.message.warning('Informe o nome do material-guia antes de salvar.');
       return;
     }
 
-    this.salvandoPlanejamento = true;
-    const nome = this.planejamentoForm.value.nome.trim();
+    this.salvandoMaterialGuia = true;
+    const nome = this.materialGuiaForm.value.nome.trim();
 
-    this.cicloService.criar({ nome }).subscribe({
-      next: planejamento => {
-        this.listaPlanejamentos = [...this.listaPlanejamentos, planejamento].sort((a, b) =>
+    this.materialGuiaService.criar({ nome }).subscribe({
+      next: materialGuia => {
+        this.listaMateriaisGuia = [...this.listaMateriaisGuia, materialGuia].sort((a, b) =>
           a.nome.localeCompare(b.nome)
         );
-        this.planejamentoForm.reset();
-        this.salvandoPlanejamento = false;
-        this.message.success('Planejamento salvo com sucesso.');
+        this.materialGuiaForm.reset();
+        this.salvandoMaterialGuia = false;
+        this.message.success('Material-guia salvo com sucesso.');
         this.cdr.detectChanges();
       },
       error: erro => {
-        console.error('Erro ao salvar planejamento:', erro);
-        this.salvandoPlanejamento = false;
-        this.message.error('Não foi possível salvar o planejamento.');
+        console.error('Erro ao salvar material-guia:', erro);
+        this.salvandoMaterialGuia = false;
+        this.message.error('Não foi possível salvar o material-guia.');
         this.cdr.detectChanges();
       }
     });
@@ -281,46 +281,46 @@ export class MateriaListaComponent implements OnInit {
     });
   }
 
-  iniciarEdicaoPlanejamento(planejamento: Ciclo): void {
-    if (!planejamento.id) return;
-    this.planejamentoEditandoId = planejamento.id;
-    this.nomePlanejamentoEdicao = planejamento.nome;
+  iniciarEdicaoMaterialGuia(materialGuia: MaterialGuia): void {
+    if (!materialGuia.id) return;
+    this.materialGuiaEditandoId = materialGuia.id;
+    this.nomeMaterialGuiaEdicao = materialGuia.nome;
   }
 
-  salvarEdicaoPlanejamento(planejamento: Ciclo): void {
-    if (!planejamento.id) return;
-    const nome = this.nomePlanejamentoEdicao.trim();
+  salvarEdicaoMaterialGuia(materialGuia: MaterialGuia): void {
+    if (!materialGuia.id) return;
+    const nome = this.nomeMaterialGuiaEdicao.trim();
     if (!nome) return;
 
-    this.cicloService.atualizar(planejamento.id, { nome }).subscribe({
+    this.materialGuiaService.atualizar(materialGuia.id, { nome }).subscribe({
       next: atualizado => {
-        this.listaPlanejamentos = this.listaPlanejamentos.map(item => item.id === atualizado.id ? atualizado : item);
-        this.planejamentoEditandoId = null;
-        this.message.success('Planejamento editado com sucesso.');
+        this.listaMateriaisGuia = this.listaMateriaisGuia.map(item => item.id === atualizado.id ? atualizado : item);
+        this.materialGuiaEditandoId = null;
+        this.message.success('Material-guia editado com sucesso.');
         this.cdr.detectChanges();
       },
       error: erro => {
-        console.error('Erro ao editar planejamento:', erro);
-        this.message.error('Não foi possível editar o planejamento.');
+        console.error('Erro ao editar material-guia:', erro);
+        this.message.error('Não foi possível editar o material-guia.');
       }
     });
   }
 
-  excluirPlanejamento(planejamento: Ciclo): void {
-    if (!planejamento.id || !window.confirm(`Apagar o planejamento "${planejamento.nome}"?`)) return;
+  excluirMaterialGuia(materialGuia: MaterialGuia): void {
+    if (!materialGuia.id || !window.confirm(`Apagar o material-guia "${materialGuia.nome}"?`)) return;
 
     this.excluindo = true;
-    this.cicloService.excluir(planejamento.id).subscribe({
+    this.materialGuiaService.excluir(materialGuia.id).subscribe({
       next: () => {
-        this.listaPlanejamentos = this.listaPlanejamentos.filter(item => item.id !== planejamento.id);
+        this.listaMateriaisGuia = this.listaMateriaisGuia.filter(item => item.id !== materialGuia.id);
         this.excluindo = false;
-        this.message.success('Planejamento apagado com sucesso.');
+        this.message.success('Material-guia apagado com sucesso.');
         this.cdr.detectChanges();
       },
       error: erro => {
-        console.error('Erro ao apagar planejamento:', erro);
+        console.error('Erro ao apagar material-guia:', erro);
         this.excluindo = false;
-        this.message.error('Não foi possível apagar o planejamento. Ele pode estar em uso.');
+        this.message.error('Não foi possível apagar o material-guia. Ele pode estar em uso.');
         this.cdr.detectChanges();
       }
     });
@@ -371,7 +371,7 @@ export class MateriaListaComponent implements OnInit {
 
   cancelarEdicaoGerenciador(): void {
     this.categoriaEditandoId = null;
-    this.planejamentoEditandoId = null;
+    this.materialGuiaEditandoId = null;
     this.tipoRegistroEditandoId = null;
   }
 

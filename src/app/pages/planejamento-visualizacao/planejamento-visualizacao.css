@@ -142,8 +142,8 @@
 .assunto-cabecalho,
 .assunto-linha {
   display: grid;
-  grid-template-columns: minmax(220px, 2fr) repeat(4, minmax(86px, 1fr)) minmax(120px, 1.15fr);
-  min-width: 720px;
+  grid-template-columns: minmax(220px, 2fr) repeat(5, minmax(120px, 1fr)) minmax(120px, 1.15fr);
+  min-width: 1080px;
 }
 
 .assunto-cabecalho {
@@ -154,7 +154,7 @@
 }
 .grupo-linha,
 .grupo-vazio {
-  min-width: 720px;
+  min-width: 1080px;
   padding: 10px 12px;
   border-top: 1px solid var(--border, #e5e7eb);
 }
@@ -189,14 +189,41 @@
   font-size: 12px;
 }
 .etapa-status,
-.aproveitamento {
+.peso-prova,
+.dificuldade {
   text-align: center;
   color: var(--text-muted, #94a3b8);
 }
 .etapa-status {
   display: grid;
-  gap: 2px;
+  gap: 4px;
   justify-items: center;
+}
+.etapa-status select {
+  width: calc(100% - 10px);
+  min-height: 34px;
+  margin: 0 5px;
+  padding: 4px 6px;
+  border: 1px solid var(--border, #d9d9d9);
+  border-radius: 6px;
+  background: var(--surface, #fff);
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+.etapa-status select:hover:not(:disabled) {
+  border-color: #91caff;
+}
+.etapa-status select:focus-visible {
+  outline: 2px solid #1677ff;
+  outline-offset: 1px;
+}
+.etapa-status select:disabled {
+  cursor: wait;
+}
+.etapa-status.salvando {
+  opacity: 0.55;
 }
 .etapa-status small {
   color: inherit;
@@ -207,9 +234,33 @@
   color: #16a34a;
   font-weight: 800;
 }
+.etapa-status.ativa select {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #15803d;
+}
 .etapa-status.andamento {
   color: #d97706;
   font-weight: 800;
+}
+.etapa-status.andamento select {
+  border-color: #fcd34d;
+  background: #fffbeb;
+  color: #b45309;
+}
+.etapa-status .desempenho {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.peso-prova,
+.dificuldade {
+  font-weight: 600;
+}
+.materia-trigger small {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-muted, #64748b);
+  font-weight: 400;
 }
 .empty-state,
 .loading-state {

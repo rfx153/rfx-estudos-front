@@ -3,7 +3,7 @@
   <header class="page-heading">
     <div>
       <h2>Gerenciador de dados</h2>
-      <p>Cadastre e edite ciclos, categorias, disciplinas, assuntos e tipos de registro.</p>
+      <p>Cadastre e edite materiais-guia, categorias, disciplinas, assuntos e tipos de registro.</p>
     </div>
   </header>
 
@@ -71,49 +71,49 @@
   <section class="planejamentos-section">
     <div class="section-heading">
       <div>
-        <h3>Ciclos de estudo</h3>
-        <p>Cadastre ciclos ou materiais-guia usados nos registros, como Pós SEFAZ SC.</p>
+        <h3>Materiais-guia</h3>
+        <p>Cadastre os materiais ou pacotes usados nos registros, como SEFAZ SC Estratégia ou Guruja Pós-edital.</p>
       </div>
-      <nz-tag nzColor="blue">{{ listaPlanejamentos.length }} ciclo(s)</nz-tag>
+      <nz-tag nzColor="blue">{{ listaMateriaisGuia.length }} material(is)</nz-tag>
     </div>
 
-    <form class="data-manager-form" nz-form [nzLayout]="'inline'" [formGroup]="planejamentoForm" (ngSubmit)="submitPlanejamento()">
+    <form class="data-manager-form" nz-form [nzLayout]="'inline'" [formGroup]="materialGuiaForm" (ngSubmit)="submitMaterialGuia()">
       <nz-form-item class="form-field">
-        <nz-form-control nzErrorTip="Por favor, digite o nome do ciclo!">
-          <input type="text" nz-input formControlName="nome" placeholder="Ex: Pós SEFAZ SC, Ciclo base, Revisão final" />
+        <nz-form-control nzErrorTip="Por favor, digite o nome do material-guia!">
+          <input type="text" nz-input formControlName="nome" placeholder="Ex: SEFAZ SC Estratégia, Guruja Pós-edital" />
         </nz-form-control>
       </nz-form-item>
 
       <nz-form-item>
         <nz-form-control>
-          <button nz-button nzType="primary" [nzLoading]="salvandoPlanejamento">
-            Adicionar Ciclo
+          <button nz-button nzType="primary" [nzLoading]="salvandoMaterialGuia">
+            Adicionar Material-guia
           </button>
         </nz-form-control>
       </nz-form-item>
     </form>
 
-    <div class="manager-list" *ngIf="listaPlanejamentos.length; else semPlanejamentos">
-      <article class="manager-item" *ngFor="let planejamento of listaPlanejamentos">
-        <ng-container *ngIf="planejamentoEditandoId !== planejamento.id; else editarPlanejamento">
-          <span>{{ planejamento.nome }}</span>
+    <div class="manager-list" *ngIf="listaMateriaisGuia.length; else semMateriaisGuia">
+      <article class="manager-item" *ngFor="let materialGuia of listaMateriaisGuia">
+        <ng-container *ngIf="materialGuiaEditandoId !== materialGuia.id; else editarMaterialGuia">
+          <span>{{ materialGuia.nome }}</span>
           <div class="manager-actions">
-            <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoPlanejamento(planejamento)">Editar</button>
-            <button nz-button nzDanger nzType="link" nzSize="small" [disabled]="excluindo" (click)="excluirPlanejamento(planejamento)">Apagar</button>
+            <button nz-button nzType="link" nzSize="small" (click)="iniciarEdicaoMaterialGuia(materialGuia)">Editar</button>
+            <button nz-button nzDanger nzType="link" nzSize="small" [disabled]="excluindo" (click)="excluirMaterialGuia(materialGuia)">Apagar</button>
           </div>
         </ng-container>
-        <ng-template #editarPlanejamento>
-          <input nz-input [(ngModel)]="nomePlanejamentoEdicao" [ngModelOptions]="{standalone: true}" />
+        <ng-template #editarMaterialGuia>
+          <input nz-input [(ngModel)]="nomeMaterialGuiaEdicao" [ngModelOptions]="{standalone: true}" />
           <div class="manager-actions">
-            <button nz-button nzType="primary" nzSize="small" (click)="salvarEdicaoPlanejamento(planejamento)">Salvar</button>
+            <button nz-button nzType="primary" nzSize="small" (click)="salvarEdicaoMaterialGuia(materialGuia)">Salvar</button>
             <button nz-button nzType="link" nzSize="small" (click)="cancelarEdicaoGerenciador()">Cancelar</button>
           </div>
         </ng-template>
       </article>
     </div>
 
-    <ng-template #semPlanejamentos>
-      <div class="planejamentos-empty" *ngIf="!planejamentosCarregando">Nenhum ciclo cadastrado.</div>
+    <ng-template #semMateriaisGuia>
+      <div class="planejamentos-empty" *ngIf="!materiaisGuiaCarregando">Nenhum material-guia cadastrado.</div>
     </ng-template>
   </section>
 

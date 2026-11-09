@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, importProvidersFrom } from '@angular/core';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -7,8 +7,7 @@ import { routes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
 
 // Configurações Globais do NG-ZORRO
-import { NZ_I18N, pt_BR } from 'ng-zorro-antd/i18n';
-import { provideNzNativeDateAdapter } from 'ng-zorro-antd/core/time';
+import { NZ_DATE_CONFIG, provideNzI18n, pt_BR } from 'ng-zorro-antd/i18n';
 import { registerLocaleData } from '@angular/common';
 import pt from '@angular/common/locales/pt';
 
@@ -22,7 +21,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(),
     provideHttpClient(), // <-- Permite que o Angular converse com o seu Java (API)
     provideAnimationsAsync(), // <-- Garante que os efeitos visuais do NG-ZORRO funcionem lisos
-    provideNzNativeDateAdapter({ locale: 'pt-BR', firstDayOfWeek: 0 }),
-    { provide: NZ_I18N, useValue: pt_BR } // <-- Força os componentes do Zorro a falarem Português
+    provideNzI18n(pt_BR), // <-- Força os componentes do Zorro a falarem Português
+    { provide: NZ_DATE_CONFIG, useValue: { firstDayOfWeek: 0 } },
   ]
 };
