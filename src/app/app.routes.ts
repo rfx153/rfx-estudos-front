@@ -10,6 +10,8 @@ import { PlanejamentoVisualizacaoComponent } from './pages/planejamento-visualiz
 import { MetodologiaComponent } from './pages/metodologia/metodologia';
 import { CaminhoComponent } from './pages/caminho/caminho';
 import { MetasComponent } from './pages/metas/metas';
+import { CiclosComponent } from './pages/ciclos/ciclos';
+import { CicloVisualizacaoComponent } from './pages/ciclo-visualizacao/ciclo-visualizacao';
 
 export const routes: Routes = [
   { path: '', component: InicioComponent },
@@ -23,6 +25,9 @@ export const routes: Routes = [
   { path: 'metodologia', component: MetodologiaComponent },
   { path: 'caminho', component: CaminhoComponent },
   { path: 'metas', component: MetasComponent },
+  { path: 'ciclos', component: CicloVisualizacaoComponent },
+  { path: 'ciclos/editar', component: CiclosComponent },
+  { path: 'ciclos/:id', component: CicloVisualizacaoComponent },
   { path: 'materias', component: MateriaListaComponent },
   { path: '**', redirectTo: '' } // Rota coringa para evitar erros 404
 ];

@@ -1,0 +1,65 @@
+<section class="cycle-view-page">
+  <header class="cycle-page-heading">
+    <div>
+      <span class="eyebrow">Rotação de estudos</span>
+      <h1>{{ visualizacaoIndividual ? quadros[0]?.ciclo?.nome || 'Ciclo' : 'Ciclos' }}</h1>
+      <p>
+        {{
+          visualizacaoIndividual
+            ? 'Matérias organizadas na ordem deste ciclo.'
+            : 'Visualize lado a lado os ciclos cadastrados e suas matérias.'
+        }}
+      </p>
+    </div>
+    <div class="heading-actions">
+      <a *ngIf="visualizacaoIndividual" class="secondary-link" routerLink="/ciclos">Todos os ciclos</a>
+      <a class="edit-link" routerLink="/ciclos/editar">Editar ciclos</a>
+    </div>
+  </header>
+
+  <div class="state-card" *ngIf="carregando">Carregando ciclos...</div>
+
+  <div class="state-card error" *ngIf="!carregando && erro">
+    <strong>Não foi possível carregar os ciclos.</strong>
+    <p>Verifique se a API de ciclos está disponível.</p>
+  </div>
+
+  <div class="state-card" *ngIf="!carregando && !erro && !quadros.length">
+    <strong>Nenhum ciclo cadastrado.</strong>
+    <p>Crie um ciclo e adicione matérias para montar o quadro.</p>
+    <a class="edit-link inline" routerLink="/ciclos/editar">Criar ciclo</a>
+  </div>
+
+  <section
+    class="cycles-board"
+    [class.single-cycle]="visualizacaoIndividual"
+    *ngIf="!carregando && !erro && quadros.length"
+    aria-label="Quadro de ciclos"
+  >
+    <article class="cycle-column" *ngFor="let quadro of quadros">
+      <header class="cycle-column-heading">
+        <div>
+          <h2>{{ quadro.ciclo.nome }}</h2>
+          <small>{{ quadro.itens.length }} matéria(s)</small>
+        </div>
+        <span class="cycle-status" [class.paused]="!quadro.ciclo.ativo">
+          {{ quadro.ciclo.ativo ? 'Ativo' : 'Pausado' }}
+        </span>
+      </header>
+
+      <p class="cycle-notes" *ngIf="quadro.ciclo.observacoes">{{ quadro.ciclo.observacoes }}</p>
+
+      <ol class="subjects-grid" *ngIf="quadro.itens.length; else cicloSemMaterias">
+        <li *ngFor="let item of quadro.itens; let indice = index" [class.inactive]="!item.ativo">
+          <span class="subject-order">{{ indice + 1 }}</span>
+          <strong>{{ item.materia.nome }}</strong>
+          <small>{{ item.ativo ? 'Na rotação' : 'Pausada' }}</small>
+        </li>
+      </ol>
+
+      <ng-template #cicloSemMaterias>
+        <div class="empty-column">Nenhuma matéria adicionada.</div>
+      </ng-template>
+    </article>
+  </section>
+</section>

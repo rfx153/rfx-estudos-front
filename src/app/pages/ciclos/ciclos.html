@@ -1,0 +1,157 @@
+<section class="cycles-page">
+  <header class="cycles-heading">
+    <div>
+      <span class="eyebrow">Rotação de estudos</span>
+      <h1>Ciclos</h1>
+      <p>Monte sequências de matérias e mantenha cada frente de estudo independente.</p>
+    </div>
+    <button nz-button nzType="primary" type="button" (click)="novoCiclo()">Novo ciclo</button>
+  </header>
+
+  <div class="cycles-loading" *ngIf="carregando">Carregando ciclos...</div>
+
+  <div class="cycles-layout" *ngIf="!carregando">
+    <aside class="cycles-sidebar" aria-label="Ciclos cadastrados">
+      <div class="sidebar-title">
+        <strong>Seus ciclos</strong>
+        <span>{{ ciclos.length }}</span>
+      </div>
+
+      <button
+        type="button"
+        class="cycle-option"
+        *ngFor="let ciclo of ciclos"
+        [class.selected]="cicloSelecionado?.id === ciclo.id"
+        (click)="selecionarCiclo(ciclo)">
+        <span class="cycle-option-mark" aria-hidden="true"></span>
+        <span class="cycle-option-copy">
+          <strong>{{ ciclo.nome }}</strong>
+          <small>{{ ciclo.ativo ? 'Ativo' : 'Pausado' }}</small>
+        </span>
+        <span class="cycle-option-arrow" aria-hidden="true">›</span>
+      </button>
+
+      <div class="sidebar-empty" *ngIf="!ciclos.length">
+        <strong>Nenhum ciclo ainda</strong>
+        <p>Crie o primeiro para organizar sua sequência de matérias.</p>
+      </div>
+    </aside>
+
+    <main class="cycle-editor">
+      <form class="cycle-form" [formGroup]="cicloForm" (ngSubmit)="salvarCiclo()">
+        <div class="editor-heading">
+          <div>
+            <span class="editor-kicker">{{ modoNovo ? 'Novo ciclo' : 'Configuração' }}</span>
+            <h2>{{ modoNovo ? 'Defina uma nova sequência' : cicloSelecionado?.nome }}</h2>
+          </div>
+          <span class="status-badge" [class.paused]="!cicloForm.controls.ativo.value">
+            {{ cicloForm.controls.ativo.value ? 'Ativo' : 'Pausado' }}
+          </span>
+        </div>
+
+        <div class="form-grid">
+          <label class="field field-name">
+            <span>Nome do ciclo</span>
+            <input formControlName="nome" maxlength="150" placeholder="Ex.: PT / Matemática" />
+            <small class="field-error" *ngIf="cicloForm.controls.nome.touched && cicloForm.controls.nome.invalid">
+              Informe um nome para o ciclo.
+            </small>
+          </label>
+
+          <label class="active-toggle">
+            <input type="checkbox" formControlName="ativo" />
+            <span>
+              <strong>Ciclo ativo</strong>
+              <small>Desative para pausar sem excluir.</small>
+            </span>
+          </label>
+
+          <label class="field field-notes">
+            <span>Observações</span>
+            <textarea formControlName="observacoes" rows="3" placeholder="Objetivo ou contexto deste ciclo"></textarea>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button
+            *ngIf="cicloSelecionado?.id"
+            nz-button
+            nzDanger
+            type="button"
+            [disabled]="excluindoCiclo"
+            (click)="excluirCiclo()">
+            {{ excluindoCiclo ? 'Excluindo...' : 'Excluir ciclo' }}
+          </button>
+          <span class="form-spacer"></span>
+          <a
+            *ngIf="cicloSelecionado?.id"
+            nz-button
+            [routerLink]="['/ciclos', cicloSelecionado?.id]">
+            Visualizar ciclo
+          </a>
+          <button nz-button nzType="primary" [nzLoading]="salvandoCiclo">
+            {{ modoNovo ? 'Criar ciclo' : 'Salvar alterações' }}
+          </button>
+        </div>
+      </form>
+
+      <section class="sequence-section" *ngIf="cicloSelecionado?.id; else salvePrimeiro">
+        <header class="sequence-heading">
+          <div>
+            <span class="editor-kicker">Sequência</span>
+            <h2>Matérias do ciclo</h2>
+            <p>A ordem define qual matéria vem depois na alternância.</p>
+          </div>
+          <span class="subject-count">{{ materiasDoCiclo.length }} matéria(s)</span>
+        </header>
+
+        <form class="add-subject" [formGroup]="materiaForm" (ngSubmit)="adicionarMateria()">
+          <label>
+            <span>Adicionar matéria</span>
+            <select formControlName="materiaId">
+              <option [ngValue]="null">Selecione uma matéria</option>
+              <option *ngFor="let materia of materias" [ngValue]="materia.id" [disabled]="!materiaDisponivel(materia)">
+                {{ materia.nome }}{{ materiaDisponivel(materia) ? '' : ' — já adicionada' }}
+              </option>
+            </select>
+          </label>
+          <button nz-button nzType="primary" [nzLoading]="adicionandoMateria">Adicionar</button>
+        </form>
+
+        <div class="sequence-loading" *ngIf="carregandoMaterias">Carregando sequência...</div>
+
+        <ol class="sequence-list" *ngIf="!carregandoMaterias && materiasDoCiclo.length">
+          <li *ngFor="let item of materiasDoCiclo; let indice = index" [class.inactive]="!item.ativo">
+            <span class="order-number">{{ indice + 1 }}</span>
+            <div class="subject-copy">
+              <strong>{{ item.materia.nome }}</strong>
+              <small>{{ item.ativo ? 'Participa da sequência' : 'Temporariamente pausada' }}</small>
+            </div>
+            <div class="subject-actions">
+              <button type="button" class="icon-button" [disabled]="indice === 0 || reordenando" aria-label="Mover matéria para cima" (click)="moverMateria(indice, -1)">↑</button>
+              <button type="button" class="icon-button" [disabled]="indice === materiasDoCiclo.length - 1 || reordenando" aria-label="Mover matéria para baixo" (click)="moverMateria(indice, 1)">↓</button>
+              <button type="button" class="text-button" (click)="alternarMateria(item)">{{ item.ativo ? 'Pausar' : 'Ativar' }}</button>
+              <button type="button" class="text-button danger" (click)="removerMateria(item)">Remover</button>
+            </div>
+          </li>
+        </ol>
+
+        <div class="sequence-empty" *ngIf="!carregandoMaterias && !materiasDoCiclo.length">
+          <span aria-hidden="true">↻</span>
+          <strong>A sequência está vazia</strong>
+          <p>Adicione matérias acima para montar a alternância deste ciclo.</p>
+        </div>
+      </section>
+
+      <ng-template #salvePrimeiro>
+        <section class="save-first">
+          <span aria-hidden="true">01</span>
+          <div>
+            <strong>Salve o ciclo para montar a sequência</strong>
+            <p>Depois você poderá adicionar e ordenar quantas matérias precisar.</p>
+          </div>
+        </section>
+      </ng-template>
+    </main>
+  </div>
+</section>
