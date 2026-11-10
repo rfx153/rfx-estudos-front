@@ -1,4 +1,6 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/rfx-estudos-front/browser",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
