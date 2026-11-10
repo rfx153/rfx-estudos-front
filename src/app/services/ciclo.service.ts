@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment.development';
 import { Materia } from './materia.service';
+import { PlanejamentoGrupoMateria } from './planejamento.service';
 
 export interface Ciclo {
   id?: number;
@@ -13,15 +14,17 @@ export interface Ciclo {
   atualizadoEm?: string;
 }
 
-export interface CicloMateria {
+export interface CicloItem {
   id?: number;
-  materia: Materia;
+  materia?: Materia | null;
+  planejamentoGrupoMateria?: PlanejamentoGrupoMateria | null;
   ordem: number;
   ativo: boolean;
 }
 
-export interface CicloMateriaDados {
-  materiaId: number;
+export interface CicloItemDados {
+  materiaId?: number | null;
+  planejamentoGrupoMateriaId?: number | null;
   ordem: number;
   ativo: boolean;
 }
@@ -51,28 +54,28 @@ export class CicloService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  listarMaterias(cicloId: number): Observable<CicloMateria[]> {
-    return this.http.get<CicloMateria[]>(`${this.apiUrl}/${cicloId}/materias`);
+  listarItens(cicloId: number): Observable<CicloItem[]> {
+    return this.http.get<CicloItem[]>(`${this.apiUrl}/${cicloId}/itens`);
   }
 
-  adicionarMateria(cicloId: number, dados: CicloMateriaDados): Observable<CicloMateria> {
-    return this.http.post<CicloMateria>(`${this.apiUrl}/${cicloId}/materias`, dados);
+  adicionarItem(cicloId: number, dados: CicloItemDados): Observable<CicloItem> {
+    return this.http.post<CicloItem>(`${this.apiUrl}/${cicloId}/itens`, dados);
   }
 
-  atualizarMateria(
+  atualizarItem(
     cicloId: number,
     itemId: number,
-    dados: CicloMateriaDados,
-  ): Observable<CicloMateria> {
-    return this.http.put<CicloMateria>(`${this.apiUrl}/${cicloId}/materias/${itemId}`, dados);
+    dados: CicloItemDados,
+  ): Observable<CicloItem> {
+    return this.http.put<CicloItem>(`${this.apiUrl}/${cicloId}/itens/${itemId}`, dados);
   }
 
-  excluirMateria(cicloId: number, itemId: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${cicloId}/materias/${itemId}`);
+  excluirItem(cicloId: number, itemId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${cicloId}/itens/${itemId}`);
   }
 
-  reordenarMaterias(cicloId: number, itens: CicloMateria[]): Observable<CicloMateria[]> {
-    return this.http.put<CicloMateria[]>(`${this.apiUrl}/${cicloId}/materias/ordem`, {
+  reordenarItens(cicloId: number, itens: CicloItem[]): Observable<CicloItem[]> {
+    return this.http.put<CicloItem[]>(`${this.apiUrl}/${cicloId}/itens/ordem`, {
       itens: itens.map((item, indice) => ({ id: item.id, ordem: indice + 1 })),
     });
   }

@@ -2,12 +2,24 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, map } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { Ciclo, CicloMateria, CicloService } from '../../services/ciclo.service';
+import { Ciclo, CicloItem, CicloService } from '../../services/ciclo.service';
 import { Materia, MateriaService } from '../../services/materia.service';
+import {
+  Planejamento,
+  PlanejamentoGrupoMateria,
+  PlanejamentoService,
+} from '../../services/planejamento.service';
+
+type CicloItemTipo = 'MATERIA' | 'GRUPO';
+
+interface GrupoPlanejamentoOpcao {
+  grupo: PlanejamentoGrupoMateria;
+  planejamento: Planejamento;
+}
 
 @Component({
   selector: 'app-ciclos',
@@ -19,19 +31,21 @@ import { Materia, MateriaService } from '../../services/materia.service';
 export class CiclosComponent implements OnInit {
   private readonly cicloService = inject(CicloService);
   private readonly materiaService = inject(MateriaService);
+  private readonly planejamentoService = inject(PlanejamentoService);
   private readonly fb = inject(FormBuilder);
   private readonly message = inject(NzMessageService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   ciclos: Ciclo[] = [];
   materias: Materia[] = [];
-  materiasDoCiclo: CicloMateria[] = [];
+  gruposPlanejamento: GrupoPlanejamentoOpcao[] = [];
+  itensDoCiclo: CicloItem[] = [];
   cicloSelecionado?: Ciclo;
   modoNovo = false;
   carregando = true;
-  carregandoMaterias = false;
+  carregandoItens = false;
   salvandoCiclo = false;
-  adicionandoMateria = false;
+  adicionandoItem = false;
   excluindoCiclo = false;
   reordenando = false;
 
@@ -41,23 +55,26 @@ export class CiclosComponent implements OnInit {
     ativo: [true],
   });
 
-  readonly materiaForm = this.fb.group({
-    materiaId: [null as number | null, Validators.required],
+  readonly itemForm = this.fb.group({
+    tipo: ['MATERIA' as CicloItemTipo, Validators.required],
+    itemId: [null as number | null, Validators.required],
   });
 
   ngOnInit(): void {
     forkJoin({
       ciclos: this.cicloService.listarTodos(),
       materias: this.materiaService.listarTodas(),
+      planejamentos: this.planejamentoService.listarTodos(),
     }).pipe(
       finalize(() => {
         this.carregando = false;
         this.cdr.detectChanges();
       }),
     ).subscribe({
-      next: ({ ciclos, materias }) => {
+      next: ({ ciclos, materias, planejamentos }) => {
         this.ciclos = this.ordenarCiclos(ciclos);
         this.materias = [...materias].sort((a, b) => a.nome.localeCompare(b.nome));
+        this.carregarGruposPlanejamento(planejamentos);
 
         if (this.ciclos.length) {
           this.selecionarCiclo(this.ciclos[0]);
@@ -75,7 +92,7 @@ export class CiclosComponent implements OnInit {
   novoCiclo(): void {
     this.modoNovo = true;
     this.cicloSelecionado = undefined;
-    this.materiasDoCiclo = [];
+    this.itensDoCiclo = [];
     this.cicloForm.reset({ nome: '', observacoes: '', ativo: true });
   }
 
@@ -89,7 +106,7 @@ export class CiclosComponent implements OnInit {
       observacoes: ciclo.observacoes || '',
       ativo: ciclo.ativo,
     });
-    this.carregarMaterias(ciclo.id);
+    this.carregarItens(ciclo.id);
   }
 
   salvarCiclo(): void {
@@ -165,132 +182,187 @@ export class CiclosComponent implements OnInit {
     });
   }
 
-  adicionarMateria(): void {
+  adicionarItem(): void {
     const cicloId = this.cicloSelecionado?.id;
-    const materiaId = this.materiaForm.controls.materiaId.value;
-    if (!cicloId || !materiaId) {
-      this.materiaForm.markAllAsTouched();
+    const tipo = this.itemForm.controls.tipo.value;
+    const itemId = this.itemForm.controls.itemId.value;
+    if (!cicloId || !tipo || !itemId) {
+      this.itemForm.markAllAsTouched();
       return;
     }
 
-    if (this.materiasDoCiclo.some(item => item.materia.id === materiaId)) {
-      this.message.warning('Esta matéria já faz parte do ciclo.');
+    if (!this.itemDisponivel(tipo, itemId)) {
+      this.message.warning(tipo === 'MATERIA'
+        ? 'Esta matéria já faz parte do ciclo.'
+        : 'Este bloco já faz parte do ciclo.');
       return;
     }
 
-    this.adicionandoMateria = true;
-    this.cicloService.adicionarMateria(cicloId, {
-      materiaId,
-      ordem: this.materiasDoCiclo.length + 1,
+    this.adicionandoItem = true;
+    this.cicloService.adicionarItem(cicloId, {
+      materiaId: tipo === 'MATERIA' ? itemId : null,
+      planejamentoGrupoMateriaId: tipo === 'GRUPO' ? itemId : null,
+      ordem: this.itensDoCiclo.length + 1,
       ativo: true,
     }).pipe(
       finalize(() => {
-        this.adicionandoMateria = false;
+        this.adicionandoItem = false;
         this.cdr.detectChanges();
       }),
     ).subscribe({
       next: item => {
-        this.materiasDoCiclo = [...this.materiasDoCiclo, item].sort((a, b) => a.ordem - b.ordem);
-        this.materiaForm.reset({ materiaId: null });
-        this.message.success('Matéria adicionada ao ciclo.');
+        this.itensDoCiclo = [...this.itensDoCiclo, item].sort((a, b) => a.ordem - b.ordem);
+        this.itemForm.reset({ tipo, itemId: null });
+        this.message.success(`${tipo === 'MATERIA' ? 'Matéria' : 'Bloco'} adicionado ao ciclo.`);
       },
       error: erro => {
-        console.error('Erro ao adicionar matéria ao ciclo:', erro);
-        this.message.error('Não foi possível adicionar a matéria.');
+        console.error('Erro ao adicionar item ao ciclo:', erro);
+        this.message.error('Não foi possível adicionar o item.');
       },
     });
   }
 
-  removerMateria(item: CicloMateria): void {
+  removerItem(item: CicloItem): void {
     const cicloId = this.cicloSelecionado?.id;
-    if (!cicloId || !item.id || !window.confirm(`Remover "${item.materia.nome}" deste ciclo?`)) return;
+    if (!cicloId || !item.id || !window.confirm(`Remover "${this.nomeItem(item)}" deste ciclo?`)) return;
 
-    this.cicloService.excluirMateria(cicloId, item.id).subscribe({
+    this.cicloService.excluirItem(cicloId, item.id).subscribe({
       next: () => {
-        this.materiasDoCiclo = this.materiasDoCiclo
-          .filter(materia => materia.id !== item.id)
-          .map((materia, indice) => ({ ...materia, ordem: indice + 1 }));
-        this.message.success('Matéria removida do ciclo.');
+        this.itensDoCiclo = this.itensDoCiclo
+          .filter(cicloItem => cicloItem.id !== item.id)
+          .map((cicloItem, indice) => ({ ...cicloItem, ordem: indice + 1 }));
+        this.message.success('Item removido do ciclo.');
         this.cdr.detectChanges();
       },
       error: erro => {
-        console.error('Erro ao remover matéria do ciclo:', erro);
-        this.message.error('Não foi possível remover a matéria.');
+        console.error('Erro ao remover item do ciclo:', erro);
+        this.message.error('Não foi possível remover o item.');
       },
     });
   }
 
-  alternarMateria(item: CicloMateria): void {
+  alternarItem(item: CicloItem): void {
     const cicloId = this.cicloSelecionado?.id;
-    if (!cicloId || !item.id || !item.materia.id) return;
+    if (!cicloId || !item.id) return;
 
-    this.cicloService.atualizarMateria(cicloId, item.id, {
-      materiaId: item.materia.id,
+    this.cicloService.atualizarItem(cicloId, item.id, {
+      materiaId: item.materia?.id ?? null,
+      planejamentoGrupoMateriaId: item.planejamentoGrupoMateria?.id ?? null,
       ordem: item.ordem,
       ativo: !item.ativo,
     }).subscribe({
       next: atualizado => {
-        this.materiasDoCiclo = this.materiasDoCiclo.map(materia =>
-          materia.id === atualizado.id ? atualizado : materia,
+        this.itensDoCiclo = this.itensDoCiclo.map(cicloItem =>
+          cicloItem.id === atualizado.id ? atualizado : cicloItem,
         );
         this.cdr.detectChanges();
       },
       error: erro => {
-        console.error('Erro ao alterar matéria do ciclo:', erro);
-        this.message.error('Não foi possível alterar a matéria.');
+        console.error('Erro ao alterar item do ciclo:', erro);
+        this.message.error('Não foi possível alterar o item.');
       },
     });
   }
 
-  moverMateria(indice: number, deslocamento: -1 | 1): void {
+  moverItem(indice: number, deslocamento: -1 | 1): void {
     const destino = indice + deslocamento;
     const cicloId = this.cicloSelecionado?.id;
-    if (!cicloId || destino < 0 || destino >= this.materiasDoCiclo.length || this.reordenando) return;
+    if (!cicloId || destino < 0 || destino >= this.itensDoCiclo.length || this.reordenando) return;
 
-    const anterior = [...this.materiasDoCiclo];
-    const reordenadas = [...this.materiasDoCiclo];
+    const anterior = [...this.itensDoCiclo];
+    const reordenadas = [...this.itensDoCiclo];
     [reordenadas[indice], reordenadas[destino]] = [reordenadas[destino], reordenadas[indice]];
-    this.materiasDoCiclo = reordenadas.map((item, posicao) => ({ ...item, ordem: posicao + 1 }));
+    this.itensDoCiclo = reordenadas.map((item, posicao) => ({ ...item, ordem: posicao + 1 }));
     this.reordenando = true;
 
-    this.cicloService.reordenarMaterias(cicloId, this.materiasDoCiclo).pipe(
+    this.cicloService.reordenarItens(cicloId, this.itensDoCiclo).pipe(
       finalize(() => {
         this.reordenando = false;
         this.cdr.detectChanges();
       }),
     ).subscribe({
       next: itens => {
-        this.materiasDoCiclo = [...itens].sort((a, b) => a.ordem - b.ordem);
+        this.itensDoCiclo = [...itens].sort((a, b) => a.ordem - b.ordem);
       },
       error: erro => {
-        this.materiasDoCiclo = anterior;
-        console.error('Erro ao reordenar matérias:', erro);
-        this.message.error('Não foi possível alterar a ordem das matérias.');
+        this.itensDoCiclo = anterior;
+        console.error('Erro ao reordenar itens:', erro);
+        this.message.error('Não foi possível alterar a ordem dos itens.');
       },
     });
   }
 
   materiaDisponivel(materia: Materia): boolean {
-    return !this.materiasDoCiclo.some(item => item.materia.id === materia.id);
+    return !!materia.id && this.itemDisponivel('MATERIA', materia.id);
   }
 
-  private carregarMaterias(cicloId: number): void {
-    this.carregandoMaterias = true;
-    this.materiasDoCiclo = [];
-    this.cicloService.listarMaterias(cicloId).pipe(
+  grupoDisponivel(grupo: PlanejamentoGrupoMateria): boolean {
+    return !!grupo.id && this.itemDisponivel('GRUPO', grupo.id);
+  }
+
+  nomeItem(item: CicloItem): string {
+    return item.materia?.nome ?? item.planejamentoGrupoMateria?.nome ?? 'Item sem nome';
+  }
+
+  tipoItem(item: CicloItem): 'Matéria' | 'Bloco' {
+    return item.materia ? 'Matéria' : 'Bloco';
+  }
+
+  aoTrocarTipoItem(): void {
+    this.itemForm.controls.itemId.reset();
+  }
+
+  private itemDisponivel(tipo: CicloItemTipo, id: number): boolean {
+    return !this.itensDoCiclo.some(item => tipo === 'MATERIA'
+      ? item.materia?.id === id
+      : item.planejamentoGrupoMateria?.id === id);
+  }
+
+  private carregarItens(cicloId: number): void {
+    this.carregandoItens = true;
+    this.itensDoCiclo = [];
+    this.cicloService.listarItens(cicloId).pipe(
       finalize(() => {
-        this.carregandoMaterias = false;
+        this.carregandoItens = false;
         this.cdr.detectChanges();
       }),
     ).subscribe({
       next: itens => {
         if (this.cicloSelecionado?.id === cicloId) {
-          this.materiasDoCiclo = [...itens].sort((a, b) => a.ordem - b.ordem);
+          this.itensDoCiclo = [...itens].sort((a, b) => a.ordem - b.ordem);
         }
       },
       error: erro => {
-        console.error('Erro ao carregar matérias do ciclo:', erro);
-        this.message.error('Não foi possível carregar as matérias do ciclo.');
+        console.error('Erro ao carregar itens do ciclo:', erro);
+        this.message.error('Não foi possível carregar os itens do ciclo.');
+      },
+    });
+  }
+
+  private carregarGruposPlanejamento(planejamentos: Planejamento[]): void {
+    const validos = planejamentos.filter(
+      (planejamento): planejamento is Planejamento & { id: number } => !!planejamento.id,
+    );
+    if (!validos.length) {
+      this.gruposPlanejamento = [];
+      return;
+    }
+
+    forkJoin(validos.map(planejamento =>
+      this.planejamentoService.listarGruposMaterias(planejamento.id).pipe(
+        map(grupos => grupos.map(grupo => ({ grupo, planejamento }))),
+      ),
+    )).subscribe({
+      next: grupos => {
+        this.gruposPlanejamento = grupos.flat().sort((a, b) =>
+          a.planejamento.nome.localeCompare(b.planejamento.nome)
+          || a.grupo.nome.localeCompare(b.grupo.nome),
+        );
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao carregar blocos dos planejamentos:', erro);
+        this.message.error('Não foi possível carregar os blocos dos planejamentos.');
       },
     });
   }

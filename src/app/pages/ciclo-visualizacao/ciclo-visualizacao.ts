@@ -3,11 +3,11 @@ import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin, map, of, switchMap } from 'rxjs';
 import { finalize } from 'rxjs/operators';
-import { Ciclo, CicloMateria, CicloService } from '../../services/ciclo.service';
+import { Ciclo, CicloItem, CicloService } from '../../services/ciclo.service';
 
 interface CicloQuadro {
   ciclo: Ciclo;
-  itens: CicloMateria[];
+  itens: CicloItem[];
 }
 
 @Component({
@@ -49,7 +49,7 @@ export class CicloVisualizacaoComponent implements OnInit {
 
           return forkJoin(
             ciclos.map((ciclo) =>
-              this.cicloService.listarMaterias(ciclo.id!).pipe(
+              this.cicloService.listarItens(ciclo.id!).pipe(
                 map((itens) => ({
                   ciclo,
                   itens: [...itens].sort((a, b) => a.ordem - b.ordem),
@@ -74,5 +74,13 @@ export class CicloVisualizacaoComponent implements OnInit {
           this.cdr.detectChanges();
         },
       });
+  }
+
+  nomeItem(item: CicloItem): string {
+    return item.materia?.nome ?? item.planejamentoGrupoMateria?.nome ?? 'Item sem nome';
+  }
+
+  tipoItem(item: CicloItem): 'Matéria' | 'Bloco' {
+    return item.materia ? 'Matéria' : 'Bloco';
   }
 }

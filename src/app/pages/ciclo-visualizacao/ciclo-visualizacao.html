@@ -6,8 +6,8 @@
       <p>
         {{
           visualizacaoIndividual
-            ? 'Matérias organizadas na ordem deste ciclo.'
-            : 'Visualize lado a lado os ciclos cadastrados e suas matérias.'
+            ? 'Matérias e blocos organizados na ordem deste ciclo.'
+            : 'Visualize lado a lado os ciclos cadastrados e seus itens.'
         }}
       </p>
     </div>
@@ -40,7 +40,7 @@
       <header class="cycle-column-heading">
         <div>
           <h2>{{ quadro.ciclo.nome }}</h2>
-          <small>{{ quadro.itens.length }} matéria(s)</small>
+          <small>{{ quadro.itens.length }} item(ns)</small>
         </div>
         <span class="cycle-status" [class.paused]="!quadro.ciclo.ativo">
           {{ quadro.ciclo.ativo ? 'Ativo' : 'Pausado' }}
@@ -52,13 +52,13 @@
       <ol class="subjects-grid" *ngIf="quadro.itens.length; else cicloSemMaterias">
         <li *ngFor="let item of quadro.itens; let indice = index" [class.inactive]="!item.ativo">
           <span class="subject-order">{{ indice + 1 }}</span>
-          <strong>{{ item.materia.nome }}</strong>
-          <small>{{ item.ativo ? 'Na rotação' : 'Pausada' }}</small>
+          <strong>{{ nomeItem(item) }}</strong>
+          <small>{{ tipoItem(item) }} · {{ item.ativo ? 'Na rotação' : 'Pausado' }}</small>
         </li>
       </ol>
 
       <ng-template #cicloSemMaterias>
-        <div class="empty-column">Nenhuma matéria adicionada.</div>
+        <div class="empty-column">Nenhum item adicionado.</div>
       </ng-template>
     </article>
   </section>

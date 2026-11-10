@@ -99,47 +99,63 @@
         <header class="sequence-heading">
           <div>
             <span class="editor-kicker">Sequência</span>
-            <h2>Matérias do ciclo</h2>
-            <p>A ordem define qual matéria vem depois na alternância.</p>
+            <h2>Itens do ciclo</h2>
+            <p>Misture matérias e blocos; a ordem define o próximo item da alternância.</p>
           </div>
-          <span class="subject-count">{{ materiasDoCiclo.length }} matéria(s)</span>
+          <span class="subject-count">{{ itensDoCiclo.length }} item(ns)</span>
         </header>
 
-        <form class="add-subject" [formGroup]="materiaForm" (ngSubmit)="adicionarMateria()">
+        <form class="add-subject" [formGroup]="itemForm" (ngSubmit)="adicionarItem()">
           <label>
-            <span>Adicionar matéria</span>
-            <select formControlName="materiaId">
+            <span>Tipo do item</span>
+            <select formControlName="tipo" (change)="aoTrocarTipoItem()">
+              <option value="MATERIA">Matéria</option>
+              <option value="GRUPO">Bloco de matérias</option>
+            </select>
+          </label>
+          <label *ngIf="itemForm.controls.tipo.value === 'MATERIA'">
+            <span>Matéria</span>
+            <select formControlName="itemId">
               <option [ngValue]="null">Selecione uma matéria</option>
               <option *ngFor="let materia of materias" [ngValue]="materia.id" [disabled]="!materiaDisponivel(materia)">
                 {{ materia.nome }}{{ materiaDisponivel(materia) ? '' : ' — já adicionada' }}
               </option>
             </select>
           </label>
-          <button nz-button nzType="primary" [nzLoading]="adicionandoMateria">Adicionar</button>
+          <label *ngIf="itemForm.controls.tipo.value === 'GRUPO'">
+            <span>Bloco do planejamento</span>
+            <select formControlName="itemId">
+              <option [ngValue]="null">Selecione um bloco</option>
+              <option *ngFor="let opcao of gruposPlanejamento" [ngValue]="opcao.grupo.id" [disabled]="!grupoDisponivel(opcao.grupo)">
+                {{ opcao.planejamento.nome }} — {{ opcao.grupo.nome }}{{ grupoDisponivel(opcao.grupo) ? '' : ' — já adicionado' }}
+              </option>
+            </select>
+          </label>
+          <button nz-button nzType="primary" [nzLoading]="adicionandoItem">Adicionar</button>
         </form>
 
-        <div class="sequence-loading" *ngIf="carregandoMaterias">Carregando sequência...</div>
+        <div class="sequence-loading" *ngIf="carregandoItens">Carregando sequência...</div>
 
-        <ol class="sequence-list" *ngIf="!carregandoMaterias && materiasDoCiclo.length">
-          <li *ngFor="let item of materiasDoCiclo; let indice = index" [class.inactive]="!item.ativo">
+        <ol class="sequence-list" *ngIf="!carregandoItens && itensDoCiclo.length">
+          <li *ngFor="let item of itensDoCiclo; let indice = index" [class.inactive]="!item.ativo">
             <span class="order-number">{{ indice + 1 }}</span>
             <div class="subject-copy">
-              <strong>{{ item.materia.nome }}</strong>
-              <small>{{ item.ativo ? 'Participa da sequência' : 'Temporariamente pausada' }}</small>
+              <strong>{{ nomeItem(item) }}</strong>
+              <small>{{ tipoItem(item) }} · {{ item.ativo ? 'Participa da sequência' : 'Temporariamente pausado' }}</small>
             </div>
             <div class="subject-actions">
-              <button type="button" class="icon-button" [disabled]="indice === 0 || reordenando" aria-label="Mover matéria para cima" (click)="moverMateria(indice, -1)">↑</button>
-              <button type="button" class="icon-button" [disabled]="indice === materiasDoCiclo.length - 1 || reordenando" aria-label="Mover matéria para baixo" (click)="moverMateria(indice, 1)">↓</button>
-              <button type="button" class="text-button" (click)="alternarMateria(item)">{{ item.ativo ? 'Pausar' : 'Ativar' }}</button>
-              <button type="button" class="text-button danger" (click)="removerMateria(item)">Remover</button>
+              <button type="button" class="icon-button" [disabled]="indice === 0 || reordenando" aria-label="Mover item para cima" (click)="moverItem(indice, -1)">↑</button>
+              <button type="button" class="icon-button" [disabled]="indice === itensDoCiclo.length - 1 || reordenando" aria-label="Mover item para baixo" (click)="moverItem(indice, 1)">↓</button>
+              <button type="button" class="text-button" (click)="alternarItem(item)">{{ item.ativo ? 'Pausar' : 'Ativar' }}</button>
+              <button type="button" class="text-button danger" (click)="removerItem(item)">Remover</button>
             </div>
           </li>
         </ol>
 
-        <div class="sequence-empty" *ngIf="!carregandoMaterias && !materiasDoCiclo.length">
+        <div class="sequence-empty" *ngIf="!carregandoItens && !itensDoCiclo.length">
           <span aria-hidden="true">↻</span>
           <strong>A sequência está vazia</strong>
-          <p>Adicione matérias acima para montar a alternância deste ciclo.</p>
+          <p>Adicione matérias ou blocos acima para montar a alternância deste ciclo.</p>
         </div>
       </section>
 
@@ -148,7 +164,7 @@
           <span aria-hidden="true">01</span>
           <div>
             <strong>Salve o ciclo para montar a sequência</strong>
-            <p>Depois você poderá adicionar e ordenar quantas matérias precisar.</p>
+            <p>Depois você poderá adicionar e ordenar matérias e blocos.</p>
           </div>
         </section>
       </ng-template>
