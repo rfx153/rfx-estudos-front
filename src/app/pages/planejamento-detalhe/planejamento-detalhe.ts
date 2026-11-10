@@ -67,6 +67,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
   readonly grupoMateriaForm = this.fb.group({
     nome: ['', [Validators.required, Validators.maxLength(150)]],
     peso: [null as number | null, [Validators.min(1), Validators.max(5)]],
+    dificuldade: [null as number | null, [Validators.min(1), Validators.max(5)]],
     ordem: [null as number | null, Validators.min(1)],
   });
   readonly grupoForm = this.fb.group({
@@ -213,6 +214,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
       const dados: PlanejamentoGrupoMateriaDTO = {
         nome: nomeBloco!,
         peso: this.materiaForm.controls.peso.value,
+        dificuldade: this.materiaForm.controls.dificuldade.value,
         ordem: this.materiaForm.controls.ordem.value,
       };
       this.salvandoMateria = true;
@@ -331,6 +333,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     const dados: PlanejamentoGrupoMateriaDTO = {
       nome: this.grupoMateriaForm.controls.nome.value!.trim(),
       peso: this.grupoMateriaForm.controls.peso.value,
+      dificuldade: this.grupoMateriaForm.controls.dificuldade.value,
       ordem: this.grupoMateriaForm.controls.ordem.value,
     };
     const editando = !!this.grupoMateriaEditandoId;
@@ -368,6 +371,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     this.grupoMateriaForm.setValue({
       nome: grupo.nome,
       peso: grupo.peso ?? null,
+      dificuldade: grupo.dificuldade ?? null,
       ordem: grupo.ordem ?? null,
     });
     this.modalGrupoMateriaAberto = true;
@@ -381,7 +385,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
 
   cancelarEdicaoGrupoMateria(): void {
     this.grupoMateriaEditandoId = undefined;
-    this.grupoMateriaForm.reset({ nome: '', peso: null, ordem: null });
+    this.grupoMateriaForm.reset({ nome: '', peso: null, dificuldade: null, ordem: null });
   }
 
   excluirGrupoMateria(grupo: PlanejamentoGrupoMateria): void {

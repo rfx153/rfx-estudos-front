@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { forkJoin, of } from 'rxjs';
@@ -29,6 +30,7 @@ interface AssuntoVisualizacao {
   materiaPlanejamentoId: number;
   grupoId: number;
   itemId: number;
+  ordem?: number | null;
   etapas: EtapaVisualizacao[];
   questoesFeitas: number;
   questoesAcertadas: number;
@@ -48,10 +50,12 @@ type StatusEtapa = 'NAO_INICIADO' | 'EM_ANDAMENTO' | 'CONCLUIDO';
 
 interface MateriaVisualizacao {
   id: number;
+  materiaId: number;
   nome: string;
   peso?: number | null;
   dificuldade?: number | null;
   grupoMateriaId?: number | null;
+  ordem?: number | null;
   grupos: GrupoVisualizacao[];
   aberta: boolean;
 }
@@ -59,6 +63,9 @@ interface MateriaVisualizacao {
 interface BlocoMateriaVisualizacao {
   id: number;
   nome: string;
+  peso?: number | null;
+  dificuldade?: number | null;
+  ordem?: number | null;
   materias: MateriaVisualizacao[];
   aberto: boolean;
 }
@@ -66,7 +73,7 @@ interface BlocoMateriaVisualizacao {
 @Component({
   selector: 'app-planejamento-visualizacao',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './planejamento-visualizacao.html',
   styleUrl: './planejamento-visualizacao.css',
 })
@@ -85,6 +92,15 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
   erro = false;
   tiposRegistro: TipoRegistro[] = [];
   etapasSendoSalvas = new Set<string>();
+  materiaEditandoId: number | null = null;
+  pesoMateriaEdicao: number | null = null;
+  dificuldadeMateriaEdicao: number | null = null;
+  salvandoMateria = false;
+  assuntosSendoSalvos = new Set<number>();
+  grupoMateriaEditandoId: number | null = null;
+  pesoGrupoMateriaEdicao: number | null = null;
+  dificuldadeGrupoMateriaEdicao: number | null = null;
+  salvandoGrupoMateria = false;
 
   ngOnInit(): void {
     this.registroService.listarTiposRegistro().subscribe({
@@ -175,6 +191,134 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
 
   alternarBlocoMateria(bloco: BlocoMateriaVisualizacao): void {
     bloco.aberto = !bloco.aberto;
+  }
+
+  editarGrupoMateria(grupo: BlocoMateriaVisualizacao): void {
+    this.grupoMateriaEditandoId = grupo.id;
+    this.pesoGrupoMateriaEdicao = grupo.peso ?? null;
+    this.dificuldadeGrupoMateriaEdicao = grupo.dificuldade ?? null;
+  }
+
+  cancelarEdicaoGrupoMateria(): void {
+    this.grupoMateriaEditandoId = null;
+    this.pesoGrupoMateriaEdicao = null;
+    this.dificuldadeGrupoMateriaEdicao = null;
+  }
+
+  salvarGrupoMateria(grupo: BlocoMateriaVisualizacao): void {
+    if (!this.planejamento?.id || this.salvandoGrupoMateria) return;
+    if (!this.valorDeUmACincoValido(this.pesoGrupoMateriaEdicao)
+        || !this.valorDeUmACincoValido(this.dificuldadeGrupoMateriaEdicao)) {
+      this.message.warning('Peso e dificuldade devem estar entre 1 e 5.');
+      return;
+    }
+
+    this.salvandoGrupoMateria = true;
+    this.service.atualizarGrupoMateria(this.planejamento.id, grupo.id, {
+      nome: grupo.nome,
+      peso: this.pesoGrupoMateriaEdicao,
+      dificuldade: this.dificuldadeGrupoMateriaEdicao,
+      ordem: grupo.ordem,
+    }).pipe(finalize(() => {
+      this.salvandoGrupoMateria = false;
+      this.cdr.detectChanges();
+    })).subscribe({
+      next: atualizado => {
+        grupo.peso = atualizado.peso;
+        grupo.dificuldade = atualizado.dificuldade;
+        this.cancelarEdicaoGrupoMateria();
+        this.message.success('Grupo de matérias atualizado.');
+      },
+      error: erro => {
+        console.error('Erro ao atualizar grupo de matérias:', erro);
+        this.message.error('Não foi possível atualizar o grupo de matérias.');
+      },
+    });
+  }
+
+  editarMateria(materia: MateriaVisualizacao): void {
+    this.materiaEditandoId = materia.id;
+    this.pesoMateriaEdicao = materia.peso ?? null;
+    this.dificuldadeMateriaEdicao = materia.dificuldade ?? null;
+  }
+
+  cancelarEdicaoMateria(): void {
+    this.materiaEditandoId = null;
+    this.pesoMateriaEdicao = null;
+    this.dificuldadeMateriaEdicao = null;
+  }
+
+  salvarMateria(materia: MateriaVisualizacao): void {
+    if (!this.planejamento?.id || this.salvandoMateria) return;
+    if (!this.valorDeUmACincoValido(this.pesoMateriaEdicao)
+        || !this.valorDeUmACincoValido(this.dificuldadeMateriaEdicao)) {
+      this.message.warning('Peso e dificuldade devem estar entre 1 e 5.');
+      return;
+    }
+
+    this.salvandoMateria = true;
+    this.service.atualizarMateria(this.planejamento.id, materia.id, {
+      materiaId: materia.materiaId,
+      planejamentoGrupoMateriaId: materia.grupoMateriaId,
+      peso: this.pesoMateriaEdicao,
+      dificuldade: this.dificuldadeMateriaEdicao,
+      ordem: materia.ordem,
+    }).pipe(finalize(() => {
+      this.salvandoMateria = false;
+      this.cdr.detectChanges();
+    })).subscribe({
+      next: atualizada => {
+        materia.peso = atualizada.peso;
+        materia.dificuldade = atualizada.dificuldade;
+        this.cancelarEdicaoMateria();
+        this.message.success('Peso e dificuldade atualizados.');
+      },
+      error: erro => {
+        console.error('Erro ao atualizar matéria:', erro);
+        this.message.error('Não foi possível atualizar a matéria.');
+      },
+    });
+  }
+
+  salvarAssunto(assunto: AssuntoVisualizacao): void {
+    if (!this.planejamento?.id || this.assuntosSendoSalvos.has(assunto.itemId)) return;
+    if (!this.valorDeUmACincoValido(assunto.peso)
+        || !this.valorDeUmACincoValido(assunto.dificuldade)) {
+      this.message.warning('Peso e dificuldade devem estar entre 1 e 5.');
+      return;
+    }
+
+    this.assuntosSendoSalvos.add(assunto.itemId);
+    this.service.atualizarItem(
+      this.planejamento.id,
+      assunto.materiaPlanejamentoId,
+      assunto.grupoId,
+      assunto.itemId,
+      {
+        assuntoId: assunto.id,
+        peso: assunto.peso,
+        dificuldade: assunto.dificuldade,
+        ordem: assunto.ordem,
+      },
+    ).pipe(finalize(() => {
+      this.assuntosSendoSalvos.delete(assunto.itemId);
+      this.cdr.detectChanges();
+    })).subscribe({
+      next: atualizado => {
+        assunto.peso = atualizado.peso;
+        assunto.dificuldade = atualizado.dificuldade;
+        this.message.success('Assunto atualizado.');
+      },
+      error: erro => {
+        console.error('Erro ao atualizar assunto:', erro);
+        this.message.error('Não foi possível atualizar o assunto.');
+        this.carregarPlanejamento(this.planejamento!.id!);
+      },
+    });
+  }
+
+  assuntoSendoSalvo(assunto: AssuntoVisualizacao): boolean {
+    return this.assuntosSendoSalvos.has(assunto.itemId);
   }
 
   temEtapa(assunto: AssuntoVisualizacao, tipo: string): boolean {
@@ -298,6 +442,10 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     ] ?? 'Não informada';
   }
 
+  private valorDeUmACincoValido(valor?: number | null): boolean {
+    return valor == null || (Number.isInteger(Number(valor)) && Number(valor) >= 1 && Number(valor) <= 5);
+  }
+
   private carregarMaterias(
     materias: PlanejamentoMateria[],
     aproveitamentosPorAssunto: Map<number, PlanejamentoAproveitamento>,
@@ -320,10 +468,12 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     if (!this.planejamento?.id || !materia.id) {
       return of({
         id: materia.id ?? 0,
+        materiaId: materia.materia.id ?? 0,
         nome: materia.materia.nome,
         peso: materia.peso,
         dificuldade: materia.dificuldade,
         grupoMateriaId: materia.planejamentoGrupoMateria?.id,
+        ordem: materia.ordem,
         grupos: [],
         aberta: false,
       });
@@ -335,10 +485,12 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
       catchError(() =>
         of({
           id: materia.id!,
+          materiaId: materia.materia.id ?? 0,
           nome: materia.materia.nome,
           peso: materia.peso,
           dificuldade: materia.dificuldade,
           grupoMateriaId: materia.planejamentoGrupoMateria?.id,
+          ordem: materia.ordem,
           grupos: [],
           aberta: false,
         }),
@@ -354,10 +506,12 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     if (!this.planejamento?.id || !materia.id || !grupos.length) {
       return of({
         id: materia.id!,
+        materiaId: materia.materia.id ?? 0,
         nome: materia.materia.nome,
         peso: materia.peso,
         dificuldade: materia.dificuldade,
         grupoMateriaId: materia.planejamentoGrupoMateria?.id,
+        ordem: materia.ordem,
         grupos: [],
         aberta: false,
       });
@@ -370,10 +524,12 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     ).pipe(
       map((gruposVisualizacao) => ({
         id: materia.id!,
+        materiaId: materia.materia.id ?? 0,
         nome: materia.materia.nome,
         peso: materia.peso,
         dificuldade: materia.dificuldade,
         grupoMateriaId: materia.planejamentoGrupoMateria?.id,
+        ordem: materia.ordem,
         grupos: gruposVisualizacao,
         aberta: false,
       })),
@@ -421,6 +577,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
         materiaPlanejamentoId: materiaId,
         grupoId,
         itemId: item.id ?? 0,
+        ordem: item.ordem,
         etapas: [],
         questoesFeitas: 0,
         questoesAcertadas: 0,
@@ -437,6 +594,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
         materiaPlanejamentoId: materiaId,
         grupoId,
         itemId: item.id!,
+        ordem: item.ordem,
         questoesFeitas: aproveitamentosPorAssunto.get(item.assunto.id)?.questoesFeitas ?? 0,
         questoesAcertadas: aproveitamentosPorAssunto.get(item.assunto.id)?.questoesAcertadas ?? 0,
         etapas: etapas
@@ -452,6 +610,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
           materiaPlanejamentoId: materiaId,
           grupoId,
           itemId: item.id!,
+          ordem: item.ordem,
           etapas: [],
           questoesFeitas: aproveitamentosPorAssunto.get(item.assunto.id)?.questoesFeitas ?? 0,
           questoesAcertadas: aproveitamentosPorAssunto.get(item.assunto.id)?.questoesAcertadas ?? 0,
@@ -492,6 +651,9 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
       .map((grupo) => ({
         id: grupo.id!,
         nome: grupo.nome,
+        peso: grupo.peso,
+        dificuldade: grupo.dificuldade,
+        ordem: grupo.ordem,
         materias: materias.filter((materia) => materia.grupoMateriaId === grupo.id),
         aberto: false,
       }))
@@ -502,10 +664,12 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     return materias
       .map((materia) => ({
         id: materia.id ?? 0,
+        materiaId: materia.materia.id ?? 0,
         nome: materia.materia.nome,
         peso: materia.peso,
         dificuldade: materia.dificuldade,
         grupoMateriaId: materia.planejamentoGrupoMateria?.id,
+        ordem: materia.ordem,
         grupos: [],
         aberta: false,
       }))

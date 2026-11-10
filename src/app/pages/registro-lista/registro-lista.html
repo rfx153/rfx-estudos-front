@@ -1,7 +1,21 @@
 <div class="registro-container">
-  <nz-card class="page-card registro-card" [nzTitle]="tituloFormulario" [nzExtra]="extraTemplate">
+  <nz-card class="page-card registro-card" [nzTitle]="tituloFormulario">
     <form nz-form [formGroup]="validateForm" (ngSubmit)="submitForm()" nzLayout="vertical">
-      
+      <section class="study-timer" aria-label="Cronômetro de estudo">
+        <div class="study-timer-display">
+          <span>Cronômetro</span>
+          <strong>{{ cronometroFormatado }}</strong>
+          <small>{{ cronometroRodando ? 'Em andamento' : (cronometroSegundos ? 'Pausado' : 'Pronto para iniciar') }}</small>
+        </div>
+        <div class="study-timer-actions">
+          <button nz-button nzType="primary" type="button" *ngIf="!cronometroRodando" (click)="iniciarCronometro()">
+            {{ cronometroSegundos ? 'Continuar' : 'Iniciar' }}
+          </button>
+          <button nz-button type="button" *ngIf="cronometroRodando" (click)="pausarCronometro()">Pausar</button>
+          <button nz-button type="button" [disabled]="!cronometroSegundos" (click)="zerarCronometro()">Zerar</button>
+        </div>
+      </section>
+
       <div nz-row [nzGutter]="24">
         <div nz-col [nzSpan]="6">
   <nz-form-item>
@@ -222,7 +236,3 @@
     </div>
   </ng-container>
 </nz-modal>
-
-<ng-template #extraTemplate>
-  <span class="record-count">{{ modoEdicao ? 'Editando registro #' + registroEditandoId : totalRegistros + ' registros' }}</span>
-</ng-template>

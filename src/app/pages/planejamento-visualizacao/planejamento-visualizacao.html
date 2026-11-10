@@ -46,21 +46,54 @@
   >
     <ng-template #materiaCard let-materia>
       <article class="materia">
-        <button
-          type="button"
-          class="materia-trigger"
-          (click)="alternarMateria(materia)"
-          [attr.aria-expanded]="materia.aberta"
+        <div class="materia-header">
+          <button
+            type="button"
+            class="materia-trigger"
+            (click)="alternarMateria(materia)"
+            [attr.aria-expanded]="materia.aberta"
+          >
+            <span>
+              <strong>{{ materia.nome }}</strong>
+              <small
+                >Peso na prova: {{ materia.peso ?? 'não informado' }} · Dificuldade:
+                {{ rotuloDificuldade(materia.dificuldade) }}</small
+              >
+            </span>
+            <span class="chevron" [class.aberta]="materia.aberta" aria-hidden="true">⌄</span>
+          </button>
+          <button class="materia-edit-button" type="button" (click)="editarMateria(materia)">
+            Editar
+          </button>
+        </div>
+
+        <form
+          class="materia-edit-panel"
+          *ngIf="materiaEditandoId === materia.id"
+          (ngSubmit)="salvarMateria(materia)"
         >
-          <span>
-            <strong>{{ materia.nome }}</strong>
-            <small
-              >Peso na prova: {{ materia.peso ?? 'não informado' }} · Dificuldade:
-              {{ rotuloDificuldade(materia.dificuldade) }}</small
-            >
-          </span>
-          <span class="chevron" [class.aberta]="materia.aberta" aria-hidden="true">⌄</span>
-        </button>
+          <label>
+            Peso na prova
+            <input type="number" min="1" max="5" name="pesoMateria" [(ngModel)]="pesoMateriaEdicao" />
+          </label>
+          <label>
+            Dificuldade
+            <select name="dificuldadeMateria" [(ngModel)]="dificuldadeMateriaEdicao">
+              <option [ngValue]="null">Não informada</option>
+              <option [ngValue]="1">1 — Muito fácil</option>
+              <option [ngValue]="2">2 — Fácil</option>
+              <option [ngValue]="3">3 — Média</option>
+              <option [ngValue]="4">4 — Difícil</option>
+              <option [ngValue]="5">5 — Muito difícil</option>
+            </select>
+          </label>
+          <div class="materia-edit-actions">
+            <button type="button" (click)="cancelarEdicaoMateria()">Cancelar</button>
+            <button class="primary" type="submit" [disabled]="salvandoMateria">
+              {{ salvandoMateria ? 'Salvando...' : 'Salvar' }}
+            </button>
+          </div>
+        </form>
 
         <div class="assuntos" *ngIf="materia.aberta">
           <ng-container *ngIf="materia.grupos.length; else semAssuntos">
@@ -109,8 +142,30 @@
                     </select>
                     <small *ngIf="dataConclusaoDaEtapa(assunto, 'revis')">{{ dataConclusaoDaEtapa(assunto, 'revis') | date: 'dd/MM/yy' }}</small>
                   </div>
-                  <span class="peso-prova">{{ assunto.peso ?? '—' }}</span>
-                  <span class="dificuldade">{{ rotuloDificuldade(assunto.dificuldade) }}</span>
+                  <span class="peso-prova">
+                    <input
+                      type="number"
+                      min="1"
+                      max="5"
+                      [name]="'pesoAssunto' + assunto.itemId"
+                      [(ngModel)]="assunto.peso"
+                      [disabled]="assuntoSendoSalvo(assunto)"
+                      (change)="salvarAssunto(assunto)" />
+                  </span>
+                  <span class="dificuldade">
+                    <select
+                      [name]="'dificuldadeAssunto' + assunto.itemId"
+                      [(ngModel)]="assunto.dificuldade"
+                      [disabled]="assuntoSendoSalvo(assunto)"
+                      (change)="salvarAssunto(assunto)">
+                      <option [ngValue]="null">Não informada</option>
+                      <option [ngValue]="1">Muito fácil</option>
+                      <option [ngValue]="2">Fácil</option>
+                      <option [ngValue]="3">Média</option>
+                      <option [ngValue]="4">Difícil</option>
+                      <option [ngValue]="5">Muito difícil</option>
+                    </select>
+                  </span>
                 </div>
                 <div class="grupo-vazio" *ngIf="!grupo.assuntos.length">Nenhum assunto adicionado.</div>
               </ng-container>
@@ -122,15 +177,50 @@
     </ng-template>
 
     <article class="materia" *ngFor="let bloco of blocosMaterias">
-      <button
-        type="button"
-        class="materia-trigger"
-        (click)="alternarBlocoMateria(bloco)"
-        [attr.aria-expanded]="bloco.aberto"
+      <div class="materia-header">
+        <button
+          type="button"
+          class="materia-trigger"
+          (click)="alternarBlocoMateria(bloco)"
+          [attr.aria-expanded]="bloco.aberto"
+        >
+          <span>
+            <strong>{{ bloco.nome }}</strong>
+            <small>Peso: {{ bloco.peso ?? 'não informado' }} · Dificuldade: {{ rotuloDificuldade(bloco.dificuldade) }}</small>
+          </span>
+          <span class="chevron" [class.aberta]="bloco.aberto" aria-hidden="true">⌄</span>
+        </button>
+        <button class="materia-edit-button" type="button" (click)="editarGrupoMateria(bloco)">
+          Editar
+        </button>
+      </div>
+      <form
+        class="materia-edit-panel"
+        *ngIf="grupoMateriaEditandoId === bloco.id"
+        (ngSubmit)="salvarGrupoMateria(bloco)"
       >
-        <span><strong>{{ bloco.nome }}</strong></span>
-        <span class="chevron" [class.aberta]="bloco.aberto" aria-hidden="true">⌄</span>
-      </button>
+        <label>
+          Peso
+          <input type="number" min="1" max="5" name="pesoGrupoMateria" [(ngModel)]="pesoGrupoMateriaEdicao" />
+        </label>
+        <label>
+          Dificuldade
+          <select name="dificuldadeGrupoMateria" [(ngModel)]="dificuldadeGrupoMateriaEdicao">
+            <option [ngValue]="null">Não informada</option>
+            <option [ngValue]="1">1 — Muito fácil</option>
+            <option [ngValue]="2">2 — Fácil</option>
+            <option [ngValue]="3">3 — Média</option>
+            <option [ngValue]="4">4 — Difícil</option>
+            <option [ngValue]="5">5 — Muito difícil</option>
+          </select>
+        </label>
+        <div class="materia-edit-actions">
+          <button type="button" (click)="cancelarEdicaoGrupoMateria()">Cancelar</button>
+          <button class="primary" type="submit" [disabled]="salvandoGrupoMateria">
+            {{ salvandoGrupoMateria ? 'Salvando...' : 'Salvar' }}
+          </button>
+        </div>
+      </form>
       <div class="bloco-materias" *ngIf="bloco.aberto">
         <p *ngIf="!bloco.materias.length">Nenhuma matéria adicionada.</p>
         <ng-container

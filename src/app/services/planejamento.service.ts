@@ -34,12 +34,14 @@ export interface PlanejamentoGrupoMateria {
   id?: number;
   nome: string;
   peso?: number | null;
+  dificuldade?: number | null;
   ordem?: number | null;
 }
 
 export interface PlanejamentoGrupoMateriaDTO {
   nome: string;
   peso?: number | null;
+  dificuldade?: number | null;
   ordem?: number | null;
 }
 

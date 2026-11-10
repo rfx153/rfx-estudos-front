@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef, PLATFORM_ID } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, ChangeDetectorRef, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -55,7 +55,7 @@ interface RegistroQuestoesTemporario {
   templateUrl: 'registro-lista.html',
   styleUrl: 'registro-lista.css',
 })
-export class RegistroListaComponent implements OnInit {
+export class RegistroListaComponent implements OnInit, OnDestroy {
   private registroService = inject(RegistroService);
   private materiaService = inject(MateriaService);
   private planejamentoService = inject(PlanejamentoService);
@@ -68,7 +68,6 @@ export class RegistroListaComponent implements OnInit {
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
 
-  totalRegistros = 0;
   listaMaterias: Materia[] = [];
   listaPlanejamentos: Planejamento[] = [];
   listaMateriaisGuia: MaterialGuia[] = [];
@@ -77,7 +76,6 @@ export class RegistroListaComponent implements OnInit {
   listaAssuntos: Assunto[] = [];
   listaTiposRegistro: TipoRegistro[] = [];
 
-  carregando = true;
   salvando = false;
   questoesAbaAberta = false;
   modoEdicao = false;
@@ -85,6 +83,12 @@ export class RegistroListaComponent implements OnInit {
   validateForm!: FormGroup;
   registroQuestoesForm!: FormGroup;
   registrosQuestoes: RegistroQuestoesTemporario[] = [];
+  cronometroSegundos = 0;
+  cronometroRodando = false;
+  private cronometroIntervalo: ReturnType<typeof setInterval> | null = null;
+  private cronometroInicioMs: number | null = null;
+  private cronometroAcumuladoMs = 0;
+  private tituloOriginal = 'RFX Estudos';
 
   constructor() {
     this.iconService.addIcon(
@@ -93,10 +97,58 @@ export class RegistroListaComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.tituloOriginal = document.title;
+    }
     this.inicializarFormulario();
     this.carregarDadosIniciais();
     this.escutarMudancaDeMateria();
     this.prepararEdicaoSeNecessario();
+  }
+
+  ngOnDestroy(): void {
+    this.pararIntervaloCronometro();
+    this.restaurarTituloNavegador();
+  }
+
+  get cronometroFormatado(): string {
+    const horas = Math.floor(this.cronometroSegundos / 3600);
+    const minutos = Math.floor((this.cronometroSegundos % 3600) / 60);
+    const segundos = this.cronometroSegundos % 60;
+    return [horas, minutos, segundos].map(valor => String(valor).padStart(2, '0')).join(':');
+  }
+
+  iniciarCronometro(): void {
+    if (this.cronometroRodando || !isPlatformBrowser(this.platformId)) return;
+
+    if (this.cronometroSegundos === 0) {
+      this.validateForm.patchValue({ horarioInicio: new Date() });
+    }
+
+    this.cronometroInicioMs = Date.now();
+    this.cronometroRodando = true;
+    this.atualizarCronometro();
+    this.cronometroIntervalo = setInterval(() => this.atualizarCronometro(), 1000);
+  }
+
+  pausarCronometro(): void {
+    if (!this.cronometroRodando) return;
+
+    this.acumularTempoCronometro();
+    this.cronometroRodando = false;
+    this.pararIntervaloCronometro();
+    this.atualizarTempoEstudado();
+    this.atualizarTituloNavegador();
+  }
+
+  zerarCronometro(): void {
+    this.pararIntervaloCronometro();
+    this.cronometroRodando = false;
+    this.cronometroInicioMs = null;
+    this.cronometroAcumuladoMs = 0;
+    this.cronometroSegundos = 0;
+    this.validateForm.patchValue({ tempoEstudado: null });
+    this.restaurarTituloNavegador();
   }
 
   inicializarFormulario(): void {
@@ -127,9 +179,7 @@ export class RegistroListaComponent implements OnInit {
   }
 
   carregarDadosIniciais(): void {
-    this.carregando = true;
-
-    // Busca os registros e as matérias em paralelo
+    // Busca as listas necessárias para preencher o formulário.
     this.materiaService.listarTodas().subscribe((materias) => {
       this.listaMaterias = materias;
       this.cdr.detectChanges();
@@ -160,18 +210,6 @@ export class RegistroListaComponent implements OnInit {
       },
     });
 
-    this.registroService.contarTodos().subscribe({
-      next: (total) => {
-        this.totalRegistros = total;
-        this.carregando = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Erro ao contar registros:', err);
-        this.carregando = false;
-        this.cdr.detectChanges();
-      },
-    });
   }
 
   get tituloFormulario(): string {
@@ -273,6 +311,7 @@ export class RegistroListaComponent implements OnInit {
     request$.subscribe({
       next: (registroSalvo) => {
         this.salvando = false;
+        this.zerarCronometro();
         this.message.success(
           this.modoEdicao ? 'Registro atualizado com sucesso.' : 'Registro salvo com sucesso.',
         );
@@ -455,6 +494,50 @@ export class RegistroListaComponent implements OnInit {
     const data = new Date();
     data.setHours(horas, minutos, segundos, 0);
     return data;
+  }
+
+  private atualizarCronometro(): void {
+    const tempoAtualMs = this.cronometroAcumuladoMs
+      + (this.cronometroInicioMs === null ? 0 : Date.now() - this.cronometroInicioMs);
+    this.cronometroSegundos = Math.floor(tempoAtualMs / 1000);
+    this.atualizarTempoEstudado();
+    this.atualizarTituloNavegador();
+    this.cdr.detectChanges();
+  }
+
+  private acumularTempoCronometro(): void {
+    if (this.cronometroInicioMs === null) return;
+    this.cronometroAcumuladoMs += Date.now() - this.cronometroInicioMs;
+    this.cronometroInicioMs = null;
+    this.cronometroSegundos = Math.floor(this.cronometroAcumuladoMs / 1000);
+  }
+
+  private atualizarTempoEstudado(): void {
+    const horas = Math.floor(this.cronometroSegundos / 3600);
+    const minutos = Math.floor((this.cronometroSegundos % 3600) / 60);
+    const segundos = this.cronometroSegundos % 60;
+    const tempo = new Date();
+    tempo.setHours(horas, minutos, segundos, 0);
+    this.validateForm.patchValue({ tempoEstudado: tempo }, { emitEvent: false });
+  }
+
+  private atualizarTituloNavegador(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const estado = this.cronometroRodando ? '▶' : '⏸';
+    document.title = `${estado} ${this.cronometroFormatado} · ${this.tituloOriginal}`;
+  }
+
+  private restaurarTituloNavegador(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      document.title = this.tituloOriginal;
+    }
+  }
+
+  private pararIntervaloCronometro(): void {
+    if (this.cronometroIntervalo !== null) {
+      clearInterval(this.cronometroIntervalo);
+      this.cronometroIntervalo = null;
+    }
   }
 
   // Adicione este método dentro da classe RegistroListaComponent

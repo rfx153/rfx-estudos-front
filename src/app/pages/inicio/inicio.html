@@ -75,29 +75,33 @@
       <div class="goals-heading">
         <div>
           <span class="eyebrow">Foco do dia</span>
-          <h2>Suas metas</h2>
+          <h2>Meta de hoje</h2>
         </div>
         <span class="goals-caption">Acompanhe seu progresso</span>
       </div>
 
       <div class="goals-grid">
-        <article class="goal-card">
-          <div class="goal-icon">Q</div>
+        <article class="goal-card" *ngIf="metaDiariaHoje as meta; else metaDiariaNaoCadastrada">
+          <div class="goal-icon">H</div>
           <div class="goal-content">
-            <div class="goal-title"><strong>Fazer 100 questões</strong><span>{{ questoesFeitasHoje }}/100</span></div>
-            <div class="goal-track"><span [style.width.%]="percentualMeta(questoesFeitasHoje, 100)"></span></div>
-            <small>{{ percentualMeta(questoesFeitasHoje, 100) }}% concluído</small>
+            <div class="goal-title">
+              <strong>Horas de estudo</strong>
+              <span>{{ formatarMinutos(meta.tempoRealizadoMinutos) }} / {{ formatarMinutos(meta.metaMinutos) }}</span>
+            </div>
+            <div class="goal-track"><span [style.width.%]="percentualMetaDiaria()"></span></div>
+            <small>{{ percentualMetaDiaria() }}% concluído</small>
           </div>
         </article>
 
-        <article class="goal-card">
-          <div class="goal-icon">M</div>
-          <div class="goal-content">
-            <div class="goal-title"><strong>Estudar 4 matérias</strong><span>{{ materiasEstudadasHoje }}/4</span></div>
-            <div class="goal-track"><span [style.width.%]="percentualMeta(materiasEstudadasHoje, 4)"></span></div>
-            <small>{{ percentualMeta(materiasEstudadasHoje, 4) }}% concluído</small>
-          </div>
-        </article>
+        <ng-template #metaDiariaNaoCadastrada>
+          <article class="goal-card">
+            <div class="goal-icon">H</div>
+            <div class="goal-content">
+              <div class="goal-title"><strong>Horas de estudo</strong></div>
+              <small>Nenhuma meta diária cadastrada para hoje.</small>
+            </div>
+          </article>
+        </ng-template>
       </div>
     </section>
 

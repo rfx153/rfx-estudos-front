@@ -102,6 +102,85 @@
   text-align: left;
 }
 
+.materia-header {
+  display: flex;
+  align-items: stretch;
+}
+
+.materia-header .materia-trigger {
+  flex: 1;
+}
+
+.materia-edit-button {
+  margin: 12px 14px 12px 0;
+  padding: 0 12px;
+  border: 1px solid var(--border, #d9d9d9);
+  border-radius: 6px;
+  background: var(--surface, #fff);
+  color: #1677ff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.materia-edit-button:hover {
+  border-color: #1677ff;
+}
+
+.materia-edit-panel {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(180px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 14px 18px;
+  border-top: 1px solid var(--border, #e5e7eb);
+  background: var(--surface-soft, #f8fafc);
+}
+
+.materia-edit-panel label {
+  display: grid;
+  gap: 5px;
+  color: var(--text-muted, #64748b);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.materia-edit-panel input,
+.materia-edit-panel select,
+.peso-prova input,
+.dificuldade select {
+  min-height: 36px;
+  padding: 5px 8px;
+  border: 1px solid var(--border, #d9d9d9);
+  border-radius: 6px;
+  background: var(--surface, #fff);
+  color: var(--text, #0f172a);
+  font: inherit;
+}
+
+.materia-edit-actions {
+  display: flex;
+  gap: 7px;
+}
+
+.materia-edit-actions button {
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid var(--border, #d9d9d9);
+  border-radius: 6px;
+  background: var(--surface, #fff);
+  color: var(--text, #0f172a);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.materia-edit-actions .primary {
+  border-color: #1677ff;
+  background: #1677ff;
+  color: #fff;
+}
+
 .materia-trigger:hover {
   background: var(--surface-soft, #f8fafc);
 }
@@ -256,6 +335,14 @@
 .dificuldade {
   font-weight: 600;
 }
+.peso-prova input {
+  width: 64px;
+  text-align: center;
+}
+.dificuldade select {
+  width: calc(100% - 10px);
+  font-size: 12px;
+}
 .materia-trigger small {
   display: block;
   margin-top: 3px;
@@ -282,5 +369,8 @@
   .edit-link {
     width: 100%;
     text-align: center;
+  }
+  .materia-edit-panel {
+    grid-template-columns: 1fr;
   }
 }

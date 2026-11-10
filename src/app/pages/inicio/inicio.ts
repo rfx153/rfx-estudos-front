@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { Registro, RegistroService } from '../../services/registro.service';
+import { MetaDiariaResumo, MetaDiariaService } from '../../services/meta-diaria.service';
 import { RegistroDetalhesModalComponent } from '../../shared/registro-detalhes-modal/registro-detalhes-modal';
 
 interface MateriaEstudadaHoje {
@@ -32,6 +33,7 @@ interface AtalhoEstudo {
 })
 export class InicioComponent implements OnInit {
   private registroService = inject(RegistroService);
+  private metaDiariaService = inject(MetaDiariaService);
   private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
 
@@ -46,6 +48,7 @@ export class InicioComponent implements OnInit {
   registrosSelecionados: Registro[] = [];
   saudacao = 'Bom dia, Rafael.';
   perfilVisivel = false;
+  metaDiariaHoje: MetaDiariaResumo | null = null;
   atalhosEstudo: AtalhoEstudo[] = [
     {
       nome: 'Estratégia novo',
@@ -70,6 +73,7 @@ export class InicioComponent implements OnInit {
   ngOnInit(): void {
     this.definirSaudacao();
     this.carregarResumoDeHoje();
+    this.carregarMetaDiariaDeHoje();
   }
 
   alternarPerfil(): void {
@@ -136,15 +140,34 @@ export class InicioComponent implements OnInit {
     return Number(horas) * 60 + Number(minutos);
   }
 
-  private formatarMinutos(totalMinutos: number): string {
+  formatarMinutos(totalMinutos: number): string {
     const horas = Math.floor(totalMinutos / 60);
     const minutos = totalMinutos % 60;
 
     return `${horas}h ${String(minutos).padStart(2, '0')}min`;
   }
 
-  percentualMeta(valor: number, meta: number): number {
-    return Math.min(Math.round((valor / meta) * 100), 100);
+  percentualMetaDiaria(): number {
+    if (!this.metaDiariaHoje?.metaMinutos) return 0;
+    return Math.min(
+      Math.round((this.metaDiariaHoje.tempoRealizadoMinutos / this.metaDiariaHoje.metaMinutos) * 100),
+      100
+    );
+  }
+
+  private carregarMetaDiariaDeHoje(): void {
+    const hoje = this.formatarDataLocal(new Date());
+    this.metaDiariaService.resumir(hoje, hoje).subscribe({
+      next: metas => {
+        this.metaDiariaHoje = metas[0] ?? null;
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao carregar meta diária:', erro);
+        this.metaDiariaHoje = null;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private calcularPercentualAcertos(acertos: number, feitas: number): string {

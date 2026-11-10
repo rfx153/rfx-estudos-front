@@ -360,6 +360,16 @@
                   formControlName="peso" /></nz-form-control
             ></nz-form-item>
             <nz-form-item
+              ><nz-form-label>Dificuldade</nz-form-label
+              ><nz-form-control
+                ><nz-select formControlName="dificuldade" nzAllowClear nzPlaceHolder="Selecione"
+                  ><nz-option [nzValue]="1" nzLabel="1 — Muito fácil"></nz-option
+                  ><nz-option [nzValue]="2" nzLabel="2 — Fácil"></nz-option
+                  ><nz-option [nzValue]="3" nzLabel="3 — Média"></nz-option
+                  ><nz-option [nzValue]="4" nzLabel="4 — Difícil"></nz-option
+                  ><nz-option [nzValue]="5" nzLabel="5 — Muito difícil"></nz-option></nz-select></nz-form-control
+            ></nz-form-item>
+            <nz-form-item
               ><nz-form-label>Ordem</nz-form-label
               ><nz-form-control
                 ><input nz-input type="number" min="1" formControlName="ordem" /></nz-form-control
