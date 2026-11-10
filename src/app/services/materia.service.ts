@@ -24,7 +24,11 @@ export class MateriaService {
   constructor(private http: HttpClient) { }
 
   // Busca todas as matérias do banco
-  listarTodas(): Observable<Materia[]> {
+  listarTodas(recarregar = false): Observable<Materia[]> {
+    if (recarregar) {
+      this.limparCache();
+    }
+
     if (!this.materiasCache$) {
       this.materiasCache$ = this.http.get<Materia[]>(this.apiUrl).pipe(shareReplay(1));
     }

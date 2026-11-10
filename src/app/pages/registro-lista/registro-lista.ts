@@ -103,6 +103,7 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
     this.inicializarFormulario();
     this.carregarDadosIniciais();
     this.escutarMudancaDeMateria();
+    this.escutarMudancaDePlanejamento();
     this.prepararEdicaoSeNecessario();
   }
 
@@ -180,8 +181,8 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
 
   carregarDadosIniciais(): void {
     // Busca as listas necessárias para preencher o formulário.
-    this.materiaService.listarTodas().subscribe((materias) => {
-      this.listaMaterias = materias;
+    this.materiaService.listarTodas(true).subscribe((materias) => {
+      this.mesclarMaterias(materias);
       this.cdr.detectChanges();
     });
     this.planejamentoService.listarTodos().subscribe({
@@ -258,8 +259,8 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
               this.modal.confirm({
                 nzTitle: 'Etapa não configurada',
                 nzContent:
-                  'Não existe uma etapa para este assunto e tipo de registro no planejamento. Deseja criá-la agora?',
-                nzOkText: 'Criar etapa',
+                  'Este assunto ainda não está configurado no planejamento. Deseja adicioná-lo à matéria existente e criar a etapa agora?',
+                nzOkText: 'Adicionar assunto',
                 nzCancelText: 'Salvar sem etapa',
                 nzOnOk: () => {
                   this.salvando = true;
@@ -274,7 +275,7 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
                       error: () => {
                         this.salvando = false;
                         this.message.error(
-                          'Não foi possível criar a etapa. Verifique se o assunto foi adicionado ao planejamento.',
+                          'Não foi possível adicionar o assunto. A matéria precisa existir no planejamento.',
                         );
                       },
                     });
@@ -413,6 +414,36 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private escutarMudancaDePlanejamento(): void {
+    this.validateForm.get('planejamento')?.valueChanges.subscribe((planejamentoId: number | null) => {
+      if (!planejamentoId) return;
+
+      this.planejamentoService.listarMaterias(planejamentoId).subscribe({
+        next: (materiasDoPlanejamento) => {
+          this.mesclarMaterias(materiasDoPlanejamento.map((item) => item.materia));
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Erro ao carregar matérias do planejamento:', err);
+        },
+      });
+    });
+  }
+
+  private mesclarMaterias(materias: Materia[]): void {
+    const materiasPorId = new Map<number, Materia>();
+
+    [...this.listaMaterias, ...materias].forEach((materia) => {
+      if (materia.id != null) {
+        materiasPorId.set(materia.id, materia);
+      }
+    });
+
+    this.listaMaterias = Array.from(materiasPorId.values()).sort((a, b) =>
+      a.nome.localeCompare(b.nome, 'pt-BR'),
+    );
   }
 
   private prepararEdicaoSeNecessario(): void {
