@@ -197,6 +197,18 @@
       </nz-form-item>
     </form>
 
+    <div class="disciplinas-search">
+      <label for="busca-disciplina">Buscar disciplina</label>
+      <input
+        id="busca-disciplina"
+        type="search"
+        nz-input
+        [(ngModel)]="buscaMateria"
+        [ngModelOptions]="{ standalone: true }"
+        (ngModelChange)="atualizarBuscaMateria()"
+        placeholder="Digite o nome da disciplina" />
+    </div>
+
     <div class="disciplinas-loading" *ngIf="carregando">Carregando disciplinas...</div>
     <div class="disciplinas-empty" *ngIf="!carregando && !materiasExibidas().length">Nenhuma disciplina encontrada.</div>
 

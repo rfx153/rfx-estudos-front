@@ -130,6 +130,20 @@
   min-width: 250px;
 }
 
+.disciplinas-search {
+  display: grid;
+  grid-template-columns: auto minmax(240px, 420px);
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.disciplinas-search label {
+  color: var(--text, #334155);
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .categoria-edit-select {
   min-width: 250px;
 }
@@ -368,6 +382,11 @@
   .categoria-edit-select {
     width: 100%;
     min-width: 0;
+  }
+
+  .disciplinas-search {
+    grid-template-columns: 1fr;
+    gap: 7px;
   }
 
   .manager-list {

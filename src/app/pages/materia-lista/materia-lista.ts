@@ -83,6 +83,7 @@ export class MateriaListaComponent implements OnInit {
   tipoRegistroForm!: FormGroup;
   paginaMateriasAtual = 1;
   materiasPorPagina = 10;
+  buscaMateria = '';
 
   constructor() {
     // 🔥 FORÇA O REGISTRO DOS ÍCONES DIRETO NO MOTOR DO NG-ZORRO
@@ -149,6 +150,11 @@ export class MateriaListaComponent implements OnInit {
 
   selecionarCategoria(id: number | null): void {
     this.categoriaSelecionadaId = id;
+    this.paginaMateriasAtual = 1;
+    this.fecharAssuntosSelecionados();
+  }
+
+  atualizarBuscaMateria(): void {
     this.paginaMateriasAtual = 1;
     this.fecharAssuntosSelecionados();
   }
@@ -517,11 +523,15 @@ export class MateriaListaComponent implements OnInit {
   }
 
   materiasExibidas(): Materia[] {
-    if (this.categoriaSelecionadaId === null) return this.listaMaterias;
+    const busca = this.normalizarTexto(this.buscaMateria);
 
-    return this.listaMaterias.filter(materia =>
-      materia.categorias?.some(categoria => categoria.id === this.categoriaSelecionadaId)
-    );
+    return this.listaMaterias.filter(materia => {
+      const pertenceCategoria = this.categoriaSelecionadaId === null
+        || materia.categorias?.some(categoria => categoria.id === this.categoriaSelecionadaId);
+      const correspondeBusca = !busca || this.normalizarTexto(materia.nome).includes(busca);
+
+      return pertenceCategoria && correspondeBusca;
+    });
   }
 
   obterMaterias(): void {
@@ -693,5 +703,13 @@ export class MateriaListaComponent implements OnInit {
     return ids
       .map(id => this.listaCategorias.find(categoria => categoria.id === id))
       .filter((categoria): categoria is Categoria => !!categoria);
+  }
+
+  private normalizarTexto(texto: string | null | undefined): string {
+    return (texto ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLocaleLowerCase('pt-BR')
+      .trim();
   }
 }
