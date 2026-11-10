@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -10,6 +10,7 @@ import { provideClientHydration } from '@angular/platform-browser';
 import { NZ_DATE_CONFIG, provideNzI18n, pt_BR } from 'ng-zorro-antd/i18n';
 import { registerLocaleData } from '@angular/common';
 import pt from '@angular/common/locales/pt';
+import { NzModalModule } from 'ng-zorro-antd/modal';
 
 // Registra o idioma português para formatação de datas, números, etc.
 registerLocaleData(pt);
@@ -22,6 +23,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(), // <-- Permite que o Angular converse com o seu Java (API)
     provideAnimationsAsync(), // <-- Garante que os efeitos visuais do NG-ZORRO funcionem lisos
     provideNzI18n(pt_BR), // <-- Força os componentes do Zorro a falarem Português
+    importProvidersFrom(NzModalModule),
     { provide: NZ_DATE_CONFIG, useValue: { firstDayOfWeek: 1 } },
   ]
 };
