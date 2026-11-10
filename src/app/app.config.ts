@@ -22,6 +22,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(), // <-- Permite que o Angular converse com o seu Java (API)
     provideAnimationsAsync(), // <-- Garante que os efeitos visuais do NG-ZORRO funcionem lisos
     provideNzI18n(pt_BR), // <-- Força os componentes do Zorro a falarem Português
-    { provide: NZ_DATE_CONFIG, useValue: { firstDayOfWeek: 0 } },
+    { provide: NZ_DATE_CONFIG, useValue: { firstDayOfWeek: 1 } },
   ]
 };

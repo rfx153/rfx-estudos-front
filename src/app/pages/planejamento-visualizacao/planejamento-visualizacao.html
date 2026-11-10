@@ -1,10 +1,12 @@
 <div class="planejamento-visualizacao page-card">
   <header class="page-heading">
     <div>
-      <h2>Planejamento</h2>
-      <p *ngIf="planejamento">{{ planejamento.nome }}</p>
+      <h2>{{ planejamento?.nome || 'Planejamentos' }}</h2>
+      <p *ngIf="planejamento">
+        {{ planejamento.descricao || 'Acompanhe as matérias, os assuntos e as etapas.' }}
+      </p>
       <p *ngIf="!planejamento && !carregando">
-        Escolha um planejamento para consultar seus assuntos.
+        Escolha um planejamento para visualizar ou editar.
       </p>
     </div>
     <div class="heading-actions">
@@ -51,6 +53,39 @@
   <a class="back-link" routerLink="/planejamento" *ngIf="!carregando && planejamento"
     >← Todos os planejamentos</a
   >
+  <section class="planning-overview" *ngIf="!carregando && planejamento">
+    <div class="overview-metrics">
+      <article>
+        <span>Matérias</span>
+        <strong>{{ totalMaterias }}</strong>
+      </article>
+      <article>
+        <span>Assuntos</span>
+        <strong>{{ totalAssuntos }}</strong>
+      </article>
+      <article>
+        <span>Etapas concluídas</span>
+        <strong>{{ etapasConcluidas }} <small>/ {{ totalEtapas }}</small></strong>
+      </article>
+      <article>
+        <span>Progresso</span>
+        <strong>{{ progressoPlanejamento }}%</strong>
+      </article>
+    </div>
+    <div
+      class="overview-progress"
+      role="progressbar"
+      aria-label="Progresso do planejamento"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      [attr.aria-valuenow]="progressoPlanejamento"
+    >
+      <span [style.width.%]="progressoPlanejamento"></span>
+    </div>
+    <small class="planning-deadline" *ngIf="planejamento.dataFimPrevista">
+      Data prevista: {{ planejamento.dataFimPrevista | date: 'dd/MM/yyyy' }}
+    </small>
+  </section>
   <section
     class="materias-lista"
     *ngIf="!carregando && (materias.length || blocosMaterias.length)"
@@ -66,11 +101,18 @@
             [attr.aria-expanded]="materia.aberta"
           >
             <span>
-              <strong>{{ materia.nome }}</strong>
+              <span class="item-title">
+                <strong>{{ materia.nome }}</strong>
+                <span class="item-type">Matéria</span>
+              </span>
               <small
-                >Peso na prova: {{ materia.peso ?? 'não informado' }} · Dificuldade:
+                >{{ quantidadeAssuntos(materia) }} assuntos · {{ progressoMateria(materia) }}%
+                concluído · Peso {{ materia.peso ?? '—' }} ·
                 {{ rotuloDificuldade(materia.dificuldade) }}</small
               >
+              <span class="item-progress" aria-hidden="true">
+                <span [style.width.%]="progressoMateria(materia)"></span>
+              </span>
             </span>
             <span class="chevron" [class.aberta]="materia.aberta" aria-hidden="true">⌄</span>
           </button>
@@ -121,10 +163,24 @@
               </div>
               <ng-container *ngFor="let grupo of materia.grupos">
                 <div class="grupo-linha" *ngIf="grupo.nome !== 'Assuntos'">
-                  {{ grupo.nome }}
+                  <span>{{ grupo.nome }}</span>
+                  <span class="inline-progress">
+                    <span class="inline-progress-track" aria-hidden="true">
+                      <span [style.width.%]="progressoGrupoAssuntos(grupo)"></span>
+                    </span>
+                    <strong>{{ progressoGrupoAssuntos(grupo) }}%</strong>
+                  </span>
                 </div>
                 <div class="assunto-linha" *ngFor="let assunto of grupo.assuntos">
-                  <div><strong>{{ assunto.nome }}</strong></div>
+                  <div class="assunto-identificacao">
+                    <strong>{{ assunto.nome }}</strong>
+                    <span class="inline-progress">
+                      <span class="inline-progress-track" aria-hidden="true">
+                        <span [style.width.%]="progressoAssunto(assunto)"></span>
+                      </span>
+                      <small>{{ progressoAssunto(assunto) }}%</small>
+                    </span>
+                  </div>
                   <div class="etapa-status" [class.ativa]="etapaConcluida(assunto, 'assunto')" [class.andamento]="etapaEmAndamento(assunto, 'assunto')" [class.salvando]="etapaSendoSalva(assunto, 'assunto')">
                     <select aria-label="Status de Assunto" [value]="statusEtapa(assunto, 'assunto')" [disabled]="etapaSendoSalva(assunto, 'assunto')" (change)="alterarStatusEtapa(assunto, 'assunto', $any($event.target).value)">
                       <option value="NAO_INICIADO">Não iniciado</option><option value="EM_ANDAMENTO">Em andamento</option><option value="CONCLUIDO">Concluído</option>
@@ -197,8 +253,17 @@
           [attr.aria-expanded]="bloco.aberto"
         >
           <span>
-            <strong>{{ bloco.nome }}</strong>
-            <small>Peso: {{ bloco.peso ?? 'não informado' }} · Dificuldade: {{ rotuloDificuldade(bloco.dificuldade) }}</small>
+            <span class="item-title">
+              <strong>{{ bloco.nome }}</strong>
+              <span class="item-type block">Bloco</span>
+            </span>
+            <small
+              >{{ bloco.materias.length }} matérias · {{ progressoBlocoMateria(bloco) }}% concluído · Peso {{ bloco.peso ?? '—' }} ·
+              {{ rotuloDificuldade(bloco.dificuldade) }}</small
+            >
+            <span class="item-progress block" aria-hidden="true">
+              <span [style.width.%]="progressoBlocoMateria(bloco)"></span>
+            </span>
           </span>
           <span class="chevron" [class.aberta]="bloco.aberto" aria-hidden="true">⌄</span>
         </button>

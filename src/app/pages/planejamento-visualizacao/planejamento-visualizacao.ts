@@ -102,6 +102,32 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
   dificuldadeGrupoMateriaEdicao: number | null = null;
   salvandoGrupoMateria = false;
 
+  get totalMaterias(): number {
+    return this.todasAsMaterias().length;
+  }
+
+  get totalAssuntos(): number {
+    return this.todasAsMaterias().reduce(
+      (total, materia) => total + this.quantidadeAssuntos(materia),
+      0,
+    );
+  }
+
+  get totalEtapas(): number {
+    return this.todosOsAssuntos().reduce((total, assunto) => total + assunto.etapas.length, 0);
+  }
+
+  get etapasConcluidas(): number {
+    return this.todosOsAssuntos().reduce(
+      (total, assunto) => total + assunto.etapas.filter((etapa) => etapa.concluida).length,
+      0,
+    );
+  }
+
+  get progressoPlanejamento(): number {
+    return this.totalEtapas ? Math.round((this.etapasConcluidas / this.totalEtapas) * 100) : 0;
+  }
+
   ngOnInit(): void {
     this.registroService.listarTiposRegistro().subscribe({
       next: (tipos) => (this.tiposRegistro = tipos),
@@ -191,6 +217,35 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
 
   alternarBlocoMateria(bloco: BlocoMateriaVisualizacao): void {
     bloco.aberto = !bloco.aberto;
+  }
+
+  quantidadeAssuntos(materia: MateriaVisualizacao): number {
+    return materia.grupos.reduce((total, grupo) => total + grupo.assuntos.length, 0);
+  }
+
+  progressoMateria(materia: MateriaVisualizacao): number {
+    const etapas = materia.grupos.flatMap((grupo) =>
+      grupo.assuntos.flatMap((assunto) => assunto.etapas),
+    );
+    if (!etapas.length) return 0;
+    return Math.round((etapas.filter((etapa) => etapa.concluida).length / etapas.length) * 100);
+  }
+
+  progressoBlocoMateria(bloco: BlocoMateriaVisualizacao): number {
+    const etapas = bloco.materias.flatMap((materia) =>
+      materia.grupos.flatMap((grupo) =>
+        grupo.assuntos.flatMap((assunto) => assunto.etapas),
+      ),
+    );
+    return this.calcularProgresso(etapas);
+  }
+
+  progressoGrupoAssuntos(grupo: GrupoVisualizacao): number {
+    return this.calcularProgresso(grupo.assuntos.flatMap((assunto) => assunto.etapas));
+  }
+
+  progressoAssunto(assunto: AssuntoVisualizacao): number {
+    return this.calcularProgresso(assunto.etapas);
   }
 
   editarGrupoMateria(grupo: BlocoMateriaVisualizacao): void {
@@ -444,6 +499,21 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
 
   private valorDeUmACincoValido(valor?: number | null): boolean {
     return valor == null || (Number.isInteger(Number(valor)) && Number(valor) >= 1 && Number(valor) <= 5);
+  }
+
+  private calcularProgresso(etapas: EtapaVisualizacao[]): number {
+    if (!etapas.length) return 0;
+    return Math.round((etapas.filter((etapa) => etapa.concluida).length / etapas.length) * 100);
+  }
+
+  private todasAsMaterias(): MateriaVisualizacao[] {
+    return [...this.materias, ...this.blocosMaterias.flatMap((bloco) => bloco.materias)];
+  }
+
+  private todosOsAssuntos(): AssuntoVisualizacao[] {
+    return this.todasAsMaterias().flatMap((materia) =>
+      materia.grupos.flatMap((grupo) => grupo.assuntos),
+    );
   }
 
   private carregarMaterias(

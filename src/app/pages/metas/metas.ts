@@ -385,8 +385,7 @@ export class MetasComponent implements OnInit {
     let inicio: Date;
     let fim: Date;
     if (this.periodo === 'SEMANAL') {
-      inicio = new Date(referencia);
-      inicio.setDate(referencia.getDate() - referencia.getDay());
+      inicio = this.inicioDaSemana(referencia);
       fim = new Date(inicio);
       fim.setDate(inicio.getDate() + 6);
     } else {
@@ -400,8 +399,7 @@ export class MetasComponent implements OnInit {
 
   private atualizarPeriodoDiario(): void {
     const referencia = new Date(this.referenciaDiaria);
-    const inicio = new Date(referencia);
-    inicio.setDate(referencia.getDate() - referencia.getDay());
+    const inicio = this.inicioDaSemana(referencia);
     const fim = new Date(inicio);
     fim.setDate(inicio.getDate() + 6);
     this.inicioDiarias = formatDate(inicio, 'yyyy-MM-dd', 'en-US');
@@ -411,13 +409,19 @@ export class MetasComponent implements OnInit {
 
   private atualizarPeriodoSemanal(): void {
     const referencia = new Date(this.referenciaSemanal);
-    const inicio = new Date(referencia);
-    inicio.setDate(referencia.getDate() - referencia.getDay());
+    const inicio = this.inicioDaSemana(referencia);
     const fim = new Date(inicio);
     fim.setDate(inicio.getDate() + 6);
     this.inicioSemanal = formatDate(inicio, 'yyyy-MM-dd', 'en-US');
     this.fimSemanal = formatDate(fim, 'yyyy-MM-dd', 'en-US');
     this.carregarMetaSemanal();
+  }
+
+  private inicioDaSemana(referencia: Date): Date {
+    const inicio = new Date(referencia);
+    const diasDesdeSegunda = (referencia.getDay() + 6) % 7;
+    inicio.setDate(referencia.getDate() - diasDesdeSegunda);
+    return inicio;
   }
 
   private carregarMetaSemanal(): void {
