@@ -5,10 +5,40 @@
       <h1>Metas de estudo</h1>
       <p>O progresso é calculado automaticamente a partir dos registros salvos.</p>
     </div>
-    <button class="primary nova-meta" type="button" (click)="abrirCriacao()">+ Nova meta semanal</button>
+    <button *ngIf="tipoMeta === 'DIARIA'" class="primary nova-meta" type="button" (click)="abrirCriacaoDiaria()">+ Nova meta diária</button>
+    <button *ngIf="tipoMeta === 'SEMANAL' && !metaSemanal" class="primary nova-meta" type="button" (click)="abrirCriacaoSemanal()">+ Nova meta semanal</button>
+    <button *ngIf="tipoMeta === 'POR_MATERIA'" class="primary nova-meta" type="button" (click)="abrirCriacao()">+ Nova meta semanal</button>
   </header>
 
-  <section class="periodo-card" aria-label="Período das metas">
+  <nav class="tipo-meta-seletor" aria-label="Tipo de meta">
+    <button type="button" [class.ativo]="tipoMeta === 'DIARIA'" (click)="mudarTipoMeta('DIARIA')">Metas diárias</button>
+    <button type="button" [class.ativo]="tipoMeta === 'SEMANAL'" (click)="mudarTipoMeta('SEMANAL')">Metas semanais</button>
+    <button type="button" [class.ativo]="tipoMeta === 'POR_MATERIA'" (click)="mudarTipoMeta('POR_MATERIA')">Metas por matéria</button>
+  </nav>
+
+  <section *ngIf="tipoMeta === 'DIARIA'" class="periodo-card" aria-label="Semana das metas diárias">
+    <div class="periodo-controles">
+      <button type="button" (click)="navegarDiarias(-1)" aria-label="Semana anterior">‹</button>
+      <div>
+        <p class="eyebrow">Metas diárias</p>
+        <h2>{{ tituloPeriodoDiario }}</h2>
+      </div>
+      <button type="button" (click)="navegarDiarias(1)" aria-label="Próxima semana">›</button>
+    </div>
+  </section>
+
+  <section *ngIf="tipoMeta === 'SEMANAL'" class="periodo-card" aria-label="Semana da meta de horas">
+    <div class="periodo-controles">
+      <button type="button" (click)="navegarSemanal(-1)" aria-label="Semana anterior">‹</button>
+      <div>
+        <p class="eyebrow">Meta semanal de horas</p>
+        <h2>{{ tituloPeriodoSemanal }}</h2>
+      </div>
+      <button type="button" (click)="navegarSemanal(1)" aria-label="Próxima semana">›</button>
+    </div>
+  </section>
+
+  <section *ngIf="tipoMeta === 'POR_MATERIA'" class="periodo-card" aria-label="Período das metas">
     <div class="periodo-controles">
       <button type="button" (click)="navegar(-1)" aria-label="Período anterior">‹</button>
       <div>
@@ -23,9 +53,55 @@
   </section>
 
   <p *ngIf="erro" class="mensagem erro">{{ erro }}</p>
-  <p *ngIf="carregando" class="mensagem">Carregando metas...</p>
+  <p *ngIf="tipoMeta === 'POR_MATERIA' && carregando" class="mensagem">Carregando metas...</p>
+  <p *ngIf="tipoMeta === 'DIARIA' && carregandoDiarias" class="mensagem">Carregando metas diárias...</p>
+  <p *ngIf="tipoMeta === 'SEMANAL' && carregandoSemanal" class="mensagem">Carregando meta semanal...</p>
 
-  <section *ngIf="!carregando" class="metas-lista">
+  <section *ngIf="tipoMeta === 'DIARIA' && !carregandoDiarias" class="metas-lista">
+    <article *ngFor="let meta of metasDiarias" class="meta-item meta-diaria-item">
+      <div class="meta-cabecalho">
+        <div>
+          <h2>{{ formatarData(meta.data) }}</h2>
+          <p><strong>Falta: {{ formatarDuracao(restanteDiaria(meta)) }}</strong> · Meta: {{ formatarDuracao(meta.metaMinutos) }}</p>
+        </div>
+        <div class="acoes">
+          <a routerLink="/novo-registro">Iniciar</a>
+          <button type="button" (click)="editarDiaria(meta)">Editar</button>
+          <button type="button" class="remover" (click)="excluirDiaria(meta)">Remover</button>
+        </div>
+      </div>
+      <div class="barra" [attr.aria-label]="porcentagemDiaria(meta).toFixed(1) + '% concluído'">
+        <span [style.width.%]="porcentagemDiaria(meta)"></span>
+        <strong>{{ porcentagemDiaria(meta) | number:'1.0-1' }}%</strong>
+      </div>
+      <small>{{ formatarDuracao(meta.tempoRealizadoMinutos) }} estudados no dia</small>
+    </article>
+    <p *ngIf="!metasDiarias.length" class="vazio">Nenhuma meta diária cadastrada nesta semana.</p>
+  </section>
+
+  <section *ngIf="tipoMeta === 'SEMANAL' && !carregandoSemanal" class="metas-lista">
+    <article *ngIf="metaSemanal as meta" class="meta-item">
+      <div class="meta-cabecalho">
+        <div>
+          <h2>Total de estudo da semana</h2>
+          <p><strong>Falta: {{ formatarDuracao(restanteSemanal(meta)) }}</strong> · Meta: {{ formatarDuracao(meta.metaMinutos) }}</p>
+        </div>
+        <div class="acoes">
+          <a routerLink="/novo-registro">Iniciar</a>
+          <button type="button" (click)="editarSemanal(meta)">Editar</button>
+          <button type="button" class="remover" (click)="excluirSemanal(meta)">Remover</button>
+        </div>
+      </div>
+      <div class="barra" [attr.aria-label]="porcentagemSemanal(meta).toFixed(1) + '% concluído'">
+        <span [style.width.%]="porcentagemSemanal(meta)"></span>
+        <strong>{{ porcentagemSemanal(meta) | number:'1.0-1' }}%</strong>
+      </div>
+      <small>{{ formatarDuracao(meta.tempoRealizadoMinutos) }} estudados na semana, considerando todas as matérias</small>
+    </article>
+    <p *ngIf="!metaSemanal" class="vazio">Nenhuma meta de horas cadastrada para esta semana.</p>
+  </section>
+
+  <section *ngIf="tipoMeta === 'POR_MATERIA' && !carregando" class="metas-lista">
     <article *ngFor="let meta of resumo" class="meta-item">
       <div class="meta-cabecalho">
         <div>
@@ -46,6 +122,48 @@
     </article>
     <p *ngIf="!resumo.length" class="vazio">Nenhuma meta cadastrada. Adicione uma meta semanal para começar.</p>
   </section>
+
+  <div *ngIf="modalDiariaAberto" class="modal-fundo" (click)="cancelarEdicaoDiaria()">
+    <form class="modal" (ngSubmit)="salvarDiaria()" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <p class="eyebrow">Meta diária</p>
+          <h2>{{ metaDiariaEmEdicao ? 'Editar meta diária' : 'Nova meta diária' }}</h2>
+        </div>
+        <button type="button" class="fechar" (click)="cancelarEdicaoDiaria()" aria-label="Fechar">×</button>
+      </header>
+      <label>Data
+        <input type="date" name="dataMetaDiaria" [(ngModel)]="formularioDiario.data" required />
+      </label>
+      <label>Horas de estudo
+        <input type="number" name="horasMetaDiaria" min="0.25" step="0.25" [(ngModel)]="formularioDiario.horas" required />
+      </label>
+      <footer>
+        <button type="button" (click)="cancelarEdicaoDiaria()">Cancelar</button>
+        <button class="primary" type="submit" [disabled]="salvandoDiaria">{{ salvandoDiaria ? 'Salvando...' : 'Salvar meta' }}</button>
+      </footer>
+    </form>
+  </div>
+
+  <div *ngIf="modalSemanalAberto" class="modal-fundo" (click)="cancelarEdicaoSemanal()">
+    <form class="modal" (ngSubmit)="salvarSemanal()" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <p class="eyebrow">Meta semanal</p>
+          <h2>{{ metaSemanalEmEdicao ? 'Editar meta semanal de horas' : 'Nova meta semanal de horas' }}</h2>
+        </div>
+        <button type="button" class="fechar" (click)="cancelarEdicaoSemanal()" aria-label="Fechar">×</button>
+      </header>
+      <p class="modal-ajuda">Semana de {{ tituloPeriodoSemanal }}. A meta considera o total de todas as matérias.</p>
+      <label>Horas de estudo
+        <input type="number" name="horasMetaSemanal" min="0.25" step="0.25" [(ngModel)]="horasMetaSemanal" required />
+      </label>
+      <footer>
+        <button type="button" (click)="cancelarEdicaoSemanal()">Cancelar</button>
+        <button class="primary" type="submit" [disabled]="salvandoSemanal">{{ salvandoSemanal ? 'Salvando...' : 'Salvar meta' }}</button>
+      </footer>
+    </form>
+  </div>
 
   <div *ngIf="modalAberto" class="modal-fundo" (click)="cancelarEdicao()">
     <form class="modal" (ngSubmit)="salvar()" (click)="$event.stopPropagation()">
