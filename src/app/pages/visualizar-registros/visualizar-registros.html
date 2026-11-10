@@ -50,6 +50,10 @@
 
         <div class="history-stats">
           <div>
+            <small>Início</small>
+            <strong>{{ registro.horarioInicio?.substring(0, 5) || 'Não informado' }}</strong>
+          </div>
+          <div>
             <small>Tempo</small>
             <strong>{{ registro.tempoEstudado || '00:00' }}</strong>
           </div>

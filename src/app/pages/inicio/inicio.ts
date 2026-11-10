@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
@@ -34,7 +33,6 @@ interface AtalhoEstudo {
 export class InicioComponent implements OnInit {
   private registroService = inject(RegistroService);
   private cdr = inject(ChangeDetectorRef);
-  private platformId = inject(PLATFORM_ID);
   private router = inject(Router);
 
   carregando = true;
@@ -47,8 +45,6 @@ export class InicioComponent implements OnInit {
   detalhesTitulo = 'Detalhes do estudo';
   registrosSelecionados: Registro[] = [];
   saudacao = 'Bom dia, Rafael.';
-  fraseMotivacional = '';
-  somBloqueado = false;
   perfilVisivel = false;
   atalhosEstudo: AtalhoEstudo[] = [
     {
@@ -71,27 +67,9 @@ export class InicioComponent implements OnInit {
     }
   ];
 
-  private readonly frasesMotivacionais = [
-    'Um bloco bem estudado hoje vira tranquilidade na prova.',
-    'Constância ganha de intensidade quando o plano é passar.',
-    'Cada questão corrigida é um erro a menos no dia decisivo.',
-    'Estudo registrado é progresso que você consegue enxergar.',
-    'A aprovação gosta de rotina, revisão e um pouco de teimosia.',
-    'Hoje não precisa ser perfeito; precisa contar.',
-    'Quem mede o estudo aprende a ajustar a rota.',
-    'Pequenas sessões bem feitas empilham resultados grandes.'
-  ];
-
   ngOnInit(): void {
     this.definirSaudacao();
-    this.sortearFraseMotivacional();
     this.carregarResumoDeHoje();
-    this.tentarTocarSomInicial();
-  }
-
-  tocarSomRetro(): void {
-    this.tocarChimeRetro();
-    this.somBloqueado = false;
   }
 
   alternarPerfil(): void {
@@ -175,11 +153,6 @@ export class InicioComponent implements OnInit {
     return `${Math.round((acertos / feitas) * 100)}%`;
   }
 
-  private sortearFraseMotivacional(): void {
-    const indice = Math.floor(Math.random() * this.frasesMotivacionais.length);
-    this.fraseMotivacional = this.frasesMotivacionais[indice];
-  }
-
   private definirSaudacao(): void {
     const hora = new Date().getHours();
 
@@ -202,60 +175,6 @@ export class InicioComponent implements OnInit {
     const dia = String(data.getDate()).padStart(2, '0');
 
     return `${ano}-${mes}-${dia}`;
-  }
-
-  private tentarTocarSomInicial(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-
-    setTimeout(() => {
-      try {
-        this.tocarChimeRetro();
-      } catch {
-        this.somBloqueado = true;
-        this.cdr.detectChanges();
-      }
-    }, 450);
-  }
-
-  private tocarChimeRetro(): void {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    const audioContext = new AudioContextClass();
-
-    if (audioContext.state === 'suspended') {
-      audioContext.resume().catch(() => {
-        this.somBloqueado = true;
-        this.cdr.detectChanges();
-      });
-    }
-
-    const masterGain = audioContext.createGain();
-    masterGain.gain.setValueAtTime(0.08, audioContext.currentTime);
-    masterGain.connect(audioContext.destination);
-
-    const notas = [
-      { frequencia: 523.25, inicio: 0, duracao: 0.16 },
-      { frequencia: 659.25, inicio: 0.13, duracao: 0.2 },
-      { frequencia: 783.99, inicio: 0.32, duracao: 0.34 },
-      { frequencia: 1046.5, inicio: 0.52, duracao: 0.42 }
-    ];
-
-    notas.forEach(nota => {
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      const inicio = audioContext.currentTime + nota.inicio;
-      const fim = inicio + nota.duracao;
-
-      oscillator.type = 'triangle';
-      oscillator.frequency.setValueAtTime(nota.frequencia, inicio);
-      gain.gain.setValueAtTime(0, inicio);
-      gain.gain.linearRampToValueAtTime(0.9, inicio + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, fim);
-
-      oscillator.connect(gain);
-      gain.connect(masterGain);
-      oscillator.start(inicio);
-      oscillator.stop(fim + 0.03);
-    });
   }
 
   private agruparMateriasEAssuntos(registros: Registro[]): MateriaEstudadaHoje[] {

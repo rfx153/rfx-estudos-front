@@ -36,6 +36,10 @@
             <span>{{ registro.planejamento?.nome || 'Não informado' }}</span>
           </div>
           <div>
+            <small>Horário de início</small>
+            <span>{{ registro.horarioInicio?.substring(0, 5) || 'Não informado' }}</span>
+          </div>
+          <div>
             <small>Tempo</small>
             <span>{{ registro.tempoEstudado || 'Não informado' }}</span>
           </div>

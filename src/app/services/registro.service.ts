@@ -30,6 +30,7 @@ export interface Registro {
   questoesFeitas: number;
   questoesAcertadas: number;
   dataEstudo: string; // LocalDate mapeia como string (YYYY-MM-DD)
+  horarioInicio: string; // LocalTime mapeia como string (HH:mm:ss)
   tempoEstudado: string; // LocalTime mapeia como string (HH:mm:ss)
   observacoes?: string;
 }

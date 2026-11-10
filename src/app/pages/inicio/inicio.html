@@ -5,23 +5,7 @@
       <strong class="home-greeting">{{ saudacao }}</strong>
       <h1>Resumo dos estudos</h1>
       <p>Acompanhe o ritmo do dia com os principais indicadores da sua sessão.</p>
-      <blockquote class="study-quote">{{ fraseMotivacional }}</blockquote>
     </div>
-
-    <div class="retro-widget" aria-hidden="true">
-      <div class="pixel-spark spark-one"></div>
-      <div class="pixel-spark spark-two"></div>
-      <div class="pixel-orb">
-        <span class="pixel-shine"></span>
-        <span class="pixel-eye eye-left"></span>
-        <span class="pixel-eye eye-right"></span>
-      </div>
-      <div class="pixel-shadow"></div>
-    </div>
-
-    <button class="sound-button" type="button" *ngIf="somBloqueado" (click)="tocarSomRetro()">
-      Tocar som retrô
-    </button>
 
     <button class="profile-button" type="button" (click)="alternarPerfil()">
       {{ perfilVisivel ? 'Ocultar perfil' : 'Perfil' }}

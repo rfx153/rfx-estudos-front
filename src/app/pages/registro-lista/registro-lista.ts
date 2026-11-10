@@ -110,6 +110,7 @@ export class RegistroListaComponent implements OnInit {
       questoesFeitas: [0],
       questoesAcertadas: [0],
       dataEstudo: [new Date(), [Validators.required]],
+      horarioInicio: [new Date(), [Validators.required]],
       tempoEstudado: [null, [Validators.required]],
       observacoes: [null],
     });
@@ -198,6 +199,9 @@ export class RegistroListaComponent implements OnInit {
         // `toISOString()` converte para UTC e pode mudar o dia no fuso de Brasília.
         // Como o backend espera um LocalDate, envie a data usando os campos locais.
         dataEstudo: formValue.dataEstudo ? this.formatarDataLocal(formValue.dataEstudo) : null,
+        horarioInicio: formValue.horarioInicio
+          ? formValue.horarioInicio.toTimeString().split(' ')[0]
+          : null,
         tempoEstudado: formValue.tempoEstudado
           ? formValue.tempoEstudado.toTimeString().split(' ')[0]
           : null,
@@ -279,6 +283,7 @@ export class RegistroListaComponent implements OnInit {
 
         this.validateForm.reset({
           dataEstudo: new Date(),
+          horarioInicio: new Date(),
           questoesFeitas: 0,
           questoesAcertadas: 0,
           concluido: false,
@@ -392,6 +397,7 @@ export class RegistroListaComponent implements OnInit {
         questoesFeitas: registro.questoesFeitas ?? 0,
         questoesAcertadas: registro.questoesAcertadas ?? 0,
         dataEstudo: this.dataParaFormulario(registro.dataEstudo),
+        horarioInicio: this.horaParaFormulario(registro.horarioInicio),
         tempoEstudado: this.horaParaFormulario(registro.tempoEstudado),
         observacoes: registro.observacoes ?? null,
       },
