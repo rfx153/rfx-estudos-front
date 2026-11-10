@@ -50,10 +50,14 @@
       <p class="cycle-notes" *ngIf="quadro.ciclo.observacoes">{{ quadro.ciclo.observacoes }}</p>
 
       <ol class="subjects-grid" *ngIf="quadro.itens.length; else cicloSemMaterias">
-        <li *ngFor="let item of quadro.itens; let indice = index" [class.inactive]="!item.ativo">
+        <li
+          *ngFor="let item of quadro.itens; let indice = index"
+          [class.inactive]="!item.ativo"
+          [class.completed]="!!item.registroConclusao">
           <span class="subject-order">{{ indice + 1 }}</span>
           <strong>{{ nomeItem(item) }}</strong>
-          <small>{{ tipoItem(item) }} · {{ item.ativo ? 'Na rotação' : 'Pausado' }}</small>
+          <small *ngIf="!item.registroConclusao">{{ tipoItem(item) }} · {{ item.ativo ? 'Na rotação' : 'Pausado' }}</small>
+          <small class="completion-time" *ngIf="item.registroConclusao">{{ tipoItem(item) }} · {{ conclusaoItem(item) }}</small>
         </li>
       </ol>
 

@@ -17,7 +17,8 @@
 .cycle-status.paused { background: #e2e8f0; color: #64748b; }
 .cycle-notes { margin: 0; padding: 11px 17px; border-bottom: 1px solid var(--border, #e5e7eb); color: var(--text-muted, #64748b); font-size: 12px; }
 .subjects-grid { display: grid; gap: 1px; margin: 0; padding: 0; background: var(--border, #dfe3e8); list-style: none; }
-.subjects-grid li { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 9px; min-height: 48px; padding: 9px 12px; background: #bbf7d0; color: #14532d; }
+.subjects-grid li { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 9px; min-height: 48px; padding: 9px 12px; background: var(--surface, #fff); color: var(--text, #0f172a); }
+.subjects-grid li.completed { background: #bbf7d0; color: #14532d; }
 .subjects-grid li.inactive { background: var(--surface, #fff); color: var(--text-muted, #64748b); }
 .subject-order { display: grid; width: 25px; height: 25px; place-items: center; border-radius: 6px; background: rgba(255, 255, 255, .68); font-size: 11px; font-weight: 850; }
 .subjects-grid strong { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }

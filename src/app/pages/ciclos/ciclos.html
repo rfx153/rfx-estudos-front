@@ -102,7 +102,12 @@
             <h2>Itens do ciclo</h2>
             <p>Misture matérias e blocos; a ordem define o próximo item da alternância.</p>
           </div>
-          <span class="subject-count">{{ itensDoCiclo.length }} item(ns)</span>
+          <div class="sequence-heading-actions">
+            <span class="subject-count">{{ itensDoCiclo.length }} item(ns)</span>
+            <button nz-button type="button" [disabled]="reiniciando || !itensDoCiclo.length" (click)="reiniciarCiclo()">
+              {{ reiniciando ? 'Reiniciando...' : 'Reiniciar ciclo' }}
+            </button>
+          </div>
         </header>
 
         <form class="add-subject" [formGroup]="itemForm" (ngSubmit)="adicionarItem()">
@@ -137,11 +142,15 @@
         <div class="sequence-loading" *ngIf="carregandoItens">Carregando sequência...</div>
 
         <ol class="sequence-list" *ngIf="!carregandoItens && itensDoCiclo.length">
-          <li *ngFor="let item of itensDoCiclo; let indice = index" [class.inactive]="!item.ativo">
+          <li
+            *ngFor="let item of itensDoCiclo; let indice = index"
+            [class.inactive]="!item.ativo"
+            [class.completed]="!!item.registroConclusao">
             <span class="order-number">{{ indice + 1 }}</span>
             <div class="subject-copy">
               <strong>{{ nomeItem(item) }}</strong>
-              <small>{{ tipoItem(item) }} · {{ item.ativo ? 'Participa da sequência' : 'Temporariamente pausado' }}</small>
+              <small *ngIf="!item.registroConclusao">{{ tipoItem(item) }} · {{ item.ativo ? 'Participa da sequência' : 'Temporariamente pausado' }}</small>
+              <small class="completion-time" *ngIf="item.registroConclusao">{{ tipoItem(item) }} · {{ conclusaoItem(item) }}</small>
             </div>
             <div class="subject-actions">
               <button type="button" class="icon-button" [disabled]="indice === 0 || reordenando" aria-label="Mover item para cima" (click)="moverItem(indice, -1)">↑</button>

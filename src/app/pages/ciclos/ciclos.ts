@@ -48,6 +48,7 @@ export class CiclosComponent implements OnInit {
   adicionandoItem = false;
   excluindoCiclo = false;
   reordenando = false;
+  reiniciando = false;
 
   readonly cicloForm = this.fb.group({
     nome: ['', [Validators.required, Validators.maxLength(150)]],
@@ -292,6 +293,30 @@ export class CiclosComponent implements OnInit {
     });
   }
 
+  reiniciarCiclo(): void {
+    const cicloId = this.cicloSelecionado?.id;
+    if (!cicloId || this.reiniciando || !window.confirm('Iniciar uma nova rodada e desmarcar todos os itens?')) {
+      return;
+    }
+
+    this.reiniciando = true;
+    this.cicloService.reiniciar(cicloId).pipe(
+      finalize(() => {
+        this.reiniciando = false;
+        this.cdr.detectChanges();
+      }),
+    ).subscribe({
+      next: itens => {
+        this.itensDoCiclo = [...itens].sort((a, b) => a.ordem - b.ordem);
+        this.message.success('Nova rodada do ciclo iniciada.');
+      },
+      error: erro => {
+        console.error('Erro ao reiniciar ciclo:', erro);
+        this.message.error('Não foi possível reiniciar o ciclo.');
+      },
+    });
+  }
+
   materiaDisponivel(materia: Materia): boolean {
     return !!materia.id && this.itemDisponivel('MATERIA', materia.id);
   }
@@ -306,6 +331,13 @@ export class CiclosComponent implements OnInit {
 
   tipoItem(item: CicloItem): 'Matéria' | 'Bloco' {
     return item.materia ? 'Matéria' : 'Bloco';
+  }
+
+  conclusaoItem(item: CicloItem): string {
+    const registro = item.registroConclusao;
+    if (!registro?.dataEstudo || !registro.tempoEstudado) return '';
+    const [ano, mes, dia] = registro.dataEstudo.substring(0, 10).split('-');
+    return `Feito em ${dia}/${mes}/${ano} · ${registro.tempoEstudado.substring(0, 5)} de estudo`;
   }
 
   aoTrocarTipoItem(): void {

@@ -37,6 +37,9 @@ export class CicloService {
             itens: itens.map((item, indice) => ({ id: item.id, ordem: indice + 1 })),
         });
     }
+    reiniciar(cicloId) {
+        return this.http.put(`${this.apiUrl}/${cicloId}/reiniciar`, {});
+    }
     static ɵfac = function CicloService_Factory(__ngFactoryType__) { return new (__ngFactoryType__ || CicloService)(); };
     static ɵprov = /*@__PURE__*/ i0.ɵɵdefineInjectable({ token: CicloService, factory: CicloService.ɵfac, providedIn: 'root' });
 }

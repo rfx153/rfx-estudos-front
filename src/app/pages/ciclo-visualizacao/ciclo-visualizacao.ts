@@ -83,4 +83,11 @@ export class CicloVisualizacaoComponent implements OnInit {
   tipoItem(item: CicloItem): 'Matéria' | 'Bloco' {
     return item.materia ? 'Matéria' : 'Bloco';
   }
+
+  conclusaoItem(item: CicloItem): string {
+    const registro = item.registroConclusao;
+    if (!registro?.dataEstudo || !registro.tempoEstudado) return '';
+    const [ano, mes, dia] = registro.dataEstudo.substring(0, 10).split('-');
+    return `Feito em ${dia}/${mes}/${ano} · ${registro.tempoEstudado.substring(0, 5)} de estudo`;
+  }
 }

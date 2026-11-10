@@ -18,6 +18,11 @@ export interface CicloItem {
   id?: number;
   materia?: Materia | null;
   planejamentoGrupoMateria?: PlanejamentoGrupoMateria | null;
+  registroConclusao?: {
+    id?: number;
+    dataEstudo: string;
+    tempoEstudado: string;
+  } | null;
   ordem: number;
   ativo: boolean;
 }
@@ -78,5 +83,9 @@ export class CicloService {
     return this.http.put<CicloItem[]>(`${this.apiUrl}/${cicloId}/itens/ordem`, {
       itens: itens.map((item, indice) => ({ id: item.id, ordem: indice + 1 })),
     });
+  }
+
+  reiniciar(cicloId: number): Observable<CicloItem[]> {
+    return this.http.put<CicloItem[]>(`${this.apiUrl}/${cicloId}/reiniciar`, {});
   }
 }
