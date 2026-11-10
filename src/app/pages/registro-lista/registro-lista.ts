@@ -6,7 +6,6 @@ import {
   RegistroService,
   Registro,
   Assunto,
-  MaterialTipo,
   TipoRegistro,
 } from '../../services/registro.service';
 import { MateriaService, Materia } from '../../services/materia.service';
@@ -14,7 +13,6 @@ import { PlanejamentoService, Planejamento } from '../../services/planejamento.s
 import { MaterialGuia, MaterialGuiaService } from '../../services/material-guia.service';
 
 // Módulos do NG-ZORRO necessários para o formulário denso de registros
-import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzSelectModule } from 'ng-zorro-antd/select';
@@ -25,13 +23,9 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule, NzIconService } from 'ng-zorro-antd/icon';
 import {
   PlusOutline,
-  CalendarOutline,
-  ClockCircleOutline,
-  InfoCircleOutline,
   DeleteOutline,
 } from '@ant-design/icons-angular/icons';
 import { NzCardModule } from 'ng-zorro-antd/card'; // <-- INSTALE ESTE IMPORT
-import { NzTooltipModule } from 'ng-zorro-antd/tooltip'; // <-- INSTALE ESTE IMPORT
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 
@@ -47,7 +41,6 @@ interface RegistroQuestoesTemporario {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    NzTableModule,
     NzFormModule,
     NzInputModule,
     NzSelectModule,
@@ -57,7 +50,6 @@ interface RegistroQuestoesTemporario {
     NzButtonModule,
     NzIconModule,
     NzCardModule,
-    NzTooltipModule,
     NzModalModule,
   ],
   templateUrl: 'registro-lista.html',
@@ -76,7 +68,6 @@ export class RegistroListaComponent implements OnInit {
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
 
-  listaRegistros: Registro[] = [];
   totalRegistros = 0;
   listaMaterias: Materia[] = [];
   listaPlanejamentos: Planejamento[] = [];
@@ -84,13 +75,11 @@ export class RegistroListaComponent implements OnInit {
 
   // Listas fictícias iniciais (ajuste conforme criar os services delas depois)
   listaAssuntos: Assunto[] = [];
-  listaTiposMaterial: MaterialTipo[] = [];
   listaTiposRegistro: TipoRegistro[] = [];
 
   carregando = true;
   salvando = false;
   questoesAbaAberta = false;
-  etapasQraqrMarcadas = new Set<string>();
   modoEdicao = false;
   registroEditandoId: number | null = null;
   validateForm!: FormGroup;
@@ -99,7 +88,7 @@ export class RegistroListaComponent implements OnInit {
 
   constructor() {
     this.iconService.addIcon(
-      ...[PlusOutline, CalendarOutline, ClockCircleOutline, InfoCircleOutline, DeleteOutline],
+      ...[PlusOutline, DeleteOutline],
     );
   }
 
@@ -118,14 +107,10 @@ export class RegistroListaComponent implements OnInit {
       materialGuia: [null],
       tipoRegistro: [null, [Validators.required]],
       concluido: [false],
-      materialTipo: [null],
-      materialNome: [null],
-      puntoParada: [null],
       questoesFeitas: [0],
       questoesAcertadas: [0],
       dataEstudo: [new Date(), [Validators.required]],
       tempoEstudado: [null, [Validators.required]],
-      linkDocumento: [null],
       observacoes: [null],
     });
 
@@ -138,18 +123,6 @@ export class RegistroListaComponent implements OnInit {
       feitas: [0],
       acertadas: [0],
     });
-  }
-
-  alternarEtapaQraqr(etapa: string): void {
-    if (this.etapasQraqrMarcadas.has(etapa)) {
-      this.etapasQraqrMarcadas.delete(etapa);
-    } else {
-      this.etapasQraqrMarcadas.add(etapa);
-    }
-  }
-
-  etapaQraqrMarcada(etapa: string): boolean {
-    return this.etapasQraqrMarcadas.has(etapa);
   }
 
   carregarDadosIniciais(): void {
@@ -175,16 +148,6 @@ export class RegistroListaComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Erro ao carregar materiais-guia:', err),
-    });
-    //listar os tipos de materias
-    this.registroService.listarTiposMaterial().subscribe({
-      next: (tipos) => {
-        this.listaTiposMaterial = tipos;
-        this.cdr.detectChanges(); // Atualiza a tela com os dados novos do banco
-      },
-      error: (err) => {
-        console.error('Erro ao carregar tipos de material:', err);
-      },
     });
     this.registroService.listarTiposRegistro().subscribe({
       next: (tipos) => {
@@ -231,12 +194,6 @@ export class RegistroListaComponent implements OnInit {
         planejamento: formValue.planejamento ? ({ id: formValue.planejamento } as any) : null,
         materialGuia: formValue.materialGuia ? ({ id: formValue.materialGuia } as any) : null,
         tipoRegistro: formValue.tipoRegistro ? ({ id: formValue.tipoRegistro } as any) : null,
-        // Se materialTipo também for apenas ID no formulário, converta aqui também:
-        materialTipo:
-          formValue.materialTipo && typeof formValue.materialTipo !== 'object'
-            ? ({ id: formValue.materialTipo } as any)
-            : formValue.materialTipo,
-
         // Formatação de datas e horas
         // `toISOString()` converte para UTC e pode mudar o dia no fuso de Brasília.
         // Como o backend espera um LocalDate, envie a data usando os campos locais.
@@ -432,14 +389,10 @@ export class RegistroListaComponent implements OnInit {
         materialGuia: registro.materialGuia?.id ?? null,
         tipoRegistro: registro.tipoRegistro?.id ?? null,
         concluido: registro.concluido ?? false,
-        materialTipo: registro.materialTipo?.id ?? null,
-        materialNome: registro.materialNome ?? null,
-        puntoParada: registro.puntoParada ?? null,
         questoesFeitas: registro.questoesFeitas ?? 0,
         questoesAcertadas: registro.questoesAcertadas ?? 0,
         dataEstudo: this.dataParaFormulario(registro.dataEstudo),
         tempoEstudado: this.horaParaFormulario(registro.tempoEstudado),
-        linkDocumento: registro.linkDocumento ?? null,
         observacoes: registro.observacoes ?? null,
       },
       { emitEvent: false },

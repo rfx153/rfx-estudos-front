@@ -7,10 +7,8 @@ export class RegistroService {
     http = inject(HttpClient);
     // 🌍 1. Centralizando as URLs base dinâmicas
     apiUrl = `${environment.apiUrl}/registros`;
-    materialTiposUrl = `${environment.apiUrl}/material-tipos`;
     tiposRegistroUrl = `${environment.apiUrl}/tipos-registro`;
     assuntosUrl = `${environment.apiUrl}/assuntos`; // Ajuste se o endpoint de assuntos no seu Java for diferente
-    materialTiposCache$;
     tiposRegistroCache$;
     assuntosCache = new Map();
     // ==========================================
@@ -74,16 +72,6 @@ export class RegistroService {
     }
     excluirAssunto(id) {
         return this.http.delete(`${this.assuntosUrl}/${id}`).pipe(tap(() => this.assuntosCache.clear()));
-    }
-    // ==========================================
-    // 🛠️ MÉTODOS DE TIPOS DE MATERIAL
-    // ==========================================
-    listarTiposMaterial() {
-        // 🔥 Mudou de localhost para a variável que lê do environment
-        if (!this.materialTiposCache$) {
-            this.materialTiposCache$ = this.http.get(this.materialTiposUrl).pipe(shareReplay(1));
-        }
-        return this.materialTiposCache$;
     }
     listarTiposRegistro() {
         if (!this.tiposRegistroCache$) {

@@ -13,11 +13,6 @@ export interface Assunto {
   nome: string;
 }
 
-export interface MaterialTipo {
-  id: number;
-  nome: string;
-}
-
 export interface TipoRegistro {
   id: number;
   nome: string;
@@ -27,19 +22,15 @@ export interface Registro {
   id?: number;
   materia: Materia;
   assunto: Assunto;
-  materialTipo?: MaterialTipo | null;
   tipoRegistro?: TipoRegistro;
   concluido?: boolean;
   planejamentoEtapa?: { id?: number };
   planejamento?: Planejamento;
   materialGuia?: MaterialGuia;
-  materialNome?: string;
-  puntoParada?: string;
   questoesFeitas: number;
   questoesAcertadas: number;
   dataEstudo: string; // LocalDate mapeia como string (YYYY-MM-DD)
   tempoEstudado: string; // LocalTime mapeia como string (HH:mm:ss)
-  linkDocumento?: string;
   observacoes?: string;
 }
 
@@ -59,10 +50,8 @@ export class RegistroService {
 
   // 🌍 1. Centralizando as URLs base dinâmicas
   private apiUrl = `${environment.apiUrl}/registros`;
-  private materialTiposUrl = `${environment.apiUrl}/material-tipos`;
   private tiposRegistroUrl = `${environment.apiUrl}/tipos-registro`;
   private assuntosUrl = `${environment.apiUrl}/assuntos`; // Ajuste se o endpoint de assuntos no seu Java for diferente
-  private materialTiposCache$?: Observable<MaterialTipo[]>;
   private tiposRegistroCache$?: Observable<TipoRegistro[]>;
   private assuntosCache = new Map<number, Observable<Assunto[]>>();
 
@@ -155,19 +144,6 @@ export class RegistroService {
     return this.http.delete<void>(`${this.assuntosUrl}/${id}`).pipe(
       tap(() => this.assuntosCache.clear())
     );
-  }
-
-  // ==========================================
-  // 🛠️ MÉTODOS DE TIPOS DE MATERIAL
-  // ==========================================
-
-  listarTiposMaterial(): Observable<MaterialTipo[]> {
-    // 🔥 Mudou de localhost para a variável que lê do environment
-    if (!this.materialTiposCache$) {
-      this.materialTiposCache$ = this.http.get<MaterialTipo[]>(this.materialTiposUrl).pipe(shareReplay(1));
-    }
-
-    return this.materialTiposCache$;
   }
 
   listarTiposRegistro(): Observable<TipoRegistro[]> {

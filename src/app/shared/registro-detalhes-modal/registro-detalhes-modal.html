@@ -36,10 +36,6 @@
             <span>{{ registro.planejamento?.nome || 'Não informado' }}</span>
           </div>
           <div>
-            <small>Material</small>
-            <span>{{ registro.materialTipo?.nome || 'Não informado' }}</span>
-          </div>
-          <div>
             <small>Tempo</small>
             <span>{{ registro.tempoEstudado || 'Não informado' }}</span>
           </div>
@@ -50,13 +46,6 @@
         </div>
 
         <div class="detail-notes">
-          <p><strong>Nome do material:</strong> {{ registro.materialNome || 'Não informado' }}</p>
-          <p><strong>Ponto de parada:</strong> {{ registro.puntoParada || 'Não informado' }}</p>
-          <p>
-            <strong>Link:</strong>
-            <a *ngIf="registro.linkDocumento; else semLink" [href]="registro.linkDocumento" target="_blank" rel="noopener noreferrer">Acessar material</a>
-            <ng-template #semLink>Não informado</ng-template>
-          </p>
           <p><strong>Observações:</strong> {{ registro.observacoes || 'Sem observações.' }}</p>
         </div>
 

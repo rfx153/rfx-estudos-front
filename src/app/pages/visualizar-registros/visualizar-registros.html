@@ -44,7 +44,6 @@
 
         <div class="history-meta">
           <nz-tag nzColor="purple">{{ registro.tipoRegistro?.nome || 'Registro' }}</nz-tag>
-          <nz-tag nzColor="blue">{{ registro.materialTipo?.nome || 'Material' }}</nz-tag>
           <span class="meta-pill">Material-guia: {{ registro.materialGuia?.nome || 'Não informado' }}</span>
           <span class="meta-pill">Planejamento: {{ registro.planejamento?.nome || 'Não informado' }}</span>
         </div>
@@ -61,10 +60,6 @@
           <div>
             <small>Aproveitamento</small>
             <strong>{{ calcularAproveitamento(registro.questoesFeitas, registro.questoesAcertadas) }}</strong>
-          </div>
-          <div class="material-summary">
-            <small>Material</small>
-            <strong>{{ registro.materialNome || 'Não informado' }}</strong>
           </div>
         </div>
       </div>
