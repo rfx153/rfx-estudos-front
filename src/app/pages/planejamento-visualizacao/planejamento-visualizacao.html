@@ -7,7 +7,17 @@
         Escolha um planejamento para consultar seus assuntos.
       </p>
     </div>
-    <a class="edit-link" routerLink="/planejamentos">Editar planejamento</a>
+    <div class="heading-actions">
+      <a class="edit-link" routerLink="/planejamentos/novo" *ngIf="!planejamento"
+        >Novo planejamento</a
+      >
+      <a
+        class="edit-link"
+        [routerLink]="['/planejamentos', planejamento.id]"
+        *ngIf="planejamento"
+        >Editar planejamento</a
+      >
+    </div>
   </header>
 
   <p class="loading-state" *ngIf="carregando">Carregando planejamento...</p>
@@ -20,14 +30,16 @@
     *ngIf="!carregando && !erro && !planejamento && planejamentos.length"
     aria-label="Planejamentos disponíveis"
   >
-    <a
-      class="planejamento-item"
-      *ngFor="let item of planejamentos"
-      [routerLink]="['/planejamento', item.id]"
-    >
-      <span>{{ item.nome }}</span>
-      <span class="item-arrow" aria-hidden="true">›</span>
-    </a>
+    <article class="planejamento-item" *ngFor="let item of planejamentos">
+      <a class="planejamento-link" [routerLink]="['/planejamento', item.id]">
+        <span>
+          <strong>{{ item.nome }}</strong>
+          <small *ngIf="item.descricao">{{ item.descricao }}</small>
+        </span>
+        <span class="item-arrow" aria-hidden="true">›</span>
+      </a>
+      <a class="item-edit-link" [routerLink]="['/planejamentos', item.id]">Editar</a>
+    </article>
   </section>
   <p
     class="empty-state"

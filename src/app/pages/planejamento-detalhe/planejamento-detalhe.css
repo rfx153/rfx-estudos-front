@@ -35,6 +35,9 @@
   border-radius: 10px;
   background: var(--surface-soft, #f8fafc);
 }
+.editing-planning-form {
+  margin-bottom: 18px;
+}
 .workspace-heading,
 .content-heading,
 .accordion-header,

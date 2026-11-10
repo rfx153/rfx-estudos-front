@@ -4,7 +4,6 @@ import { RegistroListaComponent } from './pages/registro-lista/registro-lista';
 import { VisualizarRegistrosComponent } from './pages/visualizar-registros/visualizar-registros';
 import { MateriaListaComponent } from './pages/materia-lista/materia-lista';
 import { InicioComponent } from './pages/inicio/inicio';
-import { PlanejamentoListaComponent } from './pages/planejamento-lista/planejamento-lista';
 import { PlanejamentoDetalheComponent } from './pages/planejamento-detalhe/planejamento-detalhe';
 import { PlanejamentoVisualizacaoComponent } from './pages/planejamento-visualizacao/planejamento-visualizacao';
 import { MetodologiaComponent } from './pages/metodologia/metodologia';
@@ -17,7 +16,7 @@ export const routes: Routes = [
   { path: '', component: InicioComponent },
   { path: 'novo-registro', component: RegistroListaComponent },
   { path: 'visualizar-registros', component: VisualizarRegistrosComponent },
-  { path: 'planejamentos', component: PlanejamentoListaComponent },
+  { path: 'planejamentos', redirectTo: 'planejamento', pathMatch: 'full' },
   { path: 'planejamentos/novo', component: PlanejamentoDetalheComponent },
   { path: 'planejamentos/:id', component: PlanejamentoDetalheComponent },
   { path: 'planejamento', component: PlanejamentoVisualizacaoComponent },

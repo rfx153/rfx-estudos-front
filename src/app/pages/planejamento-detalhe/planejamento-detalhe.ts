@@ -187,7 +187,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
   }
 
   voltar(): void {
-    this.router.navigate(['/planejamentos']);
+    this.router.navigate(['/planejamento']);
   }
 
   rotuloDificuldade(valor?: number | null): string {

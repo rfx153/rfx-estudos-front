@@ -15,10 +15,11 @@
 
   <form
     class="new-planning-form"
+    [class.editing-planning-form]="id"
     nz-form
     [formGroup]="form"
     (ngSubmit)="salvar()"
-    *ngIf="!id && !carregando"
+    *ngIf="!carregando"
   >
     <nz-form-item
       ><nz-form-label nzRequired>Nome</nz-form-label
@@ -36,7 +37,9 @@
     ></nz-form-item>
     <div class="form-actions">
       <button nz-button type="button" (click)="voltar()">Cancelar</button
-      ><button nz-button nzType="primary" [nzLoading]="salvando">Criar planejamento</button>
+      ><button nz-button nzType="primary" [nzLoading]="salvando">
+        {{ id ? 'Salvar dados' : 'Criar planejamento' }}
+      </button>
     </div>
   </form>
 
