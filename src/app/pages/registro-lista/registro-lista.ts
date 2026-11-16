@@ -11,6 +11,7 @@ import {
 import { MateriaService, Materia } from '../../services/materia.service';
 import { PlanejamentoService, Planejamento } from '../../services/planejamento.service';
 import { MaterialGuia, MaterialGuiaService } from '../../services/material-guia.service';
+import { RegistroDetalhesModalComponent } from '../../shared/registro-detalhes-modal/registro-detalhes-modal';
 
 // Módulos do NG-ZORRO necessários para o formulário denso de registros
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -51,6 +52,7 @@ interface RegistroQuestoesTemporario {
     NzIconModule,
     NzCardModule,
     NzModalModule,
+    RegistroDetalhesModalComponent,
   ],
   templateUrl: 'registro-lista.html',
   styleUrl: 'registro-lista.css',
@@ -83,6 +85,10 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
   validateForm!: FormGroup;
   registroQuestoesForm!: FormGroup;
   registrosQuestoes: RegistroQuestoesTemporario[] = [];
+  buscandoAtividadesRecentes = false;
+  atividadesRecentesVisiveis = false;
+  atividadesRecentes: Registro[] = [];
+  tituloAtividadesRecentes = 'Últimas atividades';
   cronometroSegundos = 0;
   cronometroRodando = false;
   private cronometroIntervalo: ReturnType<typeof setInterval> | null = null;
@@ -367,6 +373,45 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
     form.reset({ feitas: 0, acertadas: 0 });
     this.atualizarTotaisQuestoes();
     this.cdr.detectChanges();
+  }
+
+  buscarAtividadesRecentes(filtrarPorAssunto = false): void {
+    const materiaId = Number(this.validateForm.get('materia')?.value);
+    const assuntoId = Number(this.validateForm.get('assunto')?.value);
+
+    if (!materiaId || (filtrarPorAssunto && !assuntoId)) {
+      this.message.warning(filtrarPorAssunto
+        ? 'Selecione a matéria e o assunto para consultar as atividades.'
+        : 'Selecione uma matéria para consultar as atividades.');
+      return;
+    }
+
+    const materia = this.listaMaterias.find(item => item.id === materiaId);
+    const assunto = this.listaAssuntos.find(item => item.id === assuntoId);
+    this.buscandoAtividadesRecentes = true;
+
+    this.registroService.listarRecentes(50, materiaId).subscribe({
+      next: registros => {
+        this.atividadesRecentes = filtrarPorAssunto
+          ? registros.filter(registro => registro.assunto?.id === assuntoId)
+          : registros;
+        this.tituloAtividadesRecentes = `Últimas atividades${materia ? `: ${materia.nome}` : ''}${filtrarPorAssunto && assunto ? ` — ${assunto.nome}` : ''}`;
+        this.buscandoAtividadesRecentes = false;
+        this.atividadesRecentesVisiveis = true;
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao buscar atividades recentes:', erro);
+        this.buscandoAtividadesRecentes = false;
+        this.message.error('Não foi possível buscar as últimas atividades.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  editarAtividadeRecente(registro: Registro): void {
+    this.atividadesRecentesVisiveis = false;
+    this.router.navigate(['/novo-registro'], { state: { registroParaEditar: registro } });
   }
 
   removerRegistroQuestoes(index: number): void {

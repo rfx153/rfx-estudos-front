@@ -46,6 +46,20 @@
   border-top: 1px solid var(--border, #e5e7eb);
 }
 
+.recent-activities-action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  margin: -4px 0 20px;
+}
+
+.recent-activities-action button {
+  border-color: rgba(22, 119, 255, .3);
+  color: #1677ff;
+  font-weight: 750;
+}
+
 nz-form-label {
   font-weight: 600;
 }
@@ -187,6 +201,14 @@ nz-form-label {
 
   .form-footer {
     text-align: left;
+  }
+
+  .recent-activities-action {
+    justify-content: stretch;
+  }
+
+  .recent-activities-action button {
+    width: 100%;
   }
 }
 
