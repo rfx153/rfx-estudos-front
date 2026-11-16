@@ -71,6 +71,46 @@
       </nz-card>
     </div>
 
+    <section class="weekly-chart" aria-labelledby="weekly-chart-title">
+      <div class="weekly-chart-heading">
+        <div>
+          <span class="chart-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+          <h2 id="weekly-chart-title">Últimos 7 dias</h2>
+        </div>
+        <button
+          class="weekly-chart-toggle"
+          type="button"
+          (click)="alternarResumoSemanal()"
+          [attr.aria-expanded]="resumoSemanalVisivel">
+          {{ resumoSemanalVisivel ? 'Ocultar gráfico' : 'Ver gráfico' }}
+        </button>
+      </div>
+
+      <div class="weekly-chart-content" *ngIf="resumoSemanalVisivel" [class.is-loading]="carregandoResumoSemanal">
+        <div class="chart-empty" *ngIf="!carregandoResumoSemanal && !possuiEstudosResumoSemanal">
+          Registre um estudo para acompanhar sua evolução aqui.
+        </div>
+
+        <div class="chart-bars" *ngIf="carregandoResumoSemanal || possuiEstudosResumoSemanal">
+          <div class="chart-column" *ngFor="let dia of resumoUltimosSeteDias">
+            <div class="chart-bar-area">
+              <span class="chart-tooltip" *ngIf="!carregandoResumoSemanal && dia.minutos">
+                <strong>{{ dia.descricao }}</strong>
+                {{ tempoResumido(dia.minutos) }} estudados
+              </span>
+              <span
+                class="chart-bar"
+                [class.today]="dia.hoje"
+                [style.height.%]="carregandoResumoSemanal ? 28 : dia.altura"
+                [attr.aria-label]="dia.descricao + ': ' + tempoResumido(dia.minutos) + ' estudados'">
+              </span>
+            </div>
+            <span class="chart-day">{{ dia.rotulo }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="goals-section" aria-label="Suas metas">
       <div class="goals-heading">
         <div>

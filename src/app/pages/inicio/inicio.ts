@@ -24,6 +24,15 @@ interface AtalhoEstudo {
   icone: string;
 }
 
+interface ResumoDiaEstudo {
+  data: string;
+  rotulo: string;
+  descricao: string;
+  minutos: number;
+  altura: number;
+  hoje: boolean;
+}
+
 @Component({
   selector: 'app-inicio',
   standalone: true,
@@ -49,6 +58,10 @@ export class InicioComponent implements OnInit {
   saudacao = 'Bom dia, Rafael.';
   perfilVisivel = false;
   metaDiariaHoje: MetaDiariaResumo | null = null;
+  carregandoResumoSemanal = true;
+  possuiEstudosResumoSemanal = false;
+  resumoSemanalVisivel = false;
+  resumoUltimosSeteDias: ResumoDiaEstudo[] = [];
   atalhosEstudo: AtalhoEstudo[] = [
     {
       nome: 'Estratégia novo',
@@ -72,12 +85,17 @@ export class InicioComponent implements OnInit {
 
   ngOnInit(): void {
     this.definirSaudacao();
+    this.resumoUltimosSeteDias = this.criarResumoUltimosSeteDias();
     this.carregarResumoDeHoje();
     this.carregarMetaDiariaDeHoje();
   }
 
   alternarPerfil(): void {
     this.perfilVisivel = !this.perfilVisivel;
+  }
+
+  alternarResumoSemanal(): void {
+    this.resumoSemanalVisivel = !this.resumoSemanalVisivel;
   }
 
   abrirDetalhesMateria(materia: MateriaEstudadaHoje): void {
@@ -124,13 +142,77 @@ export class InicioComponent implements OnInit {
 
         this.carregando = false;
         this.cdr.detectChanges();
+        this.carregarResumoSemanalEmSegundoPlano();
       },
       error: erro => {
         console.error('Erro ao carregar resumo de hoje:', erro);
         this.carregando = false;
         this.cdr.detectChanges();
+        this.carregarResumoSemanalEmSegundoPlano();
       }
     });
+  }
+
+  private carregarResumoSemanalEmSegundoPlano(): void {
+    // O gráfico é complementar: aguarda a primeira pintura da página para
+    // não disputar carregamento com os indicadores principais.
+    setTimeout(() => {
+      this.registroService.listarRecentes(100).subscribe({
+        next: registros => {
+          const minutosPorData = new Map<string, number>();
+          const datasDoGrafico = new Set(this.criarResumoUltimosSeteDias().map(dia => dia.data));
+
+          registros.forEach(registro => {
+            const data = registro.dataEstudo?.substring(0, 10);
+            if (!data || !datasDoGrafico.has(data)) return;
+
+            minutosPorData.set(
+              data,
+              (minutosPorData.get(data) ?? 0) + this.tempoParaMinutos(registro.tempoEstudado)
+            );
+          });
+
+          const maiorValor = Math.max(...Array.from(minutosPorData.values()), 0);
+          this.resumoUltimosSeteDias = this.criarResumoUltimosSeteDias(minutosPorData, maiorValor);
+          this.possuiEstudosResumoSemanal = maiorValor > 0;
+          this.carregandoResumoSemanal = false;
+          this.cdr.detectChanges();
+        },
+        error: erro => {
+          console.error('Erro ao carregar resumo semanal:', erro);
+          this.carregandoResumoSemanal = false;
+          this.cdr.detectChanges();
+        }
+      });
+    }, 200);
+  }
+
+  private criarResumoUltimosSeteDias(minutosPorData = new Map<string, number>(), maiorValor = 0): ResumoDiaEstudo[] {
+    const hoje = new Date();
+    const nomesDias = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+
+    return Array.from({ length: 7 }, (_, indice) => {
+      const data = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - (6 - indice));
+      const dataFormatada = this.formatarDataLocal(data);
+      const minutos = minutosPorData.get(dataFormatada) ?? 0;
+
+      return {
+        data: dataFormatada,
+        rotulo: indice === 6 ? 'hoje' : nomesDias[data.getDay()],
+        descricao: `${String(data.getDate()).padStart(2, '0')}/${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`,
+        minutos,
+        altura: minutos && maiorValor ? Math.max(Math.round((minutos / maiorValor) * 100), 8) : 0,
+        hoje: indice === 6
+      };
+    });
+  }
+
+  tempoResumido(minutos: number): string {
+    if (minutos < 60) return `${minutos} min`;
+
+    const horas = Math.floor(minutos / 60);
+    const minutosRestantes = minutos % 60;
+    return minutosRestantes ? `${horas}h ${minutosRestantes}min` : `${horas}h`;
   }
 
   private tempoParaMinutos(tempo?: string): number {
