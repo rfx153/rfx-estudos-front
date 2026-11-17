@@ -12,6 +12,7 @@ import { Materia, MateriaService } from '../../services/materia.service';
 import { Assunto, RegistroService, TipoRegistro } from '../../services/registro.service';
 import {
   Planejamento,
+  PlanejamentoEstrutura,
   PlanejamentoMateria,
   PlanejamentoMateriaDTO,
   PlanejamentoGrupoMateria,
@@ -129,6 +130,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
   modalEtapasAberto = false;
   modalEtapaAberto = false;
   nomesAssuntosPorGrupo = new Map<number, string>();
+  private estrutura?: PlanejamentoEstrutura;
 
   ngOnInit(): void {
     const parametroId = this.route.snapshot.paramMap.get('id');
@@ -144,6 +146,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     this.carregar();
     this.carregarGruposMaterias();
     this.carregarMaterias();
+    this.carregarEstrutura();
     this.materiaService.listarTodas().subscribe({
       next: (materias) => {
         this.materias = materias;
@@ -525,15 +528,15 @@ export class PlanejamentoDetalheComponent implements OnInit {
         this.salvandoGrupo = false;
         this.modalGrupoAberto = false;
         this.cancelarEdicaoGrupo();
-        this.carregarGrupos();
-        if (!editando && tipo === 'ASSUNTO') {
-          this.grupos = [...this.grupos, grupo];
-          this.grupoSelecionado = grupo;
-          this.itemSelecionado = undefined;
-          this.itens = [];
-          this.carregarItens();
-          this.carregarAssuntosDaMateria(() => this.abrirItem());
-        }
+        this.recarregarEstrutura(() => {
+          this.carregarGrupos();
+          if (!editando && tipo === 'ASSUNTO') {
+            this.grupoSelecionado = this.grupos.find((item) => item.id === grupo.id) ?? grupo;
+            this.itemSelecionado = undefined;
+            this.carregarItens();
+            this.carregarAssuntosDaMateria(() => this.abrirItem());
+          }
+        });
         this.message.success(`Grupo ${editando ? 'atualizado' : 'adicionado'} com sucesso.`);
         this.cdr.detectChanges();
       },
@@ -557,6 +560,10 @@ export class PlanejamentoDetalheComponent implements OnInit {
     });
     this.modalGrupoAberto = true;
     if (this.id && this.materiaSelecionada?.id) {
+      if (this.estrutura) {
+        this.quantidadeItensGrupoEditando = this.itensDaEstrutura(grupo.id).length;
+        return;
+      }
       this.service.listarItens(this.id, this.materiaSelecionada.id, grupo.id).subscribe({
         next: (itens) => (this.quantidadeItensGrupoEditando = itens.length),
         error: (erro) => console.error('Erro ao verificar itens do grupo:', erro),
@@ -597,7 +604,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     this.service.excluirGrupo(this.id, this.materiaSelecionada.id, grupo.id).subscribe({
       next: () => {
         this.message.success('Grupo removido.');
-        this.carregarGrupos();
+        this.recarregarEstrutura(() => this.carregarGrupos());
       },
       error: (erro) => {
         console.error('Erro ao remover grupo:', erro);
@@ -686,8 +693,10 @@ export class PlanejamentoDetalheComponent implements OnInit {
         this.salvandoItem = false;
         this.modalItemAberto = false;
         this.cancelarEdicaoItem();
-        this.carregarItens();
-        this.carregarGrupos();
+        this.recarregarEstrutura(() => {
+          this.carregarItens();
+          this.carregarGrupos();
+        });
         this.message.success(
           editando
             ? 'Assunto atualizado com sucesso.'
@@ -775,7 +784,10 @@ export class PlanejamentoDetalheComponent implements OnInit {
       .subscribe({
         next: () => {
           this.message.success('Item removido.');
-          this.carregarItens();
+          this.recarregarEstrutura(() => {
+            this.carregarItens();
+            this.carregarGrupos();
+          });
         },
         error: (erro) => {
           console.error('Erro ao remover item:', erro);
@@ -858,7 +870,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
         this.salvandoEtapa = false;
         this.modalEtapaAberto = false;
         this.cancelarEdicaoEtapa();
-        this.carregarEtapas();
+        this.recarregarEstrutura(() => this.carregarEtapas());
         this.message.success(`Etapa ${editando ? 'atualizada' : 'adicionada'} com sucesso.`);
       },
       error: (erro) => {
@@ -922,7 +934,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
       .subscribe({
         next: () => {
           this.message.success('Etapa removida.');
-          this.carregarEtapas();
+          this.recarregarEstrutura(() => this.carregarEtapas());
         },
         error: (erro) => {
           console.error('Erro ao remover etapa:', erro);
@@ -935,7 +947,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
     if (!this.id) return;
     this.carregando = true;
     this.service
-      .listarTodos()
+      .buscarPorId(this.id)
       .pipe(
         finalize(() => {
           this.carregando = false;
@@ -943,14 +955,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
         }),
       )
       .subscribe({
-        next: (planejamentos) => {
-          const planejamento = planejamentos.find((item) => item.id === this.id);
-          if (!planejamento) {
-            this.message.error('Planejamento não encontrado.');
-            this.voltar();
-            return;
-          }
-
+        next: (planejamento) => {
           this.form.patchValue({
             nome: planejamento.nome,
             descricao: planejamento.descricao || '',
@@ -1013,6 +1018,14 @@ export class PlanejamentoDetalheComponent implements OnInit {
 
   private carregarGrupos(): void {
     if (!this.id || !this.materiaSelecionada?.id) return;
+    if (this.estrutura) {
+      this.grupos = this.gruposDaEstrutura(this.materiaSelecionada.id);
+      this.carregarNomesDosAssuntos(this.grupos);
+      this.carregarAssuntosCadastrados(this.grupos);
+      this.carregandoGrupos = false;
+      this.cdr.detectChanges();
+      return;
+    }
     this.carregandoGrupos = true;
     this.service
       .listarGrupos(this.id, this.materiaSelecionada.id)
@@ -1038,6 +1051,12 @@ export class PlanejamentoDetalheComponent implements OnInit {
 
   private carregarItens(): void {
     if (!this.id || !this.materiaSelecionada?.id || !this.grupoSelecionado?.id) return;
+    if (this.estrutura) {
+      this.itens = this.itensDaEstrutura(this.grupoSelecionado.id);
+      this.carregandoItens = false;
+      this.cdr.detectChanges();
+      return;
+    }
     this.carregandoItens = true;
     this.service
       .listarItens(this.id, this.materiaSelecionada.id, this.grupoSelecionado.id)
@@ -1081,6 +1100,16 @@ export class PlanejamentoDetalheComponent implements OnInit {
     this.nomesAssuntosPorGrupo.clear();
     if (!this.id || !this.materiaSelecionada?.id) return;
 
+    if (this.estrutura) {
+      grupos
+        .filter((grupo) => grupo.tipo === 'ASSUNTO' && grupo.id)
+        .forEach((grupo) => {
+          const nome = this.itensDaEstrutura(grupo.id!).at(0)?.assunto.nome;
+          if (nome) this.nomesAssuntosPorGrupo.set(grupo.id!, nome);
+        });
+      return;
+    }
+
     grupos
       .filter((grupo) => grupo.tipo === 'ASSUNTO' && grupo.id)
       .forEach((grupo) => {
@@ -1097,6 +1126,15 @@ export class PlanejamentoDetalheComponent implements OnInit {
 
   private carregarAssuntosCadastrados(grupos: PlanejamentoGrupoAssunto[]): void {
     if (!this.id || !this.materiaSelecionada?.id) return;
+
+    if (this.estrutura) {
+      this.assuntoIdsCadastrados = new Set(
+        grupos.flatMap((grupo) => grupo.id
+          ? this.itensDaEstrutura(grupo.id).map((item) => item.assunto.id)
+          : []),
+      );
+      return;
+    }
 
     const consultas = grupos
       .filter((grupo) => grupo.id)
@@ -1128,6 +1166,12 @@ export class PlanejamentoDetalheComponent implements OnInit {
       !this.itemSelecionado?.id
     )
       return;
+    if (this.estrutura) {
+      this.etapas = this.etapasDaEstrutura(this.itemSelecionado.id);
+      this.carregandoEtapas = false;
+      this.cdr.detectChanges();
+      return;
+    }
     this.carregandoEtapas = true;
     this.service
       .listarEtapas(
@@ -1163,5 +1207,62 @@ export class PlanejamentoDetalheComponent implements OnInit {
       },
       error: (erro) => console.error('Erro ao carregar tipos de registro:', erro),
     });
+  }
+
+  private carregarEstrutura(aposCarregar?: () => void): void {
+    if (!this.id) return;
+    this.service.buscarEstrutura(this.id).subscribe({
+      next: (estrutura) => {
+        this.estrutura = estrutura;
+        aposCarregar?.();
+        this.cdr.detectChanges();
+      },
+      error: (erro) => console.error('Erro ao carregar estrutura do planejamento:', erro),
+    });
+  }
+
+  private recarregarEstrutura(aposCarregar: () => void): void {
+    this.estrutura = undefined;
+    this.carregarEstrutura(aposCarregar);
+  }
+
+  private gruposDaEstrutura(planejamentoMateriaId: number): PlanejamentoGrupoAssunto[] {
+    return (this.estrutura?.grupos ?? [])
+      .filter((grupo) => grupo.planejamentoMateriaId === planejamentoMateriaId)
+      .map((grupo) => ({
+        id: grupo.id,
+        tipo: grupo.tipo,
+        nome: grupo.nome,
+        peso: grupo.peso,
+        ordem: grupo.ordem,
+      }));
+  }
+
+  private itensDaEstrutura(grupoId: number): PlanejamentoGrupoAssuntoItem[] {
+    return (this.estrutura?.itens ?? [])
+      .filter((item) => item.grupoId === grupoId)
+      .map((item) => ({
+        id: item.id,
+        assunto: { id: item.assuntoId, nome: item.assuntoNome },
+        peso: item.peso,
+        dificuldade: item.dificuldade,
+        ordem: item.ordem,
+      }));
+  }
+
+  private etapasDaEstrutura(itemId: number): PlanejamentoItemEtapa[] {
+    return (this.estrutura?.etapas ?? [])
+      .filter((etapa) => etapa.itemId === itemId)
+      .map((etapa) => ({
+        id: etapa.id,
+        tipoRegistro: {
+          id: etapa.tipoRegistroId,
+          nome: etapa.tipoRegistroNome,
+        },
+        ordem: etapa.ordem,
+        iniciada: etapa.iniciada,
+        concluida: etapa.concluida,
+        dataConcluida: etapa.dataConcluida,
+      }));
   }
 }
