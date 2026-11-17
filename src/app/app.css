@@ -17,6 +17,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .brand {
@@ -64,10 +65,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
   padding: 4px;
   border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: 10px;
   background: #f8fafc;
+  scrollbar-width: thin;
 }
 
 .main-nav a {

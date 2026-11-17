@@ -1,0 +1,248 @@
+<section class="tracking-page">
+  <header class="tracking-heading">
+    <div>
+      <span class="eyebrow">Acompanhamento</span>
+      <h1>Sua evolução nos estudos</h1>
+      <p>Visualize desempenho, constância e distribuição do tempo em um só lugar.</p>
+    </div>
+    <span class="period-badge">{{ rotuloPeriodo }}</span>
+  </header>
+
+  <nav class="tracking-tabs" aria-label="Seções do acompanhamento">
+    <button type="button" [class.active]="abaAtiva === 'desempenho'" (click)="selecionarAba('desempenho')">
+      <span class="tab-symbol" aria-hidden="true">▥</span>
+      <span>Desempenho</span>
+    </button>
+    <button type="button" [class.active]="abaAtiva === 'linha-tempo'" (click)="selecionarAba('linha-tempo')">
+      <span class="tab-symbol" aria-hidden="true">☷</span>
+      <span>Linha do tempo</span>
+    </button>
+    <button type="button" [class.active]="abaAtiva === 'tempo-estudo'" (click)="selecionarAba('tempo-estudo')">
+      <span class="tab-symbol" aria-hidden="true">◷</span>
+      <span>Tempo de estudo</span>
+    </button>
+    <button type="button" [class.active]="abaAtiva === 'tipo-estudo'" (click)="selecionarAba('tipo-estudo')">
+      <span class="tab-symbol" aria-hidden="true">▱</span>
+      <span>Tipo de estudo</span>
+    </button>
+  </nav>
+
+  <section class="period-selector" aria-labelledby="period-title">
+    <div class="period-navigation">
+      <button
+        type="button"
+        class="period-arrow"
+        (click)="navegarPeriodo(-1)"
+        [disabled]="periodoAtivo === 'total'"
+        aria-label="Período anterior">
+        ‹
+      </button>
+      <div>
+        <span class="eyebrow" id="period-title">Intervalo analisado</span>
+        <strong>{{ rotuloPeriodo }}</strong>
+      </div>
+      <button
+        type="button"
+        class="period-arrow"
+        (click)="navegarPeriodo(1)"
+        [disabled]="periodoAtivo === 'total'"
+        aria-label="Próximo período">
+        ›
+      </button>
+    </div>
+
+    <div class="custom-period" *ngIf="periodoAtivo === 'personalizado'">
+      <label>
+        <span>De</span>
+        <input type="date" [(ngModel)]="inicioPersonalizado" (change)="aplicarPeriodoPersonalizado()" />
+      </label>
+      <label>
+        <span>Até</span>
+        <input type="date" [(ngModel)]="fimPersonalizado" (change)="aplicarPeriodoPersonalizado()" />
+      </label>
+    </div>
+
+    <div class="period-presets" aria-label="Escolha do intervalo">
+      <button type="button" [class.active]="periodoAtivo === 'semana'" (click)="selecionarPeriodo('semana')">Semana</button>
+      <button type="button" [class.active]="periodoAtivo === 'mes'" (click)="selecionarPeriodo('mes')">Mês</button>
+      <button type="button" [class.active]="periodoAtivo === 'ano'" (click)="selecionarPeriodo('ano')">Ano</button>
+      <button type="button" [class.active]="periodoAtivo === 'total'" (click)="selecionarPeriodo('total')">Total</button>
+      <button type="button" [class.active]="periodoAtivo === 'personalizado'" (click)="selecionarPeriodo('personalizado')">Customizar</button>
+    </div>
+  </section>
+
+  <div class="tracking-state" *ngIf="carregando">
+    <span class="loading-ring" aria-hidden="true"></span>
+    <p>Preparando seu acompanhamento...</p>
+  </div>
+
+  <div class="tracking-state error" *ngIf="!carregando && mensagemErro">
+    <strong>Não foi possível exibir o acompanhamento</strong>
+    <p>{{ mensagemErro }}</p>
+  </div>
+
+  <ng-container *ngIf="!carregando && !mensagemErro">
+    <section class="period-empty content-card" *ngIf="!registros.length">
+      <span class="empty-chart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      <strong>Você não possui atividades cadastradas nesse período</strong>
+      <p>Altere o intervalo ou registre uma nova sessão de estudo.</p>
+      <a routerLink="/novo-registro">Inicie uma atividade agora</a>
+    </section>
+
+    <section *ngIf="registros.length && abaAtiva === 'desempenho'" class="tab-panel" aria-labelledby="performance-title">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Visão geral</span>
+          <h2 id="performance-title">Desempenho acumulado</h2>
+        </div>
+        <span>{{ registros.length }} registros analisados</span>
+      </div>
+
+      <div class="metrics-grid">
+        <article class="metric-card metric-time">
+          <span>Tempo estudado</span>
+          <strong>{{ formatarTempo(totalMinutos) }}</strong>
+          <small>nas sessões do intervalo</small>
+        </article>
+        <article class="metric-card metric-questions">
+          <span>Questões resolvidas</span>
+          <strong>{{ totalQuestoes }}</strong>
+          <small>{{ totalAcertos }} respostas corretas</small>
+        </article>
+        <article class="metric-card metric-accuracy">
+          <span>Aproveitamento</span>
+          <strong>{{ percentualAcertos }}%</strong>
+          <small>média geral de acertos</small>
+        </article>
+        <article class="metric-card metric-subjects">
+          <span>Matérias estudadas</span>
+          <strong>{{ totalMaterias }}</strong>
+          <small>com atividade registrada</small>
+        </article>
+      </div>
+
+      <article class="content-card subject-performance">
+        <div class="card-heading">
+          <div>
+            <h3>Desempenho por matéria</h3>
+            <p>Tempo dedicado e aproveitamento nas questões.</p>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="!materias.length">Seus dados aparecerão aqui após o primeiro registro.</div>
+        <div class="subject-row" *ngFor="let materia of materias">
+          <div class="subject-summary">
+            <strong>{{ materia.nome }}</strong>
+            <span>{{ formatarTempo(materia.minutos) }} · {{ materia.questoes }} questões</span>
+          </div>
+          <div class="progress-column">
+            <div class="progress-track"><span [style.width.%]="materia.percentualTempo"></span></div>
+          </div>
+          <strong class="accuracy-value">{{ materia.percentualAcertos }}%</strong>
+        </div>
+      </article>
+    </section>
+
+    <section *ngIf="registros.length && abaAtiva === 'linha-tempo'" class="tab-panel" aria-labelledby="timeline-title">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Histórico</span>
+          <h2 id="timeline-title">Linha do tempo</h2>
+        </div>
+        <span>Mais recentes primeiro</span>
+      </div>
+
+      <div class="study-timeline">
+        <article class="timeline-entry" *ngFor="let registro of registros; trackBy: trackByRegistro">
+          <span class="timeline-dot" aria-hidden="true"></span>
+          <div class="timeline-date">
+            <strong>{{ formatarData(registro.dataEstudo) }}</strong>
+            <span>{{ registro.horarioInicio?.substring(0, 5) || '--:--' }}</span>
+          </div>
+          <div class="timeline-content">
+            <div>
+              <strong>{{ registro.materia?.nome || 'Matéria não informada' }}</strong>
+              <span>{{ registro.assunto?.nome || 'Assunto não informado' }}</span>
+            </div>
+            <div class="timeline-tags">
+              <span>{{ registro.tipoRegistro?.nome || 'Estudo' }}</span>
+              <span>{{ formatarTempo(tempoParaMinutos(registro.tempoEstudado)) }}</span>
+              <span *ngIf="registro.questoesFeitas">{{ registro.questoesAcertadas || 0 }}/{{ registro.questoesFeitas }} acertos</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section *ngIf="registros.length && abaAtiva === 'tempo-estudo'" class="tab-panel" aria-labelledby="time-title">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Constância</span>
+          <h2 id="time-title">Tempo de estudo</h2>
+        </div>
+        <span>{{ descricaoGrafico }}</span>
+      </div>
+
+      <article class="content-card time-chart-card">
+        <div class="time-chart" [style.grid-template-columns]="'repeat(' + dias.length + ', minmax(50px, 1fr))'">
+          <div class="chart-day" *ngFor="let dia of dias" [title]="dia.rotulo + ': ' + formatarTempo(dia.minutos)">
+            <span class="chart-value">{{ dia.minutos ? formatarTempo(dia.minutos) : '' }}</span>
+            <div class="chart-bar-track">
+              <span
+                class="chart-segment"
+                *ngFor="let segmento of dia.segmentos"
+                [style.height.%]="segmento.altura"
+                [style.background]="segmento.cor"
+                [title]="segmento.nome + ': ' + formatarTempo(segmento.minutos)">
+              </span>
+            </div>
+            <strong>{{ dia.rotulo }}</strong>
+          </div>
+        </div>
+
+        <section class="subject-time-summary" aria-label="Tempo por matéria">
+          <header>
+            <div>
+              <span class="eyebrow">Matérias no período</span>
+              <h3>Distribuição do tempo</h3>
+            </div>
+            <strong>{{ formatarTempo(totalMinutos) }}</strong>
+          </header>
+
+          <div class="subject-time-grid">
+            <article *ngFor="let materia of materias">
+              <span class="subject-color" [style.background]="materia.cor" aria-hidden="true"></span>
+              <div>
+                <strong>{{ materia.nome }}</strong>
+                <small>{{ formatarTempo(materia.minutos) }} · {{ materia.percentualTotal }}%</small>
+              </div>
+            </article>
+          </div>
+        </section>
+      </article>
+    </section>
+
+    <section *ngIf="registros.length && abaAtiva === 'tipo-estudo'" class="tab-panel" aria-labelledby="type-title">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Distribuição</span>
+          <h2 id="type-title">Tipo de estudo</h2>
+        </div>
+        <span>{{ formatarTempo(totalMinutos) }} no total</span>
+      </div>
+
+      <div class="type-grid">
+        <article class="content-card type-card" *ngFor="let tipo of tipos; let indice = index">
+          <span class="type-index">{{ formatarIndice(indice) }}</span>
+          <div>
+            <h3>{{ tipo.nome }}</h3>
+            <p>{{ tipo.quantidade }} {{ tipo.quantidade === 1 ? 'sessão' : 'sessões' }}</p>
+          </div>
+          <strong>{{ formatarTempo(tipo.minutos) }}</strong>
+          <div class="type-progress"><span [style.width.%]="tipo.percentual"></span></div>
+          <small>{{ tipo.percentual }}% do tempo total</small>
+        </article>
+      </div>
+    </section>
+  </ng-container>
+</section>

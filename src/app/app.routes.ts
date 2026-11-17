@@ -11,6 +11,7 @@ import { CaminhoComponent } from './pages/caminho/caminho';
 import { MetasComponent } from './pages/metas/metas';
 import { CiclosComponent } from './pages/ciclos/ciclos';
 import { CicloVisualizacaoComponent } from './pages/ciclo-visualizacao/ciclo-visualizacao';
+import { AcompanhamentoComponent } from './pages/acompanhamento/acompanhamento';
 
 export const routes: Routes = [
   { path: '', component: InicioComponent },
@@ -28,5 +29,6 @@ export const routes: Routes = [
   { path: 'ciclos/editar', component: CiclosComponent },
   { path: 'ciclos/:id', component: CicloVisualizacaoComponent },
   { path: 'materias', component: MateriaListaComponent },
+  { path: 'acompanhamento', component: AcompanhamentoComponent },
   { path: '**', redirectTo: '' } // Rota coringa para evitar erros 404
 ];
