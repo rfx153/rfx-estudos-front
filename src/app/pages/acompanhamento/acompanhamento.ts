@@ -53,6 +53,7 @@ export class AcompanhamentoComponent implements OnInit {
 
   abaAtiva: AbaAcompanhamento = 'desempenho';
   carregando = true;
+  carregandoHistoricoCompleto = false;
   mensagemErro = '';
   todosRegistros: Registro[] = [];
   registros: Registro[] = [];
@@ -75,6 +76,8 @@ export class AcompanhamentoComponent implements OnInit {
     '#1677ff', '#22c55e', '#f97316', '#8b5cf6', '#e11d48', '#14b8a6',
     '#eab308', '#0ea5e9', '#a855f7', '#84cc16', '#f43f5e', '#6366f1'
   ];
+  private readonly limiteCarregamentoInicial = 300;
+  private historicoCompletoCarregado = false;
 
   ngOnInit(): void {
     this.definirPeriodo('semana');
@@ -96,7 +99,7 @@ export class AcompanhamentoComponent implements OnInit {
     }
 
     this.definirPeriodo(periodo);
-    this.aplicarFiltroPeriodo();
+    this.garantirDadosDoPeriodo();
   }
 
   navegarPeriodo(direcao: -1 | 1): void {
@@ -123,7 +126,7 @@ export class AcompanhamentoComponent implements OnInit {
       this.fimPersonalizado = this.dataLocal(this.fimPeriodo);
     }
 
-    this.aplicarFiltroPeriodo();
+    this.garantirDadosDoPeriodo();
   }
 
   aplicarPeriodoPersonalizado(): void {
@@ -135,7 +138,7 @@ export class AcompanhamentoComponent implements OnInit {
     this.fimPeriodo = inicio <= fim ? fim : inicio;
     this.inicioPersonalizado = this.dataLocal(this.inicioPeriodo);
     this.fimPersonalizado = this.dataLocal(this.fimPeriodo);
-    this.aplicarFiltroPeriodo();
+    this.garantirDadosDoPeriodo();
   }
 
   get rotuloPeriodo(): string {
@@ -193,13 +196,10 @@ export class AcompanhamentoComponent implements OnInit {
   }
 
   private carregarDados(): void {
-    this.registroService.listarTodos().subscribe({
+    this.registroService.listarRecentes(this.limiteCarregamentoInicial).subscribe({
       next: registros => {
-        this.todosRegistros = [...registros].sort((a, b) => {
-          const dataA = `${a.dataEstudo ?? ''}T${a.horarioInicio ?? '00:00:00'}`;
-          const dataB = `${b.dataEstudo ?? ''}T${b.horarioInicio ?? '00:00:00'}`;
-          return dataB.localeCompare(dataA);
-        });
+        this.todosRegistros = this.ordenarRegistros(registros);
+        this.historicoCompletoCarregado = registros.length < this.limiteCarregamentoInicial;
         this.aplicarFiltroPeriodo();
         this.carregando = false;
         this.cdr.detectChanges();
@@ -340,7 +340,9 @@ export class AcompanhamentoComponent implements OnInit {
     const mes = this.dataReferencia.getMonth();
 
     if (periodo === 'semana') {
-      this.inicioPeriodo = this.adicionarDias(this.dataReferencia, -this.dataReferencia.getDay());
+      const diaDaSemana = this.dataReferencia.getDay();
+      const deslocamentoAteSegunda = diaDaSemana === 0 ? -6 : 1 - diaDaSemana;
+      this.inicioPeriodo = this.adicionarDias(this.dataReferencia, deslocamentoAteSegunda);
       this.fimPeriodo = this.adicionarDias(this.inicioPeriodo, 6);
     } else if (periodo === 'mes') {
       this.inicioPeriodo = new Date(ano, mes, 1);
@@ -363,6 +365,56 @@ export class AcompanhamentoComponent implements OnInit {
       return data >= inicio && data <= fim;
     });
     this.calcularResumos();
+  }
+
+  private garantirDadosDoPeriodo(): void {
+    if (!this.precisaCarregarHistoricoCompleto()) {
+      this.aplicarFiltroPeriodo();
+      return;
+    }
+
+    this.carregarHistoricoCompleto();
+  }
+
+  private precisaCarregarHistoricoCompleto(): boolean {
+    if (this.historicoCompletoCarregado || this.carregandoHistoricoCompleto) return false;
+    if (this.periodoAtivo === 'total' || this.periodoAtivo === 'ano') return true;
+    if (!this.inicioPeriodo || !this.todosRegistros.length) return false;
+
+    const registroMaisAntigo = this.todosRegistros.at(-1)?.dataEstudo?.substring(0, 10);
+    return !!registroMaisAntigo && this.dataLocal(this.inicioPeriodo) < registroMaisAntigo;
+  }
+
+  private carregarHistoricoCompleto(): void {
+    if (this.carregandoHistoricoCompleto) return;
+
+    this.carregandoHistoricoCompleto = true;
+    this.carregando = true;
+    this.registroService.listarTodos().subscribe({
+      next: registros => {
+        this.todosRegistros = this.ordenarRegistros(registros);
+        this.historicoCompletoCarregado = true;
+        this.carregandoHistoricoCompleto = false;
+        this.aplicarFiltroPeriodo();
+        this.carregando = false;
+        this.cdr.detectChanges();
+      },
+      error: erro => {
+        console.error('Erro ao carregar histórico completo:', erro);
+        this.mensagemErro = 'Não foi possível carregar o histórico completo.';
+        this.carregandoHistoricoCompleto = false;
+        this.carregando = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private ordenarRegistros(registros: Registro[]): Registro[] {
+    return [...registros].sort((a, b) => {
+      const dataA = `${a.dataEstudo ?? ''}T${a.horarioInicio ?? '00:00:00'}`;
+      const dataB = `${b.dataEstudo ?? ''}T${b.horarioInicio ?? '00:00:00'}`;
+      return dataB.localeCompare(dataA);
+    });
   }
 
   private criarDias(inicio: Date, fim: Date): Date[] {

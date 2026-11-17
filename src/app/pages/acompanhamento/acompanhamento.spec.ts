@@ -11,7 +11,7 @@ describe('AcompanhamentoComponent', () => {
         {
           provide: RegistroService,
           useValue: {
-            listarTodos: () => of([
+            listarRecentes: () => of([
               {
                 id: 1,
                 materia: { id: 1, nome: 'Português' },
@@ -34,7 +34,8 @@ describe('AcompanhamentoComponent', () => {
                 horarioInicio: '10:00:00',
                 tempoEstudado: '01:00:00'
               }
-            ])
+            ]),
+            listarTodos: () => of([])
           }
         }
       ]
@@ -52,6 +53,7 @@ describe('AcompanhamentoComponent', () => {
     expect(component.totalMaterias).toBe(1);
     expect(component.materias[0].percentualTotal).toBe(100);
     expect(component.dias.flatMap(dia => dia.segmentos).some(segmento => segmento.nome === 'Português')).toBe(true);
+    expect(component.rotuloPeriodo).toBe('16/11/2026 a 22/11/2026');
     expect(fixture.nativeElement.textContent).toContain('Desempenho acumulado');
   });
 

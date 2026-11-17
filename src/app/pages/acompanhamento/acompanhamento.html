@@ -73,7 +73,7 @@
 
   <div class="tracking-state" *ngIf="carregando">
     <span class="loading-ring" aria-hidden="true"></span>
-    <p>Preparando seu acompanhamento...</p>
+    <p>{{ carregandoHistoricoCompleto ? 'Carregando histórico completo...' : 'Preparando seu acompanhamento...' }}</p>
   </div>
 
   <div class="tracking-state error" *ngIf="!carregando && mensagemErro">
