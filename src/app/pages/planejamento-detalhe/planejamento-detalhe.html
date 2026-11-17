@@ -70,12 +70,12 @@
       Nenhuma matéria adicionada. Comece pelo botão acima.
     </div>
 
-    <ng-template #materiaCard let-item>
+    <ng-template #materiaCard let-item let-principal="principal">
       <article
         class="matter-card"
         [class.open]="materiaSelecionada?.id === item.id"
-        (dragover)="permitirSoltar($event, 'materia', item.planejamentoGrupoMateria?.id ?? 0)"
-        (drop)="soltarMateria($event, item)"
+        (dragover)="principal ? permitirSoltarPrincipal($event) : permitirSoltar($event, 'materia', item.planejamentoGrupoMateria?.id ?? 0)"
+        (drop)="principal ? soltarPrincipal($event, 'materia', item.id!) : soltarMateria($event, item)"
       >
         <div class="accordion-header">
           <button
@@ -84,7 +84,7 @@
             [draggable]="!salvandoOrdem"
             title="Arraste para alterar a ordem da matéria"
             aria-label="Alterar ordem da matéria"
-            (dragstart)="iniciarArraste($event, 'materia', item.id, item.planejamentoGrupoMateria?.id ?? 0)"
+            (dragstart)="principal ? iniciarArrastePrincipal($event, 'materia', item.id!) : iniciarArraste($event, 'materia', item.id, item.planejamentoGrupoMateria?.id ?? 0)"
             (dragend)="finalizarArraste()"
           >
             ⠿
@@ -110,6 +110,20 @@
             >
           </button>
           <div class="row-actions">
+            <ng-container *ngIf="principal">
+              <button
+                type="button"
+                title="Mover matéria para cima"
+                aria-label="Mover matéria para cima"
+                [disabled]="!podeMoverPrincipal('materia', item.id!, -1)"
+                (click)="moverPrincipal('materia', item.id!, -1)">↑</button>
+              <button
+                type="button"
+                title="Mover matéria para baixo"
+                aria-label="Mover matéria para baixo"
+                [disabled]="!podeMoverPrincipal('materia', item.id!, 1)"
+                (click)="moverPrincipal('materia', item.id!, 1)">↓</button>
+            </ng-container>
             <button type="button" (click)="editarMateria(item)">Editar</button
             ><button type="button" class="danger" (click)="excluirMateria(item)">Remover</button>
           </div>
@@ -228,16 +242,12 @@
     </ng-template>
 
     <div class="inline-loading" *ngIf="carregandoGruposMaterias">Carregando blocos...</div>
-    <div
-      class="accordion-list"
-      *ngIf="!carregandoGruposMaterias && (gruposMaterias.length || materiasSemGrupo().length)"
-    >
+    <ng-template #grupoMateriaCard let-grupo>
       <article
         class="matter-card"
-        *ngFor="let grupo of gruposMaterias"
         [class.open]="grupoMateriaSelecionado?.id === grupo.id"
-        (dragover)="permitirSoltar($event, 'grupoMateria', id!)"
-        (drop)="soltarGrupoMateria($event, grupo)"
+        (dragover)="permitirSoltarPrincipal($event)"
+        (drop)="soltarPrincipal($event, 'grupoMateria', grupo.id!)"
       >
         <div class="accordion-header">
           <button
@@ -246,7 +256,7 @@
             [draggable]="!salvandoOrdem"
             title="Arraste para alterar a ordem do bloco de matérias"
             aria-label="Alterar ordem do bloco de matérias"
-            (dragstart)="iniciarArraste($event, 'grupoMateria', grupo.id!, id!)"
+            (dragstart)="iniciarArrastePrincipal($event, 'grupoMateria', grupo.id!)"
             (dragend)="finalizarArraste()"
           >
             ⠿
@@ -264,6 +274,18 @@
             >
           </button>
           <div class="row-actions">
+            <button
+              type="button"
+              title="Mover bloco para cima"
+              aria-label="Mover bloco para cima"
+              [disabled]="!podeMoverPrincipal('grupoMateria', grupo.id!, -1)"
+              (click)="moverPrincipal('grupoMateria', grupo.id!, -1)">↑</button>
+            <button
+              type="button"
+              title="Mover bloco para baixo"
+              aria-label="Mover bloco para baixo"
+              [disabled]="!podeMoverPrincipal('grupoMateria', grupo.id!, 1)"
+              (click)="moverPrincipal('grupoMateria', grupo.id!, 1)">↓</button>
             <button type="button" (click)="abrirMateriaNoGrupo(grupo)">+ Matéria</button>
             <button type="button" (click)="editarGrupoMateria(grupo)">Editar</button>
             <button type="button" class="danger" (click)="excluirGrupoMateria(grupo)">
@@ -293,11 +315,25 @@
           </div>
         </div>
       </article>
-      <ng-container
-        *ngFor="let materia of materiasSemGrupo()"
-        [ngTemplateOutlet]="materiaCard"
-        [ngTemplateOutletContext]="{ $implicit: materia }"
-      ></ng-container>
+    </ng-template>
+
+    <div
+      class="accordion-list"
+      *ngIf="!carregandoGruposMaterias && (gruposMaterias.length || materiasSemGrupo().length)"
+    >
+      <ng-container *ngFor="let item of itensPrincipais(); trackBy: trackByItemPrincipal">
+        <ng-container
+          *ngIf="item.tipo === 'grupoMateria'; else materiaPrincipal"
+          [ngTemplateOutlet]="grupoMateriaCard"
+          [ngTemplateOutletContext]="{ $implicit: item.grupo }"
+        ></ng-container>
+        <ng-template #materiaPrincipal>
+          <ng-container
+            [ngTemplateOutlet]="materiaCard"
+            [ngTemplateOutletContext]="{ $implicit: item.materia, principal: true }"
+          ></ng-container>
+        </ng-template>
+      </ng-container>
     </div>
   </section>
 

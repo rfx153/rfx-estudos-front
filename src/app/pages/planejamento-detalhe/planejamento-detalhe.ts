@@ -28,6 +28,14 @@ import {
   PlanejamentoService,
 } from '../../services/planejamento.service';
 
+interface ItemPrincipalPlanejamento {
+  tipo: 'grupoMateria' | 'materia';
+  id: number;
+  ordem?: number | null;
+  grupo?: PlanejamentoGrupoMateria;
+  materia?: PlanejamentoMateria;
+}
+
 @Component({
   selector: 'app-planejamento-detalhe',
   standalone: true,
@@ -134,9 +142,10 @@ export class PlanejamentoDetalheComponent implements OnInit {
   salvandoOrdem = false;
   private estrutura?: PlanejamentoEstrutura;
   private arraste?: {
-    tipo: 'grupoMateria' | 'materia' | 'grupo' | 'item';
+    tipo: 'principal' | 'grupoMateria' | 'materia' | 'grupo' | 'item';
     id: number;
     contexto: number;
+    chave?: string;
   };
   private grupoMateriasPendente?: PlanejamentoGrupoMateria[];
   private readonly materiasPendentes = new Map<number, PlanejamentoMateria[]>();
@@ -220,6 +229,123 @@ export class PlanejamentoDetalheComponent implements OnInit {
       this.gruposPendentes.size ||
       this.itensPendentes.size
     );
+  }
+
+  itensPrincipais(): ItemPrincipalPlanejamento[] {
+    return [
+      ...this.gruposMaterias
+        .filter((grupo): grupo is PlanejamentoGrupoMateria & { id: number } => !!grupo.id)
+        .map((grupo) => ({
+          tipo: 'grupoMateria' as const,
+          id: grupo.id,
+          ordem: grupo.ordem,
+          grupo,
+        })),
+      ...this.materiasSemGrupo()
+        .filter((materia): materia is PlanejamentoMateria & { id: number } => !!materia.id)
+        .map((materia) => ({
+          tipo: 'materia' as const,
+          id: materia.id,
+          ordem: materia.ordem,
+          materia,
+        })),
+    ].sort((a, b) => (a.ordem ?? Number.MAX_SAFE_INTEGER) - (b.ordem ?? Number.MAX_SAFE_INTEGER));
+  }
+
+  trackByItemPrincipal(_indice: number, item: ItemPrincipalPlanejamento): string {
+    return `${item.tipo}:${item.id}`;
+  }
+
+  podeMoverPrincipal(
+    tipo: 'grupoMateria' | 'materia',
+    id: number,
+    direcao: -1 | 1,
+  ): boolean {
+    const itens = this.itensPrincipais();
+    const indice = itens.findIndex((item) => item.tipo === tipo && item.id === id);
+    return indice >= 0 && indice + direcao >= 0 && indice + direcao < itens.length;
+  }
+
+  moverPrincipal(
+    tipo: 'grupoMateria' | 'materia',
+    id: number,
+    direcao: -1 | 1,
+  ): void {
+    const itens = this.itensPrincipais();
+    const origem = itens.findIndex((item) => item.tipo === tipo && item.id === id);
+    const destino = origem + direcao;
+    if (origem < 0 || destino < 0 || destino >= itens.length) return;
+
+    this.reordenarItensPrincipais(itens, origem, destino);
+  }
+
+  iniciarArrastePrincipal(
+    evento: DragEvent,
+    tipo: 'grupoMateria' | 'materia',
+    id: number,
+  ): void {
+    if (this.salvandoOrdem) {
+      evento.preventDefault();
+      return;
+    }
+
+    const chave = `${tipo}:${id}`;
+    this.arraste = { tipo: 'principal', id, contexto: this.id ?? 0, chave };
+    if (evento.dataTransfer) {
+      evento.dataTransfer.effectAllowed = 'move';
+      evento.dataTransfer.setData('text/plain', chave);
+    }
+  }
+
+  permitirSoltarPrincipal(evento: DragEvent): void {
+    if (this.arraste?.tipo !== 'principal' || this.arraste.contexto !== (this.id ?? 0)) return;
+    evento.preventDefault();
+    if (evento.dataTransfer) evento.dataTransfer.dropEffect = 'move';
+  }
+
+  soltarPrincipal(
+    evento: DragEvent,
+    tipoDestino: 'grupoMateria' | 'materia',
+    destinoId: number,
+  ): void {
+    evento.preventDefault();
+    if (this.arraste?.tipo !== 'principal') return;
+
+    const origemChave = this.arraste.chave;
+    const destinoChave = `${tipoDestino}:${destinoId}`;
+    this.arraste = undefined;
+    if (!origemChave || origemChave === destinoChave) return;
+
+    const itens = this.itensPrincipais();
+    const origem = itens.findIndex((item) => `${item.tipo}:${item.id}` === origemChave);
+    const destino = itens.findIndex((item) => `${item.tipo}:${item.id}` === destinoChave);
+    if (origem < 0 || destino < 0) return;
+
+    this.reordenarItensPrincipais(itens, origem, destino);
+  }
+
+  private reordenarItensPrincipais(
+    itens: ItemPrincipalPlanejamento[],
+    origem: number,
+    destino: number,
+  ): void {
+    const [movido] = itens.splice(origem, 1);
+    itens.splice(destino, 0, movido);
+    itens.forEach((item, indice) => {
+      const ordem = indice + 1;
+      if (item.grupo) item.grupo.ordem = ordem;
+      if (item.materia) item.materia.ordem = ordem;
+    });
+
+    this.gruposMaterias = [...this.gruposMaterias].sort(
+      (a, b) => (a.ordem ?? Number.MAX_SAFE_INTEGER) - (b.ordem ?? Number.MAX_SAFE_INTEGER),
+    );
+    const materiasSemGrupo = this.materiasSemGrupo().sort(
+      (a, b) => (a.ordem ?? Number.MAX_SAFE_INTEGER) - (b.ordem ?? Number.MAX_SAFE_INTEGER),
+    );
+    this.grupoMateriasPendente = this.gruposMaterias;
+    this.materiasPendentes.set(0, materiasSemGrupo);
+    this.cdr.detectChanges();
   }
 
   iniciarArraste(

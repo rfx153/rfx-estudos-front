@@ -268,7 +268,8 @@
       </article>
     </ng-template>
 
-    <article class="materia" *ngFor="let bloco of blocosMaterias">
+    <ng-template #blocoCard let-bloco>
+    <article class="materia">
       <div class="materia-header">
         <button
           type="button"
@@ -336,11 +337,20 @@
         ></ng-container>
       </div>
     </article>
+    </ng-template>
 
-    <ng-container
-      *ngFor="let materia of materias"
-      [ngTemplateOutlet]="materiaCard"
-      [ngTemplateOutletContext]="{ $implicit: materia }"
-    ></ng-container>
+    <ng-container *ngFor="let item of itensPrincipais()">
+      <ng-container
+        *ngIf="item.tipo === 'bloco'; else materiaPrincipal"
+        [ngTemplateOutlet]="blocoCard"
+        [ngTemplateOutletContext]="{ $implicit: item.bloco }"
+      ></ng-container>
+      <ng-template #materiaPrincipal>
+        <ng-container
+          [ngTemplateOutlet]="materiaCard"
+          [ngTemplateOutletContext]="{ $implicit: item.materia }"
+        ></ng-container>
+      </ng-template>
+    </ng-container>
   </section>
 </div>

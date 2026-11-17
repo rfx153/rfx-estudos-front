@@ -96,6 +96,7 @@
   cursor: grab;
   font-size: 20px;
 }
+
 .accordion-trigger,
 .group-trigger {
   display: flex;

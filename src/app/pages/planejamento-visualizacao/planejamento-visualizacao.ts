@@ -80,6 +80,13 @@ interface BlocoMateriaVisualizacao {
   aberto: boolean;
 }
 
+interface ItemPrincipalVisualizacao {
+  tipo: 'bloco' | 'materia';
+  ordem?: number | null;
+  bloco?: BlocoMateriaVisualizacao;
+  materia?: MateriaVisualizacao;
+}
+
 @Component({
   selector: 'app-planejamento-visualizacao',
   standalone: true,
@@ -138,6 +145,21 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
 
   get progressoPlanejamento(): number {
     return this.totalEtapas ? Math.round((this.etapasConcluidas / this.totalEtapas) * 100) : 0;
+  }
+
+  itensPrincipais(): ItemPrincipalVisualizacao[] {
+    return [
+      ...this.blocosMaterias.map((bloco) => ({
+        tipo: 'bloco' as const,
+        ordem: bloco.ordem,
+        bloco,
+      })),
+      ...this.materias.map((materia) => ({
+        tipo: 'materia' as const,
+        ordem: materia.ordem,
+        materia,
+      })),
+    ].sort((a, b) => (a.ordem ?? Number.MAX_SAFE_INTEGER) - (b.ordem ?? Number.MAX_SAFE_INTEGER));
   }
 
   ngOnInit(): void {
