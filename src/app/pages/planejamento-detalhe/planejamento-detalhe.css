@@ -83,7 +83,18 @@
 }
 .accordion-header,
 .group-header {
+  gap: 0;
   padding: 0 14px 0 0;
+}
+.drag-handle {
+  flex: 0 0 34px;
+  height: 38px;
+  margin-left: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted, #64748b);
+  cursor: grab;
+  font-size: 20px;
 }
 .accordion-trigger,
 .group-trigger {
@@ -160,7 +171,7 @@
 }
 .topic-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   border: 1px solid var(--border, #e5e7eb);
   border-radius: 7px;

@@ -50,7 +50,17 @@
         <p>Organize-as em blocos e abra uma matéria para gerenciar seu conteúdo.</p>
       </div>
       <div class="workspace-actions">
-        <button nz-button nzType="primary" type="button" (click)="abrirMateria()">
+        <button
+          nz-button
+          nzType="primary"
+          type="button"
+          [disabled]="!ordemPendente"
+          [nzLoading]="salvandoOrdem"
+          (click)="salvarOrdem()"
+        >
+          Salvar ordem
+        </button>
+        <button nz-button type="button" (click)="abrirMateria()">
           + Adicionar item
         </button>
       </div>
@@ -61,8 +71,24 @@
     </div>
 
     <ng-template #materiaCard let-item>
-      <article class="matter-card" [class.open]="materiaSelecionada?.id === item.id">
+      <article
+        class="matter-card"
+        [class.open]="materiaSelecionada?.id === item.id"
+        (dragover)="permitirSoltar($event, 'materia', item.planejamentoGrupoMateria?.id ?? 0)"
+        (drop)="soltarMateria($event, item)"
+      >
         <div class="accordion-header">
+          <button
+            type="button"
+            class="drag-handle"
+            [draggable]="!salvandoOrdem"
+            title="Arraste para alterar a ordem da matéria"
+            aria-label="Alterar ordem da matéria"
+            (dragstart)="iniciarArraste($event, 'materia', item.id, item.planejamentoGrupoMateria?.id ?? 0)"
+            (dragend)="finalizarArraste()"
+          >
+            ⠿
+          </button>
           <button
             type="button"
             class="accordion-trigger"
@@ -109,8 +135,21 @@
               class="group-card"
               *ngFor="let grupo of grupos"
               [class.open]="grupoSelecionado?.id === grupo.id"
+              (dragover)="permitirSoltar($event, 'grupo', materiaSelecionada!.id!)"
+              (drop)="soltarGrupo($event, grupo)"
             >
               <div class="group-header">
+                <button
+                  type="button"
+                  class="drag-handle"
+                  [draggable]="!salvandoOrdem"
+                  title="Arraste para alterar a ordem"
+                  aria-label="Alterar ordem do bloco ou assunto"
+                  (dragstart)="iniciarArraste($event, 'grupo', grupo.id!, materiaSelecionada!.id!)"
+                  (dragend)="finalizarArraste()"
+                >
+                  ⠿
+                </button>
                 <button
                   type="button"
                   class="group-trigger"
@@ -149,7 +188,23 @@
                   Nenhum assunto adicionado.
                 </div>
                 <div class="topics-list" *ngIf="!carregandoItens && itens.length">
-                  <article class="topic-row" *ngFor="let assunto of itens">
+                  <article
+                    class="topic-row"
+                    *ngFor="let assunto of itens"
+                    (dragover)="permitirSoltar($event, 'item', grupoSelecionado!.id!)"
+                    (drop)="soltarItem($event, assunto)"
+                  >
+                    <button
+                      type="button"
+                      class="drag-handle"
+                      [draggable]="!salvandoOrdem"
+                      title="Arraste para alterar a ordem do assunto"
+                      aria-label="Alterar ordem do assunto"
+                      (dragstart)="iniciarArraste($event, 'item', assunto.id!, grupoSelecionado!.id!)"
+                      (dragend)="finalizarArraste()"
+                    >
+                      ⠿
+                    </button>
                     <button type="button" class="topic-main" (click)="abrirEtapas(assunto)">
                       <strong>{{ assunto.assunto.nome }}</strong
                       ><small
@@ -181,8 +236,21 @@
         class="matter-card"
         *ngFor="let grupo of gruposMaterias"
         [class.open]="grupoMateriaSelecionado?.id === grupo.id"
+        (dragover)="permitirSoltar($event, 'grupoMateria', id!)"
+        (drop)="soltarGrupoMateria($event, grupo)"
       >
         <div class="accordion-header">
+          <button
+            type="button"
+            class="drag-handle"
+            [draggable]="!salvandoOrdem"
+            title="Arraste para alterar a ordem do bloco de matérias"
+            aria-label="Alterar ordem do bloco de matérias"
+            (dragstart)="iniciarArraste($event, 'grupoMateria', grupo.id!, id!)"
+            (dragend)="finalizarArraste()"
+          >
+            ⠿
+          </button>
           <button
             type="button"
             class="accordion-trigger"

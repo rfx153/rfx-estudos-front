@@ -15,6 +15,7 @@ import {
   PlanejamentoEstrutura,
   PlanejamentoMateria,
   PlanejamentoMateriaDTO,
+  PlanejamentoReordenacaoDTO,
   PlanejamentoGrupoMateria,
   PlanejamentoGrupoMateriaDTO,
   PlanejamentoGrupoAssunto,
@@ -130,7 +131,20 @@ export class PlanejamentoDetalheComponent implements OnInit {
   modalEtapasAberto = false;
   modalEtapaAberto = false;
   nomesAssuntosPorGrupo = new Map<number, string>();
+  salvandoOrdem = false;
   private estrutura?: PlanejamentoEstrutura;
+  private arraste?: {
+    tipo: 'grupoMateria' | 'materia' | 'grupo' | 'item';
+    id: number;
+    contexto: number;
+  };
+  private grupoMateriasPendente?: PlanejamentoGrupoMateria[];
+  private readonly materiasPendentes = new Map<number, PlanejamentoMateria[]>();
+  private readonly gruposPendentes = new Map<number, PlanejamentoGrupoAssunto[]>();
+  private readonly itensPendentes = new Map<
+    number,
+    { planejamentoMateriaId: number; itens: PlanejamentoGrupoAssuntoItem[] }
+  >();
 
   ngOnInit(): void {
     const parametroId = this.route.snapshot.paramMap.get('id');
@@ -197,6 +211,115 @@ export class PlanejamentoDetalheComponent implements OnInit {
     return ['Não informada', 'Muito fácil', 'Fácil', 'Média', 'Difícil', 'Muito difícil'][
       valor ?? 0
     ] ?? 'Não informada';
+  }
+
+  get ordemPendente(): boolean {
+    return !!(
+      this.grupoMateriasPendente ||
+      this.materiasPendentes.size ||
+      this.gruposPendentes.size ||
+      this.itensPendentes.size
+    );
+  }
+
+  iniciarArraste(
+    evento: DragEvent,
+    tipo: 'grupoMateria' | 'materia' | 'grupo' | 'item',
+    id: number,
+    contexto: number,
+  ): void {
+    if (this.salvandoOrdem) {
+      evento.preventDefault();
+      return;
+    }
+
+    this.arraste = { tipo, id, contexto };
+    if (evento.dataTransfer) {
+      evento.dataTransfer.effectAllowed = 'move';
+      evento.dataTransfer.setData('text/plain', `${tipo}:${id}`);
+    }
+  }
+
+  permitirSoltar(
+    evento: DragEvent,
+    tipo: 'grupoMateria' | 'materia' | 'grupo' | 'item',
+    contexto: number,
+  ): void {
+    if (this.arraste?.tipo !== tipo || this.arraste.contexto !== contexto) return;
+    evento.preventDefault();
+    if (evento.dataTransfer) evento.dataTransfer.dropEffect = 'move';
+  }
+
+  finalizarArraste(): void {
+    this.arraste = undefined;
+  }
+
+  soltarGrupoMateria(evento: DragEvent, destino: PlanejamentoGrupoMateria): void {
+    if (!this.podeSoltar(evento, 'grupoMateria', this.id ?? 0, destino.id)) return;
+
+    const ordenada = this.mover(this.gruposMaterias, this.arraste!.id, destino.id!);
+    this.arraste = undefined;
+    if (!ordenada) return;
+
+    this.gruposMaterias = this.definirOrdens(ordenada);
+    this.grupoMateriasPendente = this.gruposMaterias;
+  }
+
+  soltarMateria(evento: DragEvent, destino: PlanejamentoMateria): void {
+    const contexto = destino.planejamentoGrupoMateria?.id ?? 0;
+    if (!this.podeSoltar(evento, 'materia', contexto, destino.id)) return;
+
+    const lista = contexto
+      ? this.materiasPlanejadas.filter(
+          (item) => item.planejamentoGrupoMateria?.id === contexto,
+        )
+      : this.materiasSemGrupo();
+    const ordenada = this.mover(lista, this.arraste!.id, destino.id!);
+    this.arraste = undefined;
+    if (!ordenada) return;
+
+    const anterior = this.materiasPlanejadas;
+    const comOrdem = this.definirOrdens(ordenada);
+    let indice = 0;
+    this.materiasPlanejadas = anterior.map((item) =>
+      (item.planejamentoGrupoMateria?.id ?? 0) === contexto ? comOrdem[indice++] : item,
+    );
+    this.materiasPendentes.set(contexto, comOrdem);
+  }
+
+  soltarGrupo(evento: DragEvent, destino: PlanejamentoGrupoAssunto): void {
+    if (
+      !this.materiaSelecionada?.id ||
+      !this.podeSoltar(evento, 'grupo', this.materiaSelecionada.id, destino.id)
+    )
+      return;
+
+    const ordenada = this.mover(this.grupos, this.arraste!.id, destino.id!);
+    this.arraste = undefined;
+    if (!ordenada) return;
+
+    this.grupos = this.definirOrdens(ordenada);
+    this.gruposPendentes.set(this.materiaSelecionada.id, this.grupos);
+    this.atualizarOrdemDaEstrutura('grupo', this.grupos);
+  }
+
+  soltarItem(evento: DragEvent, destino: PlanejamentoGrupoAssuntoItem): void {
+    if (
+      !this.grupoSelecionado?.id ||
+      !this.podeSoltar(evento, 'item', this.grupoSelecionado.id, destino.id)
+    )
+      return;
+
+    const ordenada = this.mover(this.itens, this.arraste!.id, destino.id!);
+    this.arraste = undefined;
+    if (!ordenada) return;
+
+    this.itens = this.definirOrdens(ordenada);
+    this.itensPendentes.set(this.grupoSelecionado.id, {
+      planejamentoMateriaId: this.materiaSelecionada!.id!,
+      itens: this.itens,
+    });
+    this.atualizarOrdemDaEstrutura('item', this.itens);
   }
 
   salvarMateria(): void {
@@ -943,6 +1066,127 @@ export class PlanejamentoDetalheComponent implements OnInit {
       });
   }
 
+  private podeSoltar(
+    evento: DragEvent,
+    tipo: 'grupoMateria' | 'materia' | 'grupo' | 'item',
+    contexto: number,
+    destinoId?: number,
+  ): boolean {
+    evento.preventDefault();
+    return !!(
+      destinoId &&
+      this.arraste?.tipo === tipo &&
+      this.arraste.contexto === contexto &&
+      this.arraste.id !== destinoId
+    );
+  }
+
+  private mover<T extends { id?: number }>(
+    lista: T[],
+    origemId: number,
+    destinoId: number,
+  ): T[] | undefined {
+    const origem = lista.findIndex((item) => item.id === origemId);
+    const destino = lista.findIndex((item) => item.id === destinoId);
+    if (origem < 0 || destino < 0 || origem === destino) return undefined;
+
+    const ordenada = [...lista];
+    const [movida] = ordenada.splice(origem, 1);
+    ordenada.splice(destino, 0, movida);
+    return ordenada;
+  }
+
+  private definirOrdens<T extends { ordem?: number | null }>(lista: T[]): T[] {
+    return lista.map((item, indice) => ({ ...item, ordem: indice + 1 }));
+  }
+
+  private dadosDeReordenacao<T extends { id?: number; ordem?: number | null }>(
+    lista: T[],
+  ): PlanejamentoReordenacaoDTO {
+    return {
+      itens: lista.map((item) => ({ id: item.id!, ordem: item.ordem! })),
+    };
+  }
+
+  salvarOrdem(): void {
+    if (!this.id || !this.ordemPendente || this.salvandoOrdem) return;
+
+    const requisicoes: Observable<void>[] = [];
+    if (this.grupoMateriasPendente) {
+      requisicoes.push(
+        this.service.reordenarGruposMaterias(
+          this.id,
+          this.dadosDeReordenacao(this.grupoMateriasPendente),
+        ),
+      );
+    }
+    this.materiasPendentes.forEach((materias) =>
+      requisicoes.push(
+        this.service.reordenarMaterias(this.id!, this.dadosDeReordenacao(materias)),
+      ),
+    );
+    this.gruposPendentes.forEach((grupos, planejamentoMateriaId) =>
+      requisicoes.push(
+        this.service.reordenarGrupos(
+          this.id!,
+          planejamentoMateriaId,
+          this.dadosDeReordenacao(grupos),
+        ),
+      ),
+    );
+    this.itensPendentes.forEach(({ planejamentoMateriaId, itens }, grupoId) =>
+      requisicoes.push(
+        this.service.reordenarItens(
+          this.id!,
+          planejamentoMateriaId,
+          grupoId,
+          this.dadosDeReordenacao(itens),
+        ),
+      ),
+    );
+
+    this.salvandoOrdem = true;
+    forkJoin(requisicoes)
+      .pipe(finalize(() => {
+        this.salvandoOrdem = false;
+        this.cdr.detectChanges();
+      }))
+      .subscribe({
+        next: () => {
+          this.grupoMateriasPendente = undefined;
+          this.materiasPendentes.clear();
+          this.gruposPendentes.clear();
+          this.itensPendentes.clear();
+          this.message.success('Ordem salva com sucesso.');
+        },
+        error: (erro) => {
+          console.error('Erro ao salvar a ordem do planejamento:', erro);
+          this.message.error('Não foi possível salvar a ordem. Tente novamente.');
+        },
+      });
+  }
+
+  private atualizarOrdemDaEstrutura(
+    tipo: 'grupo' | 'item',
+    lista: Array<{ id?: number; ordem?: number | null }>,
+  ): void {
+    if (!this.estrutura) return;
+    const ordens = new Map(lista.map((item) => [item.id, item.ordem]));
+    this.estrutura = tipo === 'grupo'
+      ? {
+          ...this.estrutura,
+          grupos: this.estrutura.grupos.map((grupo) =>
+            ordens.has(grupo.id) ? { ...grupo, ordem: ordens.get(grupo.id) } : grupo,
+          ),
+        }
+      : {
+          ...this.estrutura,
+          itens: this.estrutura.itens.map((item) =>
+            ordens.has(item.id) ? { ...item, ordem: ordens.get(item.id) } : item,
+          ),
+        };
+  }
+
   private carregar(): void {
     if (!this.id) return;
     this.carregando = true;
@@ -1214,6 +1458,12 @@ export class PlanejamentoDetalheComponent implements OnInit {
     this.service.buscarEstrutura(this.id).subscribe({
       next: (estrutura) => {
         this.estrutura = estrutura;
+        this.gruposPendentes.forEach((grupos) =>
+          this.atualizarOrdemDaEstrutura('grupo', grupos),
+        );
+        this.itensPendentes.forEach(({ itens }) =>
+          this.atualizarOrdemDaEstrutura('item', itens),
+        );
         aposCarregar?.();
         this.cdr.detectChanges();
       },
@@ -1235,7 +1485,8 @@ export class PlanejamentoDetalheComponent implements OnInit {
         nome: grupo.nome,
         peso: grupo.peso,
         ordem: grupo.ordem,
-      }));
+      }))
+      .sort((a, b) => (a.ordem ?? Number.MAX_SAFE_INTEGER) - (b.ordem ?? Number.MAX_SAFE_INTEGER));
   }
 
   private itensDaEstrutura(grupoId: number): PlanejamentoGrupoAssuntoItem[] {
@@ -1247,7 +1498,8 @@ export class PlanejamentoDetalheComponent implements OnInit {
         peso: item.peso,
         dificuldade: item.dificuldade,
         ordem: item.ordem,
-      }));
+      }))
+      .sort((a, b) => (a.ordem ?? Number.MAX_SAFE_INTEGER) - (b.ordem ?? Number.MAX_SAFE_INTEGER));
   }
 
   private etapasDaEstrutura(itemId: number): PlanejamentoItemEtapa[] {

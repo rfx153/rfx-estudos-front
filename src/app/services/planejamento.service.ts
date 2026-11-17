@@ -95,6 +95,10 @@ export interface PlanejamentoItemEtapaDTO {
   concluidaManualmente?: boolean;
 }
 
+export interface PlanejamentoReordenacaoDTO {
+  itens: Array<{ id: number; ordem: number }>;
+}
+
 export interface PlanejamentoAproveitamento {
   assuntoId: number;
   questoesFeitas: number;
@@ -210,6 +214,16 @@ export class PlanejamentoService {
     );
   }
 
+  reordenarGruposMaterias(
+    planejamentoId: number,
+    dados: PlanejamentoReordenacaoDTO,
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${this.apiUrl}/${planejamentoId}/grupos-materias/ordem`,
+      dados,
+    );
+  }
+
   excluirGrupoMateria(planejamentoId: number, id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${planejamentoId}/grupos-materias/${id}`);
   }
@@ -238,6 +252,13 @@ export class PlanejamentoService {
       `${this.apiUrl}/${planejamentoId}/materias/${id}`,
       dados,
     );
+  }
+
+  reordenarMaterias(
+    planejamentoId: number,
+    dados: PlanejamentoReordenacaoDTO,
+  ): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${planejamentoId}/materias/ordem`, dados);
   }
 
   excluirMateria(planejamentoId: number, id: number): Observable<void> {
@@ -282,6 +303,17 @@ export class PlanejamentoService {
   ): Observable<PlanejamentoGrupoAssunto> {
     return this.http.put<PlanejamentoGrupoAssunto>(
       `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${id}`,
+      dados,
+    );
+  }
+
+  reordenarGrupos(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+    dados: PlanejamentoReordenacaoDTO,
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/ordem`,
       dados,
     );
   }
@@ -338,6 +370,18 @@ export class PlanejamentoService {
   ): Observable<PlanejamentoGrupoAssuntoItem> {
     return this.http.put<PlanejamentoGrupoAssuntoItem>(
       `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/${id}`,
+      dados,
+    );
+  }
+
+  reordenarItens(
+    planejamentoId: number,
+    planejamentoMateriaId: number,
+    grupoId: number,
+    dados: PlanejamentoReordenacaoDTO,
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${this.apiUrl}/${planejamentoId}/materias/${planejamentoMateriaId}/grupos/${grupoId}/itens/ordem`,
       dados,
     );
   }
