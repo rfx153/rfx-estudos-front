@@ -5,7 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { forkJoin, of } from 'rxjs';
 import { catchError, finalize, map, switchMap, timeout } from 'rxjs/operators';
-import { RegistroService, TipoRegistro } from '../../services/registro.service';
+import { Registro, RegistroService, TipoRegistro } from '../../services/registro.service';
 import {
   Planejamento,
   PlanejamentoAproveitamento,
@@ -35,6 +35,14 @@ interface AssuntoVisualizacao {
   etapas: EtapaVisualizacao[];
   questoesFeitas: number;
   questoesAcertadas: number;
+  ultimasQuestoesFeitas?: number;
+  ultimasQuestoesAcertadas?: number;
+}
+
+interface UltimoAproveitamento {
+  questoesFeitas: number;
+  questoesAcertadas: number;
+  dataHora: string;
 }
 
 interface EtapaVisualizacao {
@@ -186,6 +194,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
             materias,
             estrutura,
             aproveitamentosPorAssunto,
+            new Map<number, UltimoAproveitamento>(),
           );
           return {
             materias: materiasVisualizacao.filter((materia) => !materia.grupoMateriaId),
@@ -202,6 +211,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
           this.materias = materias.filter((materia) => !materia.grupoMateriaId);
           this.blocosMaterias = blocosMaterias;
           this.cdr.detectChanges();
+          this.carregarUltimosDesempenhos();
         },
         error: (erro) => {
           console.error('Erro ao carregar planejamento:', erro);
@@ -491,6 +501,18 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     return `${assunto.questoesAcertadas} acertos de ${assunto.questoesFeitas} questões`;
   }
 
+  ultimoAproveitamento(assunto: AssuntoVisualizacao): string {
+    if (!assunto.ultimasQuestoesFeitas) return '—';
+    return `${Math.round(
+      ((assunto.ultimasQuestoesAcertadas ?? 0) / assunto.ultimasQuestoesFeitas) * 100,
+    )}%`;
+  }
+
+  detalhesUltimoAproveitamento(assunto: AssuntoVisualizacao): string | null {
+    if (!assunto.ultimasQuestoesFeitas) return null;
+    return `${assunto.ultimasQuestoesAcertadas ?? 0} acertos de ${assunto.ultimasQuestoesFeitas} questões`;
+  }
+
   rotuloDificuldade(valor?: number | null): string {
     return ['Não informada', 'Muito fácil', 'Fácil', 'Média', 'Difícil', 'Muito difícil'][
       valor ?? 0
@@ -520,6 +542,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     materias: PlanejamentoMateria[],
     estrutura: PlanejamentoEstrutura,
     aproveitamentosPorAssunto: Map<number, PlanejamentoAproveitamento>,
+    ultimosAproveitamentosPorAssunto: Map<number, UltimoAproveitamento>,
   ): MateriaVisualizacao[] {
     const itensPorGrupo = new Map<number, typeof estrutura.itens>();
     const etapasPorItem = new Map<number, typeof estrutura.etapas>();
@@ -550,6 +573,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
               .sort((a, b) => (a.ordem ?? 9999) - (b.ordem ?? 9999))
               .map((item): AssuntoVisualizacao => {
                 const aproveitamento = aproveitamentosPorAssunto.get(item.assuntoId);
+                const ultimoAproveitamento = ultimosAproveitamentosPorAssunto.get(item.assuntoId);
                 return {
                   id: item.assuntoId,
                   nome: item.assuntoNome,
@@ -561,6 +585,8 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
                   ordem: item.ordem,
                   questoesFeitas: aproveitamento?.questoesFeitas ?? 0,
                   questoesAcertadas: aproveitamento?.questoesAcertadas ?? 0,
+                  ultimasQuestoesFeitas: ultimoAproveitamento?.questoesFeitas ?? 0,
+                  ultimasQuestoesAcertadas: ultimoAproveitamento?.questoesAcertadas ?? 0,
                   etapas: (etapasPorItem.get(item.id) ?? [])
                     .sort((a, b) => (a.ordem ?? 9999) - (b.ordem ?? 9999))
                     .map((etapa): EtapaVisualizacao => ({
@@ -577,6 +603,45 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
           })),
       }))
       .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  }
+
+  private criarUltimosAproveitamentos(registros: Registro[]): Map<number, UltimoAproveitamento> {
+    const ultimosPorAssunto = new Map<number, UltimoAproveitamento>();
+
+    registros.forEach((registro) => {
+      const assuntoId = registro.assunto?.id;
+      if (!assuntoId || !registro.questoesFeitas) return;
+
+      const dataHora = `${registro.dataEstudo ?? ''}T${registro.horarioInicio ?? '00:00:00'}`;
+      const atual = ultimosPorAssunto.get(assuntoId);
+      if (atual && atual.dataHora >= dataHora) return;
+
+      ultimosPorAssunto.set(assuntoId, {
+        questoesFeitas: registro.questoesFeitas,
+        questoesAcertadas: registro.questoesAcertadas || 0,
+        dataHora,
+      });
+    });
+
+    return ultimosPorAssunto;
+  }
+
+  private carregarUltimosDesempenhos(): void {
+    this.registroService
+      .listarRecentes(1000)
+      .pipe(timeout(this.tempoLimiteConsulta))
+      .subscribe({
+        next: (registros) => {
+          const ultimosPorAssunto = this.criarUltimosAproveitamentos(registros);
+          this.todosOsAssuntos().forEach((assunto) => {
+            const ultimo = ultimosPorAssunto.get(assunto.id);
+            assunto.ultimasQuestoesFeitas = ultimo?.questoesFeitas ?? 0;
+            assunto.ultimasQuestoesAcertadas = ultimo?.questoesAcertadas ?? 0;
+          });
+          this.cdr.detectChanges();
+        },
+        error: (erro) => console.error('Erro ao carregar o último desempenho:', erro),
+      });
   }
 
   private carregarMaterias(

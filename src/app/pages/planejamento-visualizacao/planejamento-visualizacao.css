@@ -391,8 +391,8 @@
 .assunto-cabecalho,
 .assunto-linha {
   display: grid;
-  grid-template-columns: minmax(220px, 2fr) repeat(5, minmax(120px, 1fr)) minmax(120px, 1.15fr);
-  min-width: 1080px;
+  grid-template-columns: minmax(220px, 2fr) repeat(7, minmax(120px, 1fr)) minmax(120px, 1.15fr);
+  min-width: 1360px;
 }
 
 .assunto-cabecalho {
@@ -404,7 +404,7 @@
 }
 .grupo-linha,
 .grupo-vazio {
-  min-width: 1080px;
+  min-width: 1360px;
   padding: 10px 12px;
   border-top: 1px solid var(--border, #e5e7eb);
 }
@@ -534,10 +534,17 @@
   background: #fffbeb;
   color: #b45309;
 }
-.etapa-status .desempenho {
-  font-weight: 700;
-  white-space: nowrap;
+.desempenho-coluna {
+  display: grid;
+  gap: 3px;
+  justify-items: center;
+  color: #15803d;
+  text-align: center;
 }
+
+.desempenho-coluna.ultimo { color: #1d4ed8; }
+.desempenho-coluna strong { padding: 0; font-size: 15px; }
+.desempenho-coluna small { color: var(--text-muted, #64748b); font-size: 10px; }
 .peso-prova,
 .dificuldade {
   font-weight: 600;

@@ -158,6 +158,8 @@
                 <span>Resumo</span>
                 <span>Questões</span>
                 <span>Revisão</span>
+                <span>Desempenho total</span>
+                <span>Último desempenho</span>
                 <span>Peso na prova</span>
                 <span>Dificuldade</span>
               </div>
@@ -198,17 +200,26 @@
                       <option value="NAO_INICIADO">Não iniciado</option><option value="EM_ANDAMENTO">Em andamento</option><option value="CONCLUIDO">Concluído</option>
                     </select>
                     <small *ngIf="dataConclusaoDaEtapa(assunto, 'quest')">{{ dataConclusaoDaEtapa(assunto, 'quest') | date: 'dd/MM/yy' }}</small>
-                    <small class="desempenho" [attr.title]="detalhesAproveitamento(assunto)"
-                      >Desempenho: {{ aproveitamento(assunto) }}<ng-container *ngIf="assunto.questoesFeitas">
-                        · {{ assunto.questoesAcertadas }}/{{ assunto.questoesFeitas }}</ng-container
-                      ></small
-                    >
                   </div>
                   <div class="etapa-status" [class.ativa]="etapaConcluida(assunto, 'revis')" [class.andamento]="etapaEmAndamento(assunto, 'revis')" [class.salvando]="etapaSendoSalva(assunto, 'revis')">
                     <select aria-label="Status de Revisão" [value]="statusEtapa(assunto, 'revis')" [disabled]="etapaSendoSalva(assunto, 'revis')" (change)="alterarStatusEtapa(assunto, 'revis', $any($event.target).value)">
                       <option value="NAO_INICIADO">Não iniciado</option><option value="EM_ANDAMENTO">Em andamento</option><option value="CONCLUIDO">Concluído</option>
                     </select>
                     <small *ngIf="dataConclusaoDaEtapa(assunto, 'revis')">{{ dataConclusaoDaEtapa(assunto, 'revis') | date: 'dd/MM/yy' }}</small>
+                  </div>
+                  <div class="desempenho-coluna" [attr.title]="detalhesAproveitamento(assunto)">
+                    <strong>{{ aproveitamento(assunto) }}</strong>
+                    <small *ngIf="assunto.questoesFeitas">
+                      {{ assunto.questoesAcertadas }}/{{ assunto.questoesFeitas }} questões
+                    </small>
+                    <small *ngIf="!assunto.questoesFeitas">Sem questões</small>
+                  </div>
+                  <div class="desempenho-coluna ultimo" [attr.title]="detalhesUltimoAproveitamento(assunto)">
+                    <strong>{{ ultimoAproveitamento(assunto) }}</strong>
+                    <small *ngIf="assunto.ultimasQuestoesFeitas">
+                      {{ assunto.ultimasQuestoesAcertadas || 0 }}/{{ assunto.ultimasQuestoesFeitas }} questões
+                    </small>
+                    <small *ngIf="!assunto.ultimasQuestoesFeitas">Sem questões</small>
                   </div>
                   <span class="peso-prova">
                     <input
