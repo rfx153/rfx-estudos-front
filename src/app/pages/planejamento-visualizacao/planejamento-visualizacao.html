@@ -104,6 +104,11 @@
               <span class="item-title">
                 <strong>{{ materia.nome }}</strong>
                 <span class="item-type">Matéria</span>
+                <span
+                  class="item-performance performance-score performance-badge"
+                  [ngClass]="classeDesempenho(desempenhoDaMateria(materia), !!questoesDaMateria(materia))">
+                  Desempenho {{ questoesDaMateria(materia) ? desempenhoDaMateria(materia) + '%' : '—' }}
+                </span>
               </span>
               <small
                 >{{ quantidadeAssuntos(materia) }} assuntos · {{ progressoMateria(materia) }}%
@@ -275,6 +280,11 @@
             <span class="item-title">
               <strong>{{ bloco.nome }}</strong>
               <span class="item-type block">Bloco</span>
+              <span
+                class="item-performance performance-score performance-badge"
+                [ngClass]="classeDesempenho(desempenhoDoBloco(bloco), !!questoesDoBloco(bloco))">
+                Desempenho {{ questoesDoBloco(bloco) ? desempenhoDoBloco(bloco) + '%' : '—' }}
+              </span>
             </span>
             <small
               >{{ bloco.materias.length }} matérias · {{ progressoBlocoMateria(bloco) }}% concluído · Peso {{ bloco.peso ?? '—' }} ·

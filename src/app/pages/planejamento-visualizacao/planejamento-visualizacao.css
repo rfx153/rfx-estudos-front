@@ -313,7 +313,16 @@
 .item-title {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
+}
+
+.item-performance {
+  min-width: 0;
+  padding: 3px 9px !important;
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .item-type {

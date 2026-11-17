@@ -252,6 +252,54 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     return this.calcularProgresso(etapas);
   }
 
+  questoesDaMateria(materia: MateriaVisualizacao): number {
+    return materia.grupos.reduce(
+      (total, grupo) => total + grupo.assuntos.reduce(
+        (subtotal, assunto) => subtotal + assunto.questoesFeitas,
+        0,
+      ),
+      0,
+    );
+  }
+
+  acertosDaMateria(materia: MateriaVisualizacao): number {
+    return materia.grupos.reduce(
+      (total, grupo) => total + grupo.assuntos.reduce(
+        (subtotal, assunto) => subtotal + assunto.questoesAcertadas,
+        0,
+      ),
+      0,
+    );
+  }
+
+  desempenhoDaMateria(materia: MateriaVisualizacao): number {
+    return calcularPercentualDesempenho(
+      this.questoesDaMateria(materia),
+      this.acertosDaMateria(materia),
+    );
+  }
+
+  questoesDoBloco(bloco: BlocoMateriaVisualizacao): number {
+    return bloco.materias.reduce(
+      (total, materia) => total + this.questoesDaMateria(materia),
+      0,
+    );
+  }
+
+  acertosDoBloco(bloco: BlocoMateriaVisualizacao): number {
+    return bloco.materias.reduce(
+      (total, materia) => total + this.acertosDaMateria(materia),
+      0,
+    );
+  }
+
+  desempenhoDoBloco(bloco: BlocoMateriaVisualizacao): number {
+    return calcularPercentualDesempenho(
+      this.questoesDoBloco(bloco),
+      this.acertosDoBloco(bloco),
+    );
+  }
+
   progressoGrupoAssuntos(grupo: GrupoVisualizacao): number {
     return this.calcularProgresso(grupo.assuntos.flatMap((assunto) => assunto.etapas));
   }
