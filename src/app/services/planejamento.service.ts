@@ -101,6 +101,42 @@ export interface PlanejamentoAproveitamento {
   questoesAcertadas: number;
 }
 
+export interface PlanejamentoEstrutura {
+  grupos: PlanejamentoEstruturaGrupo[];
+  itens: PlanejamentoEstruturaItem[];
+  etapas: PlanejamentoEstruturaEtapa[];
+}
+
+export interface PlanejamentoEstruturaGrupo {
+  id: number;
+  planejamentoMateriaId: number;
+  tipo: PlanejamentoGrupoAssuntoTipo;
+  nome?: string | null;
+  peso?: number | null;
+  ordem?: number | null;
+}
+
+export interface PlanejamentoEstruturaItem {
+  id: number;
+  grupoId: number;
+  assuntoId: number;
+  assuntoNome: string;
+  peso?: number | null;
+  dificuldade?: number | null;
+  ordem?: number | null;
+}
+
+export interface PlanejamentoEstruturaEtapa {
+  id: number;
+  itemId: number;
+  tipoRegistroId: number;
+  tipoRegistroNome: string;
+  ordem?: number | null;
+  iniciada: boolean;
+  concluida: boolean;
+  dataConcluida?: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PlanejamentoService {
   private readonly http = inject(HttpClient);
@@ -122,6 +158,12 @@ export class PlanejamentoService {
   listarAproveitamentos(planejamentoId: number): Observable<PlanejamentoAproveitamento[]> {
     return this.http.get<PlanejamentoAproveitamento[]>(
       `${this.apiUrl}/${planejamentoId}/aproveitamentos`,
+    );
+  }
+
+  buscarEstrutura(planejamentoId: number): Observable<PlanejamentoEstrutura> {
+    return this.http.get<PlanejamentoEstrutura>(
+      `${this.apiUrl}/${planejamentoId}/estrutura`,
     );
   }
 

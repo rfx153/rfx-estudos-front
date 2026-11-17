@@ -9,6 +9,7 @@ import { RegistroService, TipoRegistro } from '../../services/registro.service';
 import {
   Planejamento,
   PlanejamentoAproveitamento,
+  PlanejamentoEstrutura,
   PlanejamentoGrupoAssunto,
   PlanejamentoGrupoAssuntoItem,
   PlanejamentoGrupoMateria,
@@ -174,24 +175,22 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
             gruposMaterias: this.service.listarGruposMaterias(id).pipe(timeout(this.tempoLimiteConsulta)),
             materias: this.service.listarMaterias(id).pipe(timeout(this.tempoLimiteConsulta)),
             aproveitamentos: this.service.listarAproveitamentos(id).pipe(timeout(this.tempoLimiteConsulta)),
+            estrutura: this.service.buscarEstrutura(id).pipe(timeout(this.tempoLimiteConsulta)),
           });
         }),
-        switchMap(({ gruposMaterias, materias, aproveitamentos }) => {
+        map(({ gruposMaterias, materias, aproveitamentos, estrutura }) => {
           const aproveitamentosPorAssunto = new Map(
             aproveitamentos.map((aproveitamento) => [aproveitamento.assuntoId, aproveitamento]),
           );
-          const materiasBasicas = this.criarMateriasBasicas(materias);
-          this.materias = materiasBasicas.filter((materia) => !materia.grupoMateriaId);
-          this.blocosMaterias = this.agruparMaterias(gruposMaterias, materiasBasicas);
-          this.carregando = false;
-          this.cdr.detectChanges();
-
-          return this.carregarMaterias(materias, aproveitamentosPorAssunto).pipe(
-            map((materiasVisualizacao) => ({
-              materias: materiasVisualizacao,
-              blocosMaterias: this.agruparMaterias(gruposMaterias, materiasVisualizacao),
-            })),
+          const materiasVisualizacao = this.montarMaterias(
+            materias,
+            estrutura,
+            aproveitamentosPorAssunto,
           );
+          return {
+            materias: materiasVisualizacao.filter((materia) => !materia.grupoMateriaId),
+            blocosMaterias: this.agruparMaterias(gruposMaterias, materiasVisualizacao),
+          };
         }),
         finalize(() => {
           this.carregando = false;
@@ -515,6 +514,69 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     return this.todasAsMaterias().flatMap((materia) =>
       materia.grupos.flatMap((grupo) => grupo.assuntos),
     );
+  }
+
+  private montarMaterias(
+    materias: PlanejamentoMateria[],
+    estrutura: PlanejamentoEstrutura,
+    aproveitamentosPorAssunto: Map<number, PlanejamentoAproveitamento>,
+  ): MateriaVisualizacao[] {
+    const itensPorGrupo = new Map<number, typeof estrutura.itens>();
+    const etapasPorItem = new Map<number, typeof estrutura.etapas>();
+
+    estrutura.itens.forEach((item) => {
+      itensPorGrupo.set(item.grupoId, [...(itensPorGrupo.get(item.grupoId) ?? []), item]);
+    });
+    estrutura.etapas.forEach((etapa) => {
+      etapasPorItem.set(etapa.itemId, [...(etapasPorItem.get(etapa.itemId) ?? []), etapa]);
+    });
+
+    return materias
+      .map((materia): MateriaVisualizacao => ({
+        id: materia.id ?? 0,
+        materiaId: materia.materia.id ?? 0,
+        nome: materia.materia.nome,
+        peso: materia.peso,
+        dificuldade: materia.dificuldade,
+        grupoMateriaId: materia.planejamentoGrupoMateria?.id,
+        ordem: materia.ordem,
+        aberta: false,
+        grupos: estrutura.grupos
+          .filter((grupo) => grupo.planejamentoMateriaId === materia.id)
+          .sort((a, b) => (a.ordem ?? 9999) - (b.ordem ?? 9999))
+          .map((grupo): GrupoVisualizacao => ({
+            nome: grupo.tipo === 'BLOCO' ? grupo.nome || 'Bloco sem nome' : 'Assuntos',
+            assuntos: (itensPorGrupo.get(grupo.id) ?? [])
+              .sort((a, b) => (a.ordem ?? 9999) - (b.ordem ?? 9999))
+              .map((item): AssuntoVisualizacao => {
+                const aproveitamento = aproveitamentosPorAssunto.get(item.assuntoId);
+                return {
+                  id: item.assuntoId,
+                  nome: item.assuntoNome,
+                  peso: item.peso,
+                  dificuldade: item.dificuldade,
+                  materiaPlanejamentoId: materia.id ?? 0,
+                  grupoId: grupo.id,
+                  itemId: item.id,
+                  ordem: item.ordem,
+                  questoesFeitas: aproveitamento?.questoesFeitas ?? 0,
+                  questoesAcertadas: aproveitamento?.questoesAcertadas ?? 0,
+                  etapas: (etapasPorItem.get(item.id) ?? [])
+                    .sort((a, b) => (a.ordem ?? 9999) - (b.ordem ?? 9999))
+                    .map((etapa): EtapaVisualizacao => ({
+                      id: etapa.id,
+                      tipoRegistroId: etapa.tipoRegistroId,
+                      nome: etapa.tipoRegistroNome,
+                      ordem: etapa.ordem,
+                      iniciada: etapa.iniciada,
+                      concluida: etapa.concluida,
+                      dataConcluida: etapa.dataConcluida,
+                    })),
+                };
+              }),
+          })),
+      }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   }
 
   private carregarMaterias(
