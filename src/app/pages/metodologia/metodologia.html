@@ -2,14 +2,23 @@
   <header class="metodologia-heading">
     <div>
       <span class="eyebrow">Método de estudo</span>
-      <h1>Metodologia de assunto</h1>
-      <p>Um ciclo de {{ totalMinutos }} minutos para estudar, revisar e testar a retenção do conteúdo.</p>
+      <h1>Metodologias de estudo</h1>
+      <p>Estratégias complementares para conduzir cada sessão e organizar a evolução dos assuntos.</p>
     </div>
     <div class="metodologia-total">
       <strong>{{ totalMinutos }} min</strong>
       <span>por assunto</span>
     </div>
   </header>
+
+  <div class="metodologia-section-heading micro-heading">
+    <div>
+      <span class="eyebrow">Ciclo da sessão</span>
+      <h2>Metodologias micro</h2>
+      <p>Organiza o que fazer dentro de cada bloco de estudo.</p>
+    </div>
+    <span class="method-badge">QRAQR + Q</span>
+  </div>
 
   <section class="metodologia-intro">
     <span class="sequence-label">Ciclo do bloco</span>
@@ -56,6 +65,47 @@
         <p>{{ etapa.descricao }}</p>
         <div class="tempo-barra"><span [style.width.%]="etapa.minutos * 2"></span></div>
       </article>
+    </div>
+  </section>
+
+  <section class="macro-section" aria-labelledby="macro-title">
+    <div class="metodologia-section-heading">
+      <div>
+        <span class="eyebrow">Jornada do conteúdo</span>
+        <h2 id="macro-title">Metodologias macro</h2>
+        <p>Define como cada assunto evolui do primeiro contato até as revisões recorrentes.</p>
+      </div>
+      <span class="method-badge macro">Ciclo contínuo</span>
+    </div>
+
+    <div class="macro-flow" aria-label="Assunto, resumo, questões e revisão">
+      <article
+        class="macro-card"
+        [ngClass]="etapa.classe"
+        *ngFor="let etapa of etapasMacro; let ultimo = last">
+        <div class="macro-card-top">
+          <span class="macro-number">{{ etapa.numero }}</span>
+          <span class="macro-icon" aria-hidden="true">
+            <ng-container [ngSwitch]="etapa.classe">
+              <span *ngSwitchCase="'assunto'">A</span>
+              <span *ngSwitchCase="'resumo'">R</span>
+              <span *ngSwitchCase="'questoes'">Q</span>
+              <span *ngSwitchDefault>↻</span>
+            </ng-container>
+          </span>
+        </div>
+        <h3>{{ etapa.nome }}</h3>
+        <p>{{ etapa.descricao }}</p>
+        <ul>
+          <li *ngFor="let pratica of etapa.praticas">{{ pratica }}</li>
+        </ul>
+        <span class="macro-arrow" *ngIf="!ultimo" aria-hidden="true">→</span>
+      </article>
+    </div>
+
+    <div class="macro-cycle-note">
+      <strong>Assunto → Resumo → Questões → Revisão</strong>
+      <span>A revisão alimenta os próximos ciclos e mantém os assuntos anteriores ativos.</span>
     </div>
   </section>
 </section>

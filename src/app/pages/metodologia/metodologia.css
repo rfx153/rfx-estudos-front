@@ -11,7 +11,8 @@
 }
 
 .metodologia-heading h1,
-.section-title h2 {
+.section-title h2,
+.metodologia-section-heading h2 {
   margin: 4px 0 0;
   color: var(--text, #0f172a);
 }
@@ -20,6 +21,31 @@
   margin: 8px 0 0;
   color: var(--text-muted, #64748b);
 }
+
+.metodologia-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.metodologia-section-heading h2 { font-size: 24px; }
+.metodologia-section-heading p { margin: 7px 0 0; color: var(--text-muted, #64748b); }
+.micro-heading { margin-top: 34px; }
+
+.method-badge {
+  flex: 0 0 auto;
+  padding: 8px 13px;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+
+.method-badge.macro { border-color: #bbf7d0; background: #f0fdf4; color: #15803d; }
 
 .eyebrow,
 .sequence-label {
@@ -72,8 +98,85 @@
 .tempo-barra { height: 5px; margin-top: 16px; overflow: hidden; border-radius: 999px; background: #e2e8f0; }
 .tempo-barra span { display: block; height: 100%; border-radius: inherit; background: #60a5fa; }
 
+.macro-section {
+  margin-top: 44px;
+  padding-top: 36px;
+  border-top: 1px solid var(--border, #e5e7eb);
+}
+
+.macro-flow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.macro-card {
+  --macro-color: #1677ff;
+  --macro-soft: #eff6ff;
+  position: relative;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid color-mix(in srgb, var(--macro-color) 28%, transparent);
+  border-radius: 14px;
+  background: linear-gradient(160deg, var(--macro-soft), var(--surface, #fff) 58%);
+}
+
+.macro-card.resumo { --macro-color: #8b5cf6; --macro-soft: #f5f3ff; }
+.macro-card.questoes { --macro-color: #f97316; --macro-soft: #fff7ed; }
+.macro-card.revisao { --macro-color: #16a34a; --macro-soft: #f0fdf4; }
+
+.macro-card-top { display: flex; align-items: center; justify-content: space-between; }
+.macro-number { color: var(--macro-color); font-size: 12px; font-weight: 900; }
+.macro-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--macro-color);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.macro-card h3 { margin: 18px 0 7px; color: var(--text, #0f172a); font-size: 18px; }
+.macro-card p { min-height: 60px; margin: 0; color: var(--text-muted, #64748b); font-size: 13px; line-height: 1.5; }
+.macro-card ul { display: grid; gap: 7px; margin: 16px 0 0; padding: 0; list-style: none; }
+.macro-card li { position: relative; padding-left: 15px; color: var(--text, #334155); font-size: 13px; font-weight: 700; }
+.macro-card li::before { position: absolute; top: 7px; left: 0; width: 6px; height: 6px; border-radius: 50%; background: var(--macro-color); content: ''; }
+.macro-arrow { position: absolute; z-index: 1; top: 50%; right: -24px; color: #94a3b8; font-size: 23px; font-weight: 900; transform: translateY(-50%); }
+
+.macro-cycle-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 18px;
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: var(--surface-soft, #f8fafc);
+}
+
+.macro-cycle-note strong { color: var(--text, #0f172a); }
+.macro-cycle-note span { color: var(--text-muted, #64748b); font-size: 13px; }
+
+:host-context(.dark-theme) .metodologia-intro,
+:host-context(.dark-theme) .macro-card { background: var(--surface-muted, #172033); }
+:host-context(.dark-theme) .method-badge { background: #172554; border-color: #1e40af; color: #93c5fd; }
+:host-context(.dark-theme) .method-badge.macro { background: #052e16; border-color: #166534; color: #86efac; }
+
 @media (max-width: 640px) {
-  .metodologia-heading, .section-title { flex-direction: column; }
+  .metodologia-heading, .section-title, .metodologia-section-heading { flex-direction: column; }
   .metodologia-total { width: 100%; }
   .sequence { flex-wrap: wrap; }
+  .macro-flow { grid-template-columns: 1fr; }
+  .macro-arrow { top: auto; right: 50%; bottom: -25px; transform: translateX(50%) rotate(90deg); }
+  .macro-card p { min-height: 0; }
+  .macro-cycle-note { align-items: flex-start; flex-direction: column; }
+}
+
+@media (min-width: 641px) and (max-width: 1000px) {
+  .macro-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .macro-card:nth-child(2) .macro-arrow { display: none; }
 }
