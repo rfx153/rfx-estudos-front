@@ -9,6 +9,7 @@ import { Categoria } from './categoria.service';
 export interface Materia {
   id?: number;
   nome: string;
+  ativo?: boolean;
   categorias?: Categoria[];
 }
 
@@ -34,6 +35,12 @@ export class MateriaService {
     }
 
     return this.materiasCache$;
+  }
+
+  listarTodasIncluindoInativas(): Observable<Materia[]> {
+    return this.http.get<Materia[]>(this.apiUrl, {
+      params: { incluirInativas: true }
+    });
   }
 
   // Envia uma nova matéria para salvar no banco

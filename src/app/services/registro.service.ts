@@ -11,11 +11,14 @@ import { environment } from '../../environments/environment.development';
 export interface Assunto {
   id: number;
   nome: string;
+  ativo?: boolean;
+  materia?: Materia;
 }
 
 export interface TipoRegistro {
   id: number;
   nome: string;
+  ativo?: boolean;
 }
 
 export interface Registro {
@@ -72,26 +75,45 @@ export class RegistroService {
     return this.http.get<number>(`${this.apiUrl}/total`);
   }
 
-  listarRecentes(limite = 100, materiaId?: number | null): Observable<Registro[]> {
+  listarRecentes(
+    limite = 100,
+    materiaId?: number | null,
+    assuntoId?: number | null,
+    materialGuiaId?: number | null,
+    tipoRegistroId?: number | null
+  ): Observable<Registro[]> {
     let params = new HttpParams().set('limite', limite);
-
-    if (materiaId) {
-      params = params.set('materiaId', materiaId);
-    }
+    params = this.adicionarFiltrosHistorico(
+      params,
+      materiaId,
+      assuntoId,
+      materialGuiaId,
+      tipoRegistroId
+    );
 
     return this.http.get<PaginaRegistros>(`${this.apiUrl}/recentes`, { params }).pipe(
       map(pagina => pagina.content)
     );
   }
 
-  listarRecentesPaginado(page = 0, size = 10, materiaId?: number | null): Observable<PaginaRegistros> {
+  listarRecentesPaginado(
+    page = 0,
+    size = 10,
+    materiaId?: number | null,
+    assuntoId?: number | null,
+    materialGuiaId?: number | null,
+    tipoRegistroId?: number | null
+  ): Observable<PaginaRegistros> {
     let params = new HttpParams()
       .set('page', page)
       .set('size', size);
-
-    if (materiaId) {
-      params = params.set('materiaId', materiaId);
-    }
+    params = this.adicionarFiltrosHistorico(
+      params,
+      materiaId,
+      assuntoId,
+      materialGuiaId,
+      tipoRegistroId
+    );
 
     return this.http.get<PaginaRegistros>(`${this.apiUrl}/recentes`, { params });
   }
@@ -128,6 +150,13 @@ export class RegistroService {
     return request$;
   }
 
+  listarAssuntos(incluirInativos = false): Observable<Assunto[]> {
+    const params = incluirInativos
+      ? new HttpParams().set('incluirInativos', true)
+      : undefined;
+    return this.http.get<Assunto[]>(this.assuntosUrl, { params });
+  }
+
   criarAssunto(assunto: { nome: string; materiaId: number }): Observable<Assunto> {
     // Usando a rota dinâmica de assuntos
     return this.http.post<Assunto>(this.assuntosUrl, assunto).pipe(
@@ -147,12 +176,31 @@ export class RegistroService {
     );
   }
 
-  listarTiposRegistro(): Observable<TipoRegistro[]> {
+  listarTiposRegistro(incluirInativos = false): Observable<TipoRegistro[]> {
+    if (incluirInativos) {
+      const params = new HttpParams().set('incluirInativos', true);
+      return this.http.get<TipoRegistro[]>(this.tiposRegistroUrl, { params });
+    }
+
     if (!this.tiposRegistroCache$) {
       this.tiposRegistroCache$ = this.http.get<TipoRegistro[]>(this.tiposRegistroUrl).pipe(shareReplay(1));
     }
 
     return this.tiposRegistroCache$;
+  }
+
+  private adicionarFiltrosHistorico(
+    params: HttpParams,
+    materiaId?: number | null,
+    assuntoId?: number | null,
+    materialGuiaId?: number | null,
+    tipoRegistroId?: number | null
+  ): HttpParams {
+    if (materiaId != null) params = params.set('materiaId', materiaId);
+    if (assuntoId != null) params = params.set('assuntoId', assuntoId);
+    if (materialGuiaId != null) params = params.set('materialGuiaId', materialGuiaId);
+    if (tipoRegistroId != null) params = params.set('tipoRegistroId', tipoRegistroId);
+    return params;
   }
 
 

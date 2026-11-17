@@ -1,16 +1,54 @@
 <nz-card class="page-card history-card" nzTitle="Histórico de estudos">
   
-  <div nz-row [nzGutter]="24" class="filters-row">
-    <div nz-col [nzSpan]="8">
+  <div nz-row [nzGutter]="[16, 16]" class="filters-row">
+    <div nz-col [nzXs]="24" [nzMd]="12" [nzXl]="6">
       <label class="filter-label">Filtrar por matéria</label>
       <nz-select 
-        [ngModel]="materiaSelecionadaId" 
-        (ngModelChange)="filtrarPorMateria($event)" 
+        [(ngModel)]="materiaSelecionadaId"
+        (ngModelChange)="alterarMateria()"
         nzAllowClear 
         nzPlaceHolder="Todas as matérias" 
         style="width: 100%;">
-        <nz-option nzLabel="Todas as matérias" [nzValue]="null"></nz-option>
-        <nz-option *ngFor="let m of listaMaterias" [nzLabel]="m.nome" [nzValue]="m.id"></nz-option>
+        <nz-option *ngFor="let m of listaMaterias" [nzLabel]="m.nome + (m.ativo === false ? ' (inativa)' : '')" [nzValue]="m.id"></nz-option>
+      </nz-select>
+    </div>
+
+    <div nz-col [nzXs]="24" [nzMd]="12" [nzXl]="6">
+      <label class="filter-label">Filtrar por assunto</label>
+      <nz-select
+        [(ngModel)]="assuntoSelecionadoId"
+        (ngModelChange)="aplicarFiltros()"
+        nzAllowClear
+        nzShowSearch
+        nzPlaceHolder="Todos os assuntos"
+        style="width: 100%;">
+        <nz-option *ngFor="let assunto of assuntosDisponiveis" [nzLabel]="assunto.nome + (assunto.ativo === false ? ' (inativo)' : '')" [nzValue]="assunto.id"></nz-option>
+      </nz-select>
+    </div>
+
+    <div nz-col [nzXs]="24" [nzMd]="12" [nzXl]="6">
+      <label class="filter-label">Filtrar por material-guia</label>
+      <nz-select
+        [(ngModel)]="materialGuiaSelecionadoId"
+        (ngModelChange)="aplicarFiltros()"
+        nzAllowClear
+        nzShowSearch
+        nzPlaceHolder="Todos os materiais"
+        style="width: 100%;">
+        <nz-option *ngFor="let material of listaMateriaisGuia" [nzLabel]="material.nome + (material.ativo === false ? ' (inativo)' : '')" [nzValue]="material.id"></nz-option>
+      </nz-select>
+    </div>
+
+    <div nz-col [nzXs]="24" [nzMd]="12" [nzXl]="6">
+      <label class="filter-label">Filtrar por tipo de registro</label>
+      <nz-select
+        [(ngModel)]="tipoRegistroSelecionadoId"
+        (ngModelChange)="aplicarFiltros()"
+        nzAllowClear
+        nzShowSearch
+        nzPlaceHolder="Todos os tipos"
+        style="width: 100%;">
+        <nz-option *ngFor="let tipo of listaTiposRegistro" [nzLabel]="tipo.nome + (tipo.ativo === false ? ' (inativo)' : '')" [nzValue]="tipo.id"></nz-option>
       </nz-select>
     </div>
   </div>

@@ -9,8 +9,9 @@ import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzPaginationModule } from 'ng-zorro-antd/pagination';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { Registro, RegistroService } from '../../services/registro.service';
+import { Assunto, Registro, RegistroService, TipoRegistro } from '../../services/registro.service';
 import { MateriaService } from '../../services/materia.service';
+import { MaterialGuia, MaterialGuiaService } from '../../services/material-guia.service';
 import { RegistroDetalhesModalComponent } from '../../shared/registro-detalhes-modal/registro-detalhes-modal';
 
 @Component({
@@ -24,7 +25,13 @@ export class VisualizarRegistrosComponent implements OnInit {
   listaRegistros: Registro[] = [];
   registrosFiltrados: Registro[] = [];
   listaMaterias: any[] = [];
+  listaAssuntos: Assunto[] = [];
+  listaMateriaisGuia: MaterialGuia[] = [];
+  listaTiposRegistro: TipoRegistro[] = [];
   materiaSelecionadaId: number | null = null;
+  assuntoSelecionadoId: number | null = null;
+  materialGuiaSelecionadoId: number | null = null;
+  tipoRegistroSelecionadoId: number | null = null;
   carregando = true;
   detalhesVisiveis = false;
   registrosSelecionados: Registro[] = [];
@@ -36,6 +43,7 @@ export class VisualizarRegistrosComponent implements OnInit {
   constructor(
     private registroService: RegistroService,
     private materiaService: MateriaService,
+    private materialGuiaService: MaterialGuiaService,
     private cdr: ChangeDetectorRef,
     private message: NzMessageService,
     private router: Router
@@ -43,19 +51,50 @@ export class VisualizarRegistrosComponent implements OnInit {
 
   ngOnInit(): void {
     this.carregarMaterias();
+    this.carregarAssuntos();
+    this.carregarMateriaisGuia();
+    this.carregarTiposRegistro();
     this.carregarRegistrosRecentes();
   }
 
+  carregarAssuntos(): void {
+    this.registroService.listarAssuntos(true).subscribe(assuntos => {
+      this.listaAssuntos = assuntos;
+      this.cdr.detectChanges();
+    });
+  }
+
+  carregarMateriaisGuia(): void {
+    this.materialGuiaService.listarTodosIncluindoInativos().subscribe(materiais => {
+      this.listaMateriaisGuia = materiais;
+      this.cdr.detectChanges();
+    });
+  }
+
+  carregarTiposRegistro(): void {
+    this.registroService.listarTiposRegistro(true).subscribe(tipos => {
+      this.listaTiposRegistro = tipos;
+      this.cdr.detectChanges();
+    });
+  }
+
   carregarMaterias(): void {
-    this.materiaService.listarTodas().subscribe(materias => {
+    this.materiaService.listarTodasIncluindoInativas().subscribe(materias => {
       this.listaMaterias = materias;
       this.cdr.detectChanges();
     });
   }
 
-  carregarRegistrosRecentes(materiaId: number | null = this.materiaSelecionadaId): void {
+  carregarRegistrosRecentes(): void {
     this.carregando = true;
-    this.registroService.listarRecentesPaginado(this.paginaAtual - 1, this.itensPorPagina, materiaId).subscribe({
+    this.registroService.listarRecentesPaginado(
+      this.paginaAtual - 1,
+      this.itensPorPagina,
+      this.materiaSelecionadaId,
+      this.assuntoSelecionadoId,
+      this.materialGuiaSelecionadoId,
+      this.tipoRegistroSelecionadoId
+    ).subscribe({
       next: pagina => {
         this.listaRegistros = pagina.content;
         this.registrosFiltrados = pagina.content;
@@ -71,11 +110,32 @@ export class VisualizarRegistrosComponent implements OnInit {
     });
   }
 
-  // 🔥 LÓGICA DO FILTRO POR MATÉRIA
-  filtrarPorMateria(materiaId: number | null): void {
-    this.materiaSelecionadaId = materiaId;
+  aplicarFiltros(): void {
     this.paginaAtual = 1;
-    this.carregarRegistrosRecentes(materiaId);
+    this.carregarRegistrosRecentes();
+  }
+
+  alterarMateria(): void {
+    if (this.assuntoSelecionadoId !== null) {
+      const assuntoSelecionado = this.listaAssuntos.find(
+        assunto => assunto.id === this.assuntoSelecionadoId
+      );
+      const pertenceAMateria = this.materiaSelecionadaId === null
+        || assuntoSelecionado?.materia?.id === this.materiaSelecionadaId;
+
+      if (!pertenceAMateria) {
+        this.assuntoSelecionadoId = null;
+      }
+    }
+
+    this.aplicarFiltros();
+  }
+
+  get assuntosDisponiveis(): Assunto[] {
+    if (this.materiaSelecionadaId === null) return this.listaAssuntos;
+    return this.listaAssuntos.filter(
+      assunto => assunto.materia?.id === this.materiaSelecionadaId
+    );
   }
 
   get registrosPaginados(): Registro[] {

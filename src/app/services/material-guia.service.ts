@@ -6,6 +6,7 @@ import { environment } from '../../environments/environment.development';
 export interface MaterialGuia {
   id?: number;
   nome: string;
+  ativo?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -19,6 +20,12 @@ export class MaterialGuiaService {
       this.cache$ = this.http.get<MaterialGuia[]>(this.apiUrl).pipe(shareReplay(1));
     }
     return this.cache$;
+  }
+
+  listarTodosIncluindoInativos(): Observable<MaterialGuia[]> {
+    return this.http.get<MaterialGuia[]>(this.apiUrl, {
+      params: { incluirInativos: true }
+    });
   }
 
   criar(materialGuia: MaterialGuia): Observable<MaterialGuia> {
