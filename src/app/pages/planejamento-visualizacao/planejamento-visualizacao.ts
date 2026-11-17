@@ -83,6 +83,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
   private readonly message = inject(NzMessageService);
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly tempoLimiteConsulta = 30_000;
 
   planejamento?: Planejamento;
   planejamentos: Planejamento[] = [];
@@ -143,7 +144,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     this.service
       .listarTodos()
       .pipe(
-        timeout(8000),
+        timeout(this.tempoLimiteConsulta),
         finalize(() => {
           this.carregando = false;
           this.cdr.detectChanges();
@@ -166,13 +167,13 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     this.service
       .buscarPorId(id)
       .pipe(
-        timeout(8000),
+        timeout(this.tempoLimiteConsulta),
         switchMap((planejamento) => {
           this.planejamento = planejamento;
           return forkJoin({
-            gruposMaterias: this.service.listarGruposMaterias(id).pipe(timeout(8000)),
-            materias: this.service.listarMaterias(id).pipe(timeout(8000)),
-            aproveitamentos: this.service.listarAproveitamentos(id).pipe(timeout(8000)),
+            gruposMaterias: this.service.listarGruposMaterias(id).pipe(timeout(this.tempoLimiteConsulta)),
+            materias: this.service.listarMaterias(id).pipe(timeout(this.tempoLimiteConsulta)),
+            aproveitamentos: this.service.listarAproveitamentos(id).pipe(timeout(this.tempoLimiteConsulta)),
           });
         }),
         switchMap(({ gruposMaterias, materias, aproveitamentos }) => {
@@ -550,7 +551,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     }
 
     return this.service.listarGrupos(this.planejamento.id, materia.id).pipe(
-      timeout(8000),
+      timeout(this.tempoLimiteConsulta),
       switchMap((grupos) => this.carregarGrupos(materia, grupos, aproveitamentosPorAssunto)),
       catchError(() =>
         of({
@@ -616,7 +617,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     }
 
     return this.service.listarItens(this.planejamento.id, materiaId, grupo.id).pipe(
-      timeout(8000),
+      timeout(this.tempoLimiteConsulta),
       switchMap((itens: PlanejamentoGrupoAssuntoItem[]) => {
         const itensOrdenados = itens.sort((a, b) => (a.ordem ?? 9999) - (b.ordem ?? 9999));
         if (!itensOrdenados.length) return of([] as AssuntoVisualizacao[]);
@@ -655,7 +656,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     }
 
     return this.service.listarEtapas(this.planejamento.id, materiaId, grupoId, item.id).pipe(
-      timeout(8000),
+      timeout(this.tempoLimiteConsulta),
       map((etapas: PlanejamentoItemEtapa[]) => ({
         id: item.assunto.id,
         nome: item.assunto.nome,
