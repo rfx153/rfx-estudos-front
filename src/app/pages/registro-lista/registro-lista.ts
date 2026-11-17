@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, inject, ChangeDetectorRef, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   RegistroService,
@@ -9,7 +9,11 @@ import {
   TipoRegistro,
 } from '../../services/registro.service';
 import { MateriaService, Materia } from '../../services/materia.service';
-import { PlanejamentoService, Planejamento } from '../../services/planejamento.service';
+import {
+  PlanejamentoDestinoRegistro,
+  PlanejamentoService,
+  Planejamento,
+} from '../../services/planejamento.service';
 import { MaterialGuia, MaterialGuiaService } from '../../services/material-guia.service';
 import { RegistroDetalhesModalComponent } from '../../shared/registro-detalhes-modal/registro-detalhes-modal';
 import { calcularPercentualDesempenho, classeDesempenho } from '../../shared/desempenho';
@@ -42,6 +46,7 @@ interface RegistroQuestoesTemporario {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     NzFormModule,
     NzInputModule,
@@ -88,6 +93,9 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
   registroQuestoesForm!: FormGroup;
   registrosQuestoes: RegistroQuestoesTemporario[] = [];
   buscandoAtividadesRecentes = false;
+  modalDestinoAberto = false;
+  destinosRegistro: PlanejamentoDestinoRegistro[] = [];
+  destinoSelecionadoId?: number;
   atividadesRecentesVisiveis = false;
   atividadesRecentes: Registro[] = [];
   tituloAtividadesRecentes = 'Últimas atividades';
@@ -97,6 +105,10 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
   private cronometroInicioMs: number | null = null;
   private cronometroAcumuladoMs = 0;
   private tituloOriginal = 'RFX Estudos';
+  private payloadDestinoPendente?: Partial<Registro>;
+  private assuntoDestinoPendente?: number;
+  private tipoRegistroDestinoPendente?: number;
+  private planejamentoDestinoPendente?: number;
 
   constructor() {
     this.iconService.addIcon(
@@ -256,40 +268,62 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
 
       if (formValue.planejamento) {
         this.planejamentoService
-          .buscarEtapaPorAssunto(formValue.planejamento, formValue.assunto, formValue.tipoRegistro)
+          .listarDestinosRegistro(
+            formValue.planejamento,
+            formValue.assunto,
+            formValue.tipoRegistro,
+          )
           .subscribe({
-            next: (etapa) => {
-              if (etapa) {
-                this.salvarRegistro(payload);
+            next: (destinos) => {
+              if (!destinos.length) {
+                this.salvando = false;
+                this.message.error('A matéria precisa existir no planejamento selecionado.');
                 return;
               }
-              this.salvando = false;
-              this.modal.confirm({
-                nzTitle: 'Etapa não configurada',
-                nzContent:
-                  'Este assunto ainda não está configurado no planejamento. Deseja adicioná-lo à matéria existente e criar a etapa agora?',
-                nzOkText: 'Adicionar assunto',
-                nzCancelText: 'Salvar sem etapa',
-                nzOnOk: () => {
-                  this.salvando = true;
-                  this.planejamentoService
-                    .adicionarEtapaPorAssunto(
+
+              if (destinos.length === 1) {
+                const destino = destinos[0];
+                if (destino.etapaId) {
+                  this.salvarRegistroNoDestino(
+                    payload,
+                    formValue.planejamento,
+                    formValue.assunto,
+                    formValue.tipoRegistro,
+                    destino,
+                  );
+                  return;
+                }
+
+                this.salvando = false;
+                this.modal.confirm({
+                  nzTitle: 'Etapa não configurada',
+                  nzContent:
+                    'Este assunto ainda não está configurado nesta matéria do planejamento. Deseja criar a etapa agora?',
+                  nzOkText: 'Adicionar assunto',
+                  nzCancelText: 'Salvar sem etapa',
+                  nzOnOk: () => {
+                    this.salvando = true;
+                    this.salvarRegistroNoDestino(
+                      payload,
                       formValue.planejamento,
                       formValue.assunto,
                       formValue.tipoRegistro,
-                    )
-                    .subscribe({
-                      next: () => this.salvarRegistro(payload),
-                      error: () => {
-                        this.salvando = false;
-                        this.message.error(
-                          'Não foi possível adicionar o assunto. A matéria precisa existir no planejamento.',
-                        );
-                      },
-                    });
-                },
-                nzOnCancel: () => this.salvarRegistro(payload),
-              });
+                      destino,
+                    );
+                  },
+                  nzOnCancel: () => this.salvarRegistro(payload),
+                });
+                return;
+              }
+
+              this.salvando = false;
+              this.destinosRegistro = destinos;
+              this.destinoSelecionadoId = destinos[0].planejamentoMateriaId;
+              this.payloadDestinoPendente = payload;
+              this.planejamentoDestinoPendente = formValue.planejamento;
+              this.assuntoDestinoPendente = formValue.assunto;
+              this.tipoRegistroDestinoPendente = formValue.tipoRegistro;
+              this.modalDestinoAberto = true;
             },
             error: () => {
               this.salvando = false;
@@ -309,6 +343,95 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
       });
       this.message.warning('Preencha os campos obrigatórios antes de salvar.');
     }
+  }
+
+  confirmarDestinoRegistro(): void {
+    const destino = this.destinosRegistro.find(
+      (item) => item.planejamentoMateriaId === this.destinoSelecionadoId,
+    );
+    if (
+      !destino ||
+      !this.payloadDestinoPendente ||
+      !this.planejamentoDestinoPendente ||
+      !this.assuntoDestinoPendente ||
+      !this.tipoRegistroDestinoPendente
+    ) {
+      return;
+    }
+
+    this.modalDestinoAberto = false;
+    this.salvando = true;
+    this.salvarRegistroNoDestino(
+      this.payloadDestinoPendente,
+      this.planejamentoDestinoPendente,
+      this.assuntoDestinoPendente,
+      this.tipoRegistroDestinoPendente,
+      destino,
+    );
+  }
+
+  cancelarDestinoRegistro(): void {
+    this.modalDestinoAberto = false;
+    this.limparDestinoPendente();
+  }
+
+  rotuloDestino(destino: PlanejamentoDestinoRegistro): string {
+    const partes = [
+      destino.blocoMateriaNome,
+      destino.materiaNome,
+      destino.materiaOrdem ? `Ordem ${destino.materiaOrdem}` : null,
+      destino.grupoAssuntoNome,
+    ].filter((parte): parte is string => !!parte);
+    return partes.join(' · ');
+  }
+
+  destinoSelecionadoPrecisaEtapa(): boolean {
+    return !!this.destinosRegistro.find(
+      (item) => item.planejamentoMateriaId === this.destinoSelecionadoId && !item.etapaId,
+    );
+  }
+
+  private salvarRegistroNoDestino(
+    payload: Partial<Registro>,
+    planejamentoId: number,
+    assuntoId: number,
+    tipoRegistroId: number,
+    destino: PlanejamentoDestinoRegistro,
+  ): void {
+    if (destino.etapaId) {
+      payload.planejamentoEtapa = { id: destino.etapaId };
+      this.limparDestinoPendente();
+      this.salvarRegistro(payload);
+      return;
+    }
+
+    this.planejamentoService
+      .adicionarEtapaPorAssunto(
+        planejamentoId,
+        assuntoId,
+        tipoRegistroId,
+        destino.planejamentoMateriaId,
+      )
+      .subscribe({
+        next: (etapa) => {
+          payload.planejamentoEtapa = { id: etapa.id };
+          this.limparDestinoPendente();
+          this.salvarRegistro(payload);
+        },
+        error: () => {
+          this.salvando = false;
+          this.message.error('Não foi possível criar a etapa no destino escolhido.');
+        },
+      });
+  }
+
+  private limparDestinoPendente(): void {
+    this.destinosRegistro = [];
+    this.destinoSelecionadoId = undefined;
+    this.payloadDestinoPendente = undefined;
+    this.planejamentoDestinoPendente = undefined;
+    this.assuntoDestinoPendente = undefined;
+    this.tipoRegistroDestinoPendente = undefined;
   }
 
   private salvarRegistro(payload: Partial<Registro>): void {

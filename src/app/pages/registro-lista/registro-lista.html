@@ -265,6 +265,45 @@
   </ng-container>
 </nz-modal>
 
+<nz-modal
+  [(nzVisible)]="modalDestinoAberto"
+  nzTitle="Escolha onde salvar no planejamento"
+  [nzFooter]="null"
+  [nzWidth]="560"
+  (nzOnCancel)="cancelarDestinoRegistro()">
+  <ng-container *nzModalContent>
+    <p>
+      Esta matéria aparece mais de uma vez no planejamento. Selecione a ocorrência que deve
+      receber este registro.
+    </p>
+    <nz-select
+      [(ngModel)]="destinoSelecionadoId"
+      [ngModelOptions]="{ standalone: true }"
+      nzPlaceHolder="Selecione o destino"
+      style="width: 100%">
+      <nz-option
+        *ngFor="let destino of destinosRegistro"
+        [nzValue]="destino.planejamentoMateriaId"
+        [nzLabel]="rotuloDestino(destino)">
+      </nz-option>
+    </nz-select>
+    <p *ngIf="destinoSelecionadoPrecisaEtapa()">
+      Se necessário, o assunto e a etapa serão criados no destino escolhido.
+    </p>
+    <div class="form-actions">
+      <button nz-button type="button" (click)="cancelarDestinoRegistro()">Cancelar</button>
+      <button
+        nz-button
+        nzType="primary"
+        type="button"
+        [disabled]="!destinoSelecionadoId"
+        (click)="confirmarDestinoRegistro()">
+        Salvar neste destino
+      </button>
+    </div>
+  </ng-container>
+</nz-modal>
+
 <app-registro-detalhes-modal
   [(visivel)]="atividadesRecentesVisiveis"
   [titulo]="tituloAtividadesRecentes"

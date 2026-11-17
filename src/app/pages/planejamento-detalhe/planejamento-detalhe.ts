@@ -690,12 +690,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
   }
 
   materiasDisponiveis(): Materia[] {
-    const idsAdicionados = new Set(
-      this.materiasPlanejadas
-        .filter((item) => item.id !== this.materiaEditandoId)
-        .map((item) => item.materia.id),
-    );
-    return this.materias.filter((materia) => !idsAdicionados.has(materia.id));
+    return this.materias;
   }
 
   cadastrarMateriaRapida(inputElement: HTMLInputElement): void {

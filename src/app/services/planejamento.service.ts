@@ -141,6 +141,16 @@ export interface PlanejamentoEstruturaEtapa {
   dataConcluida?: string | null;
 }
 
+export interface PlanejamentoDestinoRegistro {
+  planejamentoMateriaId: number;
+  etapaId?: number | null;
+  planejamentoNome: string;
+  blocoMateriaNome?: string | null;
+  materiaNome: string;
+  materiaOrdem?: number | null;
+  grupoAssuntoNome?: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PlanejamentoService {
   private readonly http = inject(HttpClient);
@@ -469,14 +479,25 @@ export class PlanejamentoService {
     );
   }
 
+  listarDestinosRegistro(
+    planejamentoId: number,
+    assuntoId: number,
+    tipoRegistroId: number,
+  ): Observable<PlanejamentoDestinoRegistro[]> {
+    return this.http.get<PlanejamentoDestinoRegistro[]>(
+      `${this.apiUrl}/${planejamentoId}/destinos-registro?assuntoId=${assuntoId}&tipoRegistroId=${tipoRegistroId}`,
+    );
+  }
+
   adicionarEtapaPorAssunto(
     planejamentoId: number,
     assuntoId: number,
     tipoRegistroId: number,
+    planejamentoMateriaId?: number,
   ): Observable<PlanejamentoItemEtapa> {
     return this.http.post<PlanejamentoItemEtapa>(
       `${this.apiUrl}/${planejamentoId}/etapas-por-assunto`,
-      { assuntoId, tipoRegistroId },
+      { assuntoId, tipoRegistroId, planejamentoMateriaId },
     );
   }
 
