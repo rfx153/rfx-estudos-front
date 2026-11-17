@@ -4,6 +4,7 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { Registro } from '../../services/registro.service';
+import { calcularPercentualDesempenho, classeDesempenho } from '../desempenho';
 
 @Component({
   selector: 'app-registro-detalhes-modal',
@@ -13,6 +14,7 @@ import { Registro } from '../../services/registro.service';
   styleUrl: './registro-detalhes-modal.css'
 })
 export class RegistroDetalhesModalComponent {
+  readonly classeDesempenho = classeDesempenho;
   @Input() visivel = false;
   @Input() titulo = 'Detalhes do estudo';
   @Input() registros: Registro[] = [];
@@ -26,7 +28,11 @@ export class RegistroDetalhesModalComponent {
 
   aproveitamento(feitas = 0, acertadas = 0): string {
     if (!feitas) return '0%';
-    return `${Math.round((acertadas / feitas) * 100)}%`;
+    return `${this.percentualAproveitamento(feitas, acertadas)}%`;
+  }
+
+  percentualAproveitamento(feitas = 0, acertadas = 0): number {
+    return calcularPercentualDesempenho(feitas, acertadas);
   }
 
   editarRegistro(registro: Registro): void {

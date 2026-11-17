@@ -3,6 +3,7 @@ import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Registro, RegistroService } from '../../services/registro.service';
+import { calcularPercentualDesempenho, classeDesempenho } from '../../shared/desempenho';
 
 type AbaAcompanhamento = 'desempenho' | 'linha-tempo' | 'tempo-estudo' | 'tipo-estudo';
 type TipoPeriodo = 'semana' | 'mes' | 'ano' | 'total' | 'personalizado';
@@ -78,6 +79,7 @@ export class AcompanhamentoComponent implements OnInit {
   ];
   private readonly limiteCarregamentoInicial = 300;
   private historicoCompletoCarregado = false;
+  readonly classeDesempenho = classeDesempenho;
 
   ngOnInit(): void {
     this.definirPeriodo('semana');
@@ -193,6 +195,10 @@ export class AcompanhamentoComponent implements OnInit {
     if (!tempo) return 0;
     const [horas = '0', minutos = '0', segundos = '0'] = tempo.split(':');
     return Number(horas) * 60 + Number(minutos) + (Number(segundos) >= 30 ? 1 : 0);
+  }
+
+  percentualDoRegistro(registro: Registro): number {
+    return calcularPercentualDesempenho(registro.questoesFeitas, registro.questoesAcertadas);
   }
 
   private carregarDados(): void {

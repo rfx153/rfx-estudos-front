@@ -38,6 +38,27 @@ html.dark-theme body {
   box-sizing: border-box;
 }
 
+/* Escala única de desempenho em questões, reutilizada em toda a aplicação. */
+.performance-neutral { --performance-color: var(--text-muted, #64748b); --performance-bg: var(--surface-soft, #f1f5f9); }
+.performance-red { --performance-color: #b91c1c; --performance-bg: #fee2e2; }
+.performance-orange { --performance-color: #c2410c; --performance-bg: #ffedd5; }
+.performance-yellow { --performance-color: #854d0e; --performance-bg: #fef9c3; }
+.performance-light-green { --performance-color: #4d7c0f; --performance-bg: #ecfccb; }
+.performance-green { --performance-color: #15803d; --performance-bg: #dcfce7; }
+
+.performance-score { color: var(--performance-color) !important; }
+.performance-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-width: 48px;
+  padding: 4px 8px !important;
+  border-radius: 999px;
+  background: var(--performance-bg);
+  font-weight: 800;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
 }

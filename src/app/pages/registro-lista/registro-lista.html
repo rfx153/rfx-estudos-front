@@ -241,13 +241,21 @@
 
       <div class="question-log-summary" *ngIf="registrosQuestoes.length">
         <span>Total: <strong>{{ totalQuestoes('acertadas') }}/{{ totalQuestoes('feitas') }}</strong></span>
-        <span>{{ calcularAproveitamento(totalQuestoes('feitas'), totalQuestoes('acertadas')) }} de aproveitamento</span>
+        <span
+          class="performance-score performance-badge"
+          [ngClass]="classeDesempenho(percentualAproveitamento(totalQuestoes('feitas'), totalQuestoes('acertadas')), !!totalQuestoes('feitas'))">
+          {{ calcularAproveitamento(totalQuestoes('feitas'), totalQuestoes('acertadas')) }} de aproveitamento
+        </span>
       </div>
 
       <div class="question-log-list" *ngIf="registrosQuestoes.length">
         <div class="question-log-item" *ngFor="let registro of registrosQuestoes; let i = index">
           <span>{{ registro.descricao || 'Registro sem descrição' }}</span>
-          <strong>{{ registro.acertadas }}/{{ registro.feitas }}</strong>
+          <strong
+            class="performance-score performance-badge"
+            [ngClass]="classeDesempenho(percentualAproveitamento(registro.feitas, registro.acertadas), !!registro.feitas)">
+            {{ registro.acertadas }}/{{ registro.feitas }}
+          </strong>
           <button nz-button nzType="text" nzDanger type="button" (click)="removerRegistroQuestoes(i)" aria-label="Remover registro de questões">
             <i nz-icon nzType="delete"></i>
           </button>

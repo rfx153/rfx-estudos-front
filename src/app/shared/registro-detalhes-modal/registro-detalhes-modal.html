@@ -45,7 +45,11 @@
           </div>
           <div>
             <small>Questões</small>
-            <span>{{ registro.questoesAcertadas || 0 }}/{{ registro.questoesFeitas || 0 }} ({{ aproveitamento(registro.questoesFeitas, registro.questoesAcertadas) }})</span>
+            <span
+              class="performance-score performance-badge"
+              [ngClass]="classeDesempenho(percentualAproveitamento(registro.questoesFeitas, registro.questoesAcertadas), !!registro.questoesFeitas)">
+              {{ registro.questoesAcertadas || 0 }}/{{ registro.questoesFeitas || 0 }} ({{ aproveitamento(registro.questoesFeitas, registro.questoesAcertadas) }})
+            </span>
           </div>
         </div>
 

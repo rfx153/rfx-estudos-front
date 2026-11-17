@@ -13,6 +13,7 @@ import { Assunto, Registro, RegistroService, TipoRegistro } from '../../services
 import { MateriaService } from '../../services/materia.service';
 import { MaterialGuia, MaterialGuiaService } from '../../services/material-guia.service';
 import { RegistroDetalhesModalComponent } from '../../shared/registro-detalhes-modal/registro-detalhes-modal';
+import { calcularPercentualDesempenho, classeDesempenho } from '../../shared/desempenho';
 
 @Component({
   selector: 'app-visualizar-registros',
@@ -22,6 +23,7 @@ import { RegistroDetalhesModalComponent } from '../../shared/registro-detalhes-m
   styleUrl: 'visualizar-registros.css'
 })
 export class VisualizarRegistrosComponent implements OnInit {
+  readonly classeDesempenho = classeDesempenho;
   listaRegistros: Registro[] = [];
   registrosFiltrados: Registro[] = [];
   listaMaterias: any[] = [];
@@ -169,7 +171,11 @@ export class VisualizarRegistrosComponent implements OnInit {
 
   calcularAproveitamento(feitas = 0, acertadas = 0): string {
     if (!feitas) return '0%';
-    return `${((acertadas / feitas) * 100).toFixed(0)}%`;
+    return `${calcularPercentualDesempenho(feitas, acertadas)}%`;
+  }
+
+  percentualAproveitamento(feitas = 0, acertadas = 0): number {
+    return calcularPercentualDesempenho(feitas, acertadas);
   }
 
   trackByRegistroId(index: number, registro: Registro): number {

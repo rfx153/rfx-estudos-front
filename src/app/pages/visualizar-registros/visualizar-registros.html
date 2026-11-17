@@ -101,7 +101,11 @@
           </div>
           <div>
             <small>Aproveitamento</small>
-            <strong>{{ calcularAproveitamento(registro.questoesFeitas, registro.questoesAcertadas) }}</strong>
+            <strong
+              class="performance-score performance-badge"
+              [ngClass]="classeDesempenho(percentualAproveitamento(registro.questoesFeitas, registro.questoesAcertadas), !!registro.questoesFeitas)">
+              {{ calcularAproveitamento(registro.questoesFeitas, registro.questoesAcertadas) }}
+            </strong>
           </div>
         </div>
       </div>

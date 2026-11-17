@@ -111,7 +111,7 @@
         </article>
         <article class="metric-card metric-accuracy">
           <span>Aproveitamento</span>
-          <strong>{{ percentualAcertos }}%</strong>
+          <strong class="performance-score" [ngClass]="classeDesempenho(percentualAcertos, !!totalQuestoes)">{{ percentualAcertos }}%</strong>
           <small>média geral de acertos</small>
         </article>
         <article class="metric-card metric-subjects">
@@ -138,7 +138,11 @@
           <div class="progress-column">
             <div class="progress-track"><span [style.width.%]="materia.percentualTempo"></span></div>
           </div>
-          <strong class="accuracy-value">{{ materia.percentualAcertos }}%</strong>
+          <strong
+            class="accuracy-value performance-score performance-badge"
+            [ngClass]="classeDesempenho(materia.percentualAcertos, !!materia.questoes)">
+            {{ materia.percentualAcertos }}%
+          </strong>
         </div>
       </article>
     </section>
@@ -167,7 +171,12 @@
             <div class="timeline-tags">
               <span>{{ registro.tipoRegistro?.nome || 'Estudo' }}</span>
               <span>{{ formatarTempo(tempoParaMinutos(registro.tempoEstudado)) }}</span>
-              <span *ngIf="registro.questoesFeitas">{{ registro.questoesAcertadas || 0 }}/{{ registro.questoesFeitas }} acertos</span>
+              <span
+                *ngIf="registro.questoesFeitas"
+                class="performance-score"
+                [ngClass]="classeDesempenho(percentualDoRegistro(registro))">
+                {{ registro.questoesAcertadas || 0 }}/{{ registro.questoesFeitas }} acertos
+              </span>
             </div>
           </div>
         </article>

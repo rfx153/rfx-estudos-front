@@ -67,7 +67,11 @@
 
       <nz-card class="stat-card accuracy-card">
         <span class="stat-label">Acertos</span>
-        <strong>{{ percentualAcertosHoje }}</strong>
+        <strong
+          class="performance-score"
+          [ngClass]="classeDesempenho(percentualComoNumero(percentualAcertosHoje), !!questoesFeitasHoje)">
+          {{ percentualAcertosHoje }}
+        </strong>
       </nz-card>
     </div>
 
@@ -163,7 +167,11 @@
           <div class="studied-metrics">
             <span>{{ materia.questoesFeitas }} questões</span>
             <span>{{ materia.questoesAcertadas }} acertos</span>
-            <span>{{ materia.percentualAcertos }} de acerto</span>
+            <span
+              class="performance-score performance-badge"
+              [ngClass]="classeDesempenho(percentualComoNumero(materia.percentualAcertos), !!materia.questoesFeitas)">
+              {{ materia.percentualAcertos }} de acerto
+            </span>
           </div>
 
           <ul>

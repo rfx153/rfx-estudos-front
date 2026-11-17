@@ -6,6 +6,7 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { Registro, RegistroService } from '../../services/registro.service';
 import { MetaDiariaResumo, MetaDiariaService } from '../../services/meta-diaria.service';
 import { RegistroDetalhesModalComponent } from '../../shared/registro-detalhes-modal/registro-detalhes-modal';
+import { classeDesempenho } from '../../shared/desempenho';
 
 interface MateriaEstudadaHoje {
   id: number | string;
@@ -45,6 +46,7 @@ export class InicioComponent implements OnInit {
   private metaDiariaService = inject(MetaDiariaService);
   private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
+  readonly classeDesempenho = classeDesempenho;
 
   carregando = true;
   horasEstudadasHoje = '0h 00min';
@@ -213,6 +215,10 @@ export class InicioComponent implements OnInit {
     const horas = Math.floor(minutos / 60);
     const minutosRestantes = minutos % 60;
     return minutosRestantes ? `${horas}h ${minutosRestantes}min` : `${horas}h`;
+  }
+
+  percentualComoNumero(valor: string): number {
+    return Number(valor.replace('%', '')) || 0;
   }
 
   private tempoParaMinutos(tempo?: string): number {

@@ -538,11 +538,9 @@
   display: grid;
   gap: 3px;
   justify-items: center;
-  color: #15803d;
   text-align: center;
 }
 
-.desempenho-coluna.ultimo { color: #1d4ed8; }
 .desempenho-coluna strong { padding: 0; font-size: 15px; }
 .desempenho-coluna small { color: var(--text-muted, #64748b); font-size: 10px; }
 .peso-prova,

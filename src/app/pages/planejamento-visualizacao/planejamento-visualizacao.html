@@ -208,14 +208,22 @@
                     <small *ngIf="dataConclusaoDaEtapa(assunto, 'revis')">{{ dataConclusaoDaEtapa(assunto, 'revis') | date: 'dd/MM/yy' }}</small>
                   </div>
                   <div class="desempenho-coluna" [attr.title]="detalhesAproveitamento(assunto)">
-                    <strong>{{ aproveitamento(assunto) }}</strong>
+                    <strong
+                      class="performance-score performance-badge"
+                      [ngClass]="classeDesempenho(percentualAproveitamento(assunto), !!assunto.questoesFeitas)">
+                      {{ aproveitamento(assunto) }}
+                    </strong>
                     <small *ngIf="assunto.questoesFeitas">
                       {{ assunto.questoesAcertadas }}/{{ assunto.questoesFeitas }} questões
                     </small>
                     <small *ngIf="!assunto.questoesFeitas">Sem questões</small>
                   </div>
                   <div class="desempenho-coluna ultimo" [attr.title]="detalhesUltimoAproveitamento(assunto)">
-                    <strong>{{ ultimoAproveitamento(assunto) }}</strong>
+                    <strong
+                      class="performance-score performance-badge"
+                      [ngClass]="classeDesempenho(percentualUltimoAproveitamento(assunto), !!assunto.ultimasQuestoesFeitas)">
+                      {{ ultimoAproveitamento(assunto) }}
+                    </strong>
                     <small *ngIf="assunto.ultimasQuestoesFeitas">
                       {{ assunto.ultimasQuestoesAcertadas || 0 }}/{{ assunto.ultimasQuestoesFeitas }} questões
                     </small>

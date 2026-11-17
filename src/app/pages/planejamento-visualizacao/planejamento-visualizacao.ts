@@ -6,6 +6,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { forkJoin, of } from 'rxjs';
 import { catchError, finalize, map, switchMap, timeout } from 'rxjs/operators';
 import { Registro, RegistroService, TipoRegistro } from '../../services/registro.service';
+import { calcularPercentualDesempenho, classeDesempenho } from '../../shared/desempenho';
 import {
   Planejamento,
   PlanejamentoAproveitamento,
@@ -111,6 +112,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
   pesoGrupoMateriaEdicao: number | null = null;
   dificuldadeGrupoMateriaEdicao: number | null = null;
   salvandoGrupoMateria = false;
+  readonly classeDesempenho = classeDesempenho;
 
   get totalMaterias(): number {
     return this.todasAsMaterias().length;
@@ -493,7 +495,11 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
 
   aproveitamento(assunto: AssuntoVisualizacao): string {
     if (!assunto.questoesFeitas) return '—';
-    return `${Math.round((assunto.questoesAcertadas / assunto.questoesFeitas) * 100)}%`;
+    return `${this.percentualAproveitamento(assunto)}%`;
+  }
+
+  percentualAproveitamento(assunto: AssuntoVisualizacao): number {
+    return calcularPercentualDesempenho(assunto.questoesFeitas, assunto.questoesAcertadas);
   }
 
   detalhesAproveitamento(assunto: AssuntoVisualizacao): string | null {
@@ -503,9 +509,14 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
 
   ultimoAproveitamento(assunto: AssuntoVisualizacao): string {
     if (!assunto.ultimasQuestoesFeitas) return '—';
-    return `${Math.round(
-      ((assunto.ultimasQuestoesAcertadas ?? 0) / assunto.ultimasQuestoesFeitas) * 100,
-    )}%`;
+    return `${this.percentualUltimoAproveitamento(assunto)}%`;
+  }
+
+  percentualUltimoAproveitamento(assunto: AssuntoVisualizacao): number {
+    return calcularPercentualDesempenho(
+      assunto.ultimasQuestoesFeitas,
+      assunto.ultimasQuestoesAcertadas,
+    );
   }
 
   detalhesUltimoAproveitamento(assunto: AssuntoVisualizacao): string | null {

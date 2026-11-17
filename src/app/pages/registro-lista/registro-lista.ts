@@ -12,6 +12,7 @@ import { MateriaService, Materia } from '../../services/materia.service';
 import { PlanejamentoService, Planejamento } from '../../services/planejamento.service';
 import { MaterialGuia, MaterialGuiaService } from '../../services/material-guia.service';
 import { RegistroDetalhesModalComponent } from '../../shared/registro-detalhes-modal/registro-detalhes-modal';
+import { calcularPercentualDesempenho, classeDesempenho } from '../../shared/desempenho';
 
 // Módulos do NG-ZORRO necessários para o formulário denso de registros
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -69,6 +70,7 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
   private modal = inject(NzModalService);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
+  readonly classeDesempenho = classeDesempenho;
 
   listaMaterias: Materia[] = [];
   listaPlanejamentos: Planejamento[] = [];
@@ -432,9 +434,12 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
   }
 
   calcularAproveitamento(feitas: number, acertadas: number): string {
-    if (!feitas || feitas === 0) return '0%';
-    const percentual = (acertadas / feitas) * 100;
-    return `${percentual.toFixed(0)}%`;
+    if (!feitas) return '0%';
+    return `${this.percentualAproveitamento(feitas, acertadas)}%`;
+  }
+
+  percentualAproveitamento(feitas: number, acertadas: number): number {
+    return calcularPercentualDesempenho(feitas, acertadas);
   }
 
   escutarMudancaDeMateria(): void {
