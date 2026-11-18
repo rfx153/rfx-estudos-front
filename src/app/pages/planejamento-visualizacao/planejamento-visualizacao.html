@@ -339,7 +339,7 @@
     </article>
     </ng-template>
 
-    <ng-container *ngFor="let item of itensPrincipais()">
+    <ng-container *ngFor="let item of itensPrincipais; trackBy: identificarItemPrincipal">
       <ng-container
         *ngIf="item.tipo === 'bloco'; else materiaPrincipal"
         [ngTemplateOutlet]="blocoCard"

@@ -106,6 +106,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
   planejamentos: Planejamento[] = [];
   materias: MateriaVisualizacao[] = [];
   blocosMaterias: BlocoMateriaVisualizacao[] = [];
+  itensPrincipais: ItemPrincipalVisualizacao[] = [];
   carregando = true;
   erro = false;
   tiposRegistro: TipoRegistro[] = [];
@@ -147,8 +148,12 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
     return this.totalEtapas ? Math.round((this.etapasConcluidas / this.totalEtapas) * 100) : 0;
   }
 
-  itensPrincipais(): ItemPrincipalVisualizacao[] {
-    return [
+  identificarItemPrincipal(_indice: number, item: ItemPrincipalVisualizacao): string {
+    return `${item.tipo}-${item.bloco?.id ?? item.materia?.id ?? _indice}`;
+  }
+
+  private atualizarItensPrincipais(): void {
+    this.itensPrincipais = [
       ...this.blocosMaterias.map((bloco) => ({
         tipo: 'bloco' as const,
         ordem: bloco.ordem,
@@ -234,6 +239,7 @@ export class PlanejamentoVisualizacaoComponent implements OnInit {
         next: ({ materias, blocosMaterias }) => {
           this.materias = materias.filter((materia) => !materia.grupoMateriaId);
           this.blocosMaterias = blocosMaterias;
+          this.atualizarItensPrincipais();
           this.cdr.detectChanges();
           this.carregarUltimosDesempenhos();
         },
