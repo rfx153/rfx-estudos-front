@@ -278,6 +278,7 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
               if (!destinos.length) {
                 this.salvando = false;
                 this.message.error('A matéria precisa existir no planejamento selecionado.');
+                this.cdr.detectChanges();
                 return;
               }
 
@@ -295,6 +296,7 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
                 }
 
                 this.salvando = false;
+                this.cdr.detectChanges();
                 this.modal.confirm({
                   nzTitle: 'Etapa não configurada',
                   nzContent:
@@ -324,10 +326,12 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
               this.assuntoDestinoPendente = formValue.assunto;
               this.tipoRegistroDestinoPendente = formValue.tipoRegistro;
               this.modalDestinoAberto = true;
+              this.cdr.detectChanges();
             },
             error: () => {
               this.salvando = false;
               this.message.error('Não foi possível verificar a etapa do planejamento.');
+              this.cdr.detectChanges();
             },
           });
         return;
@@ -421,6 +425,7 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
         error: () => {
           this.salvando = false;
           this.message.error('Não foi possível criar a etapa no destino escolhido.');
+          this.cdr.detectChanges();
         },
       });
   }

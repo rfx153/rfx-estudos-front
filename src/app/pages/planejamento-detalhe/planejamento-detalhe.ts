@@ -491,6 +491,7 @@ export class PlanejamentoDetalheComponent implements OnInit {
       this.message.warning('Na edição, selecione apenas uma matéria.');
       return;
     }
+    if (!this.confirmarMateriasRepetidas(materiaIds)) return;
 
     const criarDados = (materiaId: number): PlanejamentoMateriaDTO => ({
       materiaId,
@@ -894,6 +895,8 @@ export class PlanejamentoDetalheComponent implements OnInit {
       this.message.warning('Na edição, selecione apenas um assunto.');
       return;
     }
+    if (!this.confirmarAssuntosRepetidos(assuntoIds)) return;
+
     const criarDados = (assuntoId: number): PlanejamentoGrupoAssuntoItemDTO => ({
       assuntoId,
       peso: this.itemForm.controls.peso.value,
@@ -1053,6 +1056,55 @@ export class PlanejamentoDetalheComponent implements OnInit {
         assunto.id === this.itemForm.controls.assuntoIds.value?.[0] ||
         !assunto.id ||
         !this.assuntoIdsCadastrados.has(assunto.id),
+    );
+  }
+
+  private confirmarMateriasRepetidas(materiaIds: number[]): boolean {
+    const idsJaCadastrados = new Set(
+      this.materiasPlanejadas
+        .filter((item) => item.id !== this.materiaEditandoId)
+        .map((item) => item.materia.id)
+        .filter((id): id is number => id != null),
+    );
+    const nomes = this.nomesPorIdsRepetidos(materiaIds, idsJaCadastrados, this.materias);
+    return this.confirmarRepeticao('materia', nomes);
+  }
+
+  private confirmarAssuntosRepetidos(assuntoIds: number[]): boolean {
+    const idsJaCadastrados = new Set(
+      (this.estrutura?.itens ?? [])
+        .filter((item) => item.id !== this.itemEditandoId)
+        .map((item) => item.assuntoId),
+    );
+    const nomes = this.nomesPorIdsRepetidos(assuntoIds, idsJaCadastrados, this.assuntos);
+    return this.confirmarRepeticao('assunto', nomes);
+  }
+
+  private nomesPorIdsRepetidos<T extends { id?: number; nome: string }>(
+    idsSelecionados: number[],
+    idsJaCadastrados: Set<number>,
+    opcoes: T[],
+  ): string[] {
+    const nomesPorId = new Map(opcoes.map((opcao) => [opcao.id, opcao.nome]));
+    return [...new Set(idsSelecionados)]
+      .filter((id) => idsJaCadastrados.has(id))
+      .map((id) => nomesPorId.get(id) ?? `ID ${id}`);
+  }
+
+  private confirmarRepeticao(tipo: 'materia' | 'assunto', nomes: string[]): boolean {
+    if (!nomes.length) return true;
+
+    const plural = nomes.length > 1;
+    const materia = tipo === 'materia';
+    const sujeito = materia
+      ? `${plural ? 'As matérias' : 'A matéria'}`
+      : `${plural ? 'Os assuntos' : 'O assunto'}`;
+    const verbo = plural
+      ? `já estão cadastrad${materia ? 'as' : 'os'}`
+      : `já está cadastrad${materia ? 'a' : 'o'}`;
+    const pronome = materia ? (plural ? 'las' : 'la') : (plural ? 'los' : 'lo');
+    return window.confirm(
+      `${sujeito} ${nomes.map((nome) => `"${nome}"`).join(', ')} ${verbo} neste planejamento. Deseja adicioná-${pronome} novamente?`,
     );
   }
 
