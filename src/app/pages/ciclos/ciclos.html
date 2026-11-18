@@ -122,7 +122,7 @@
             <span>Matéria</span>
             <select formControlName="itemId">
               <option [ngValue]="null">Selecione uma matéria</option>
-              <option *ngFor="let materia of materias" [ngValue]="materia.id" [disabled]="!materiaDisponivel(materia)">
+              <option *ngFor="let materia of materias" [ngValue]="materia.id">
                 {{ materia.nome }}{{ materiaDisponivel(materia) ? '' : ' — já adicionada' }}
               </option>
             </select>

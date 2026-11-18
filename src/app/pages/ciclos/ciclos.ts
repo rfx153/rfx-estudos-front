@@ -192,10 +192,8 @@ export class CiclosComponent implements OnInit {
       return;
     }
 
-    if (!this.itemDisponivel(tipo, itemId)) {
-      this.message.warning(tipo === 'MATERIA'
-        ? 'Esta matéria já faz parte do ciclo.'
-        : 'Este bloco já faz parte do ciclo.');
+    if (tipo === 'GRUPO' && !this.itemDisponivel(tipo, itemId)) {
+      this.message.warning('Este bloco já faz parte do ciclo.');
       return;
     }
 
