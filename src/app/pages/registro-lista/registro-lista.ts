@@ -34,6 +34,7 @@ import {
 import { NzCardModule } from 'ng-zorro-antd/card'; // <-- INSTALE ESTE IMPORT
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
+import { finalize } from 'rxjs';
 
 interface RegistroQuestoesTemporario {
   descricao: string;
@@ -86,6 +87,8 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
   listaTiposRegistro: TipoRegistro[] = [];
 
   salvando = false;
+  criandoMateria = false;
+  criandoAssunto = false;
   questoesAbaAberta = false;
   modoEdicao = false;
   registroEditandoId: number | null = null;
@@ -754,7 +757,7 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
     const nomeAssunto = inputElement.value.trim();
     const materiaFormValue = this.validateForm.get('materia')?.value;
 
-    if (!nomeAssunto) {
+    if (!nomeAssunto || this.criandoAssunto) {
       return; // Se estiver em branco, ignora
     }
 
@@ -776,7 +779,14 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
       materiaId: materiaId,
     };
 
-    this.registroService.criarAssunto(novoAssuntoPayload).subscribe({
+    this.criandoAssunto = true;
+    this.cdr.detectChanges();
+    this.registroService.criarAssunto(novoAssuntoPayload).pipe(
+      finalize(() => {
+        this.criandoAssunto = false;
+        this.cdr.detectChanges();
+      }),
+    ).subscribe({
       next: (assuntoSalvo) => {
         // 1. Adiciona o novo assunto retornado do Java na lista da tela
         this.listaAssuntos = [...this.listaAssuntos, assuntoSalvo];
@@ -793,7 +803,11 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Erro ao cadastrar assunto rápido:', err);
-        this.message.error('Não foi possível criar o assunto.');
+        this.message.error(
+          err?.status === 409
+            ? 'Já existe um assunto com esse nome nesta matéria.'
+            : 'Não foi possível criar o assunto.',
+        );
       },
     });
   }
@@ -801,11 +815,18 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
   cadastrarMateriaRapida(inputElement: HTMLInputElement): void {
     const nomeMateria = inputElement.value.trim();
 
-    if (!nomeMateria) {
+    if (!nomeMateria || this.criandoMateria) {
       return; // Se estiver em branco, não faz nada
     }
 
-    this.materiaService.criar({ nome: nomeMateria }).subscribe({
+    this.criandoMateria = true;
+    this.cdr.detectChanges();
+    this.materiaService.criar({ nome: nomeMateria }).pipe(
+      finalize(() => {
+        this.criandoMateria = false;
+        this.cdr.detectChanges();
+      }),
+    ).subscribe({
       next: (materiaSalva) => {
         // 1. Adiciona a nova matéria retornada do Java na lista da tela
         this.listaMaterias = [...this.listaMaterias, materiaSalva];
@@ -822,7 +843,11 @@ export class RegistroListaComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Erro ao cadastrar matéria rápida:', err);
-        this.message.error('Não foi possível criar a matéria.');
+        this.message.error(
+          err?.status === 409
+            ? 'Já existe uma matéria com esse nome.'
+            : 'Não foi possível criar a matéria.',
+        );
       },
     });
   }

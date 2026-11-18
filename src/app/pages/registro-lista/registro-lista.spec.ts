@@ -9,21 +9,29 @@ import { provideNzNativeDateAdapter } from 'ng-zorro-antd/core/time';
 import { NzModalService } from 'ng-zorro-antd/modal';
 
 import { MaterialGuiaService } from '../../services/material-guia.service';
-import { MateriaService } from '../../services/materia.service';
+import { Materia, MateriaService } from '../../services/materia.service';
 import {
   PlanejamentoDestinoRegistro,
   PlanejamentoService,
 } from '../../services/planejamento.service';
-import { RegistroService } from '../../services/registro.service';
+import { Assunto, RegistroService } from '../../services/registro.service';
 import { RegistroListaComponent } from './registro-lista';
 
 registerLocaleData(pt);
 
 describe('RegistroListaComponent', () => {
   let destinos$: Subject<PlanejamentoDestinoRegistro[]>;
+  let criarMateria$: Subject<Materia>;
+  let criarAssunto$: Subject<Assunto>;
+  let criarMateria: ReturnType<typeof vi.fn>;
+  let criarAssunto: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     destinos$ = new Subject<PlanejamentoDestinoRegistro[]>();
+    criarMateria$ = new Subject<Materia>();
+    criarAssunto$ = new Subject<Assunto>();
+    criarMateria = vi.fn(() => criarMateria$);
+    criarAssunto = vi.fn(() => criarAssunto$);
     await TestBed.configureTestingModule({
       imports: [RegistroListaComponent],
       providers: [
@@ -34,7 +42,7 @@ describe('RegistroListaComponent', () => {
         NzModalService,
         {
           provide: MateriaService,
-          useValue: { listarTodas: () => of([]), criar: () => of({}) },
+          useValue: { listarTodas: () => of([]), criar: criarMateria },
         },
         {
           provide: PlanejamentoService,
@@ -50,7 +58,11 @@ describe('RegistroListaComponent', () => {
         },
         {
           provide: RegistroService,
-          useValue: { listarTiposRegistro: () => of([]) },
+          useValue: {
+            listarTiposRegistro: () => of([]),
+            listarAssuntosPorMateria: () => of([]),
+            criarAssunto,
+          },
         },
       ],
     }).compileComponents();
@@ -103,5 +115,42 @@ describe('RegistroListaComponent', () => {
 
     expect(component.modalDestinoAberto).toBe(true);
     expect(document.body.textContent).toContain('Escolha onde salvar no planejamento');
+  });
+
+  it('deve bloquear novos cliques enquanto cria uma matéria', () => {
+    const fixture = TestBed.createComponent(RegistroListaComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    const input = document.createElement('input');
+    input.value = 'Português';
+
+    component.cadastrarMateriaRapida(input);
+    component.cadastrarMateriaRapida(input);
+
+    expect(component.criandoMateria).toBe(true);
+    expect(criarMateria).toHaveBeenCalledOnce();
+
+    criarMateria$.next({ id: 1, nome: 'Português' });
+    criarMateria$.complete();
+    expect(component.criandoMateria).toBe(false);
+  });
+
+  it('deve bloquear novos cliques enquanto cria um assunto', () => {
+    const fixture = TestBed.createComponent(RegistroListaComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.validateForm.patchValue({ materia: 1 }, { emitEvent: false });
+    const input = document.createElement('input');
+    input.value = 'Interpretação';
+
+    component.cadastrarAssuntoRapido(input);
+    component.cadastrarAssuntoRapido(input);
+
+    expect(component.criandoAssunto).toBe(true);
+    expect(criarAssunto).toHaveBeenCalledOnce();
+
+    criarAssunto$.next({ id: 2, nome: 'Interpretação' });
+    criarAssunto$.complete();
+    expect(component.criandoAssunto).toBe(false);
   });
 });

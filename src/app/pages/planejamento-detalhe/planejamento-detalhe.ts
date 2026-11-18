@@ -715,7 +715,11 @@ export class PlanejamentoDetalheComponent implements OnInit {
       error: (erro) => {
         console.error('Erro ao criar matéria:', erro);
         this.criandoMateria = false;
-        this.message.error('Não foi possível criar a matéria.');
+        this.message.error(
+          erro?.status === 409
+            ? 'Já existe uma matéria com esse nome.'
+            : 'Não foi possível criar a matéria.',
+        );
         this.cdr.detectChanges();
       },
     });
@@ -983,7 +987,11 @@ export class PlanejamentoDetalheComponent implements OnInit {
       error: (erro) => {
         console.error('Erro ao criar assunto:', erro);
         this.criandoAssunto = false;
-        this.message.error('Não foi possível criar o assunto.');
+        this.message.error(
+          erro?.status === 409
+            ? 'Já existe um assunto com esse nome nesta matéria.'
+            : 'Não foi possível criar o assunto.',
+        );
         this.cdr.detectChanges();
       },
     });

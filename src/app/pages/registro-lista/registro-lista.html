@@ -34,9 +34,17 @@
       <ng-template #renderMateriaTemplate>
         <div class="dropdown-wrapper" style="display: flex; flex-wrap: nowrap; padding: 8px;">
           <input type="text" nz-input #inputMateria placeholder="Nova matéria..." style="flex: auto;" />
-          <a class="add-item-btn" (click)="cadastrarMateriaRapida(inputMateria)" style="flex: none; padding: 8px; display: block; cursor: pointer;">
-            <i nz-icon nzType="plus"></i> Criar
-          </a>
+          <button
+            nz-button
+            nzType="link"
+            type="button"
+            class="add-item-btn"
+            [disabled]="criandoMateria"
+            [nzLoading]="criandoMateria"
+            (click)="cadastrarMateriaRapida(inputMateria)"
+            style="flex: none; padding: 8px;">
+            <i nz-icon nzType="plus"></i> {{ criandoMateria ? 'Criando...' : 'Criar' }}
+          </button>
         </div>
       </ng-template>
     </nz-form-control>
@@ -60,9 +68,16 @@
             <ng-template #renderTemplate>
               <div class="dropdown-wrapper">
                 <input type="text" nz-input #inputElement placeholder="Novo assunto..." />
-                <a class="add-item-btn" (click)="cadastrarAssuntoRapido(inputElement)">
-                  <i nz-icon nzType="plus"></i> Criar
-                </a>
+                <button
+                  nz-button
+                  nzType="link"
+                  type="button"
+                  class="add-item-btn"
+                  [disabled]="criandoAssunto"
+                  [nzLoading]="criandoAssunto"
+                  (click)="cadastrarAssuntoRapido(inputElement)">
+                  <i nz-icon nzType="plus"></i> {{ criandoAssunto ? 'Criando...' : 'Criar' }}
+                </button>
               </div>
             </ng-template>
 
