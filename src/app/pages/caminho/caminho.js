@@ -91,6 +91,7 @@ export class CaminhoComponent {
                 { nome: 'Técnico em informática', status: 'Feito' },
                 { nome: 'Pós-graduação', status: 'A fazer' },
                 { nome: 'Mestrado', status: 'A fazer' },
+                { nome: 'Base - Computação (POSCOMP) e Matemática', status: 'A fazer' },
                 { nome: 'Artigos para congresso', status: 'Fazendo' }
             ]
         },
@@ -98,9 +99,12 @@ export class CaminhoComponent {
             nome: 'Concursos',
             descricao: 'Construção da base e preparação para os próximos níveis.',
             marcos: [
-                { nome: 'Concurso tribunal', status: 'Feito' },
-                { nome: 'Refinar a base', status: 'A fazer' },
-                { nome: 'Estudos para concurso de alto nível', status: 'Fazendo' }
+                { nome: 'Bombeiro', status: 'Feito' },
+                { nome: 'Detran/AP', status: 'Feito' },
+                { nome: 'Concurso técnico tribunal TRT 1', status: 'Feito' },
+                { nome: 'Concurso Tribunal do Estado do Amapá', status: 'Feito' },
+                { nome: 'Estudo para concurso de alto nível (Bacen, CGU)', status: 'Fazendo' },
+                { nome: 'Receita Federal ou TCU', status: 'A fazer' }
             ]
         },
         {
@@ -116,7 +120,26 @@ export class CaminhoComponent {
         {
             nome: 'Habilidades em tecnologia',
             descricao: 'Competências técnicas para apoiar os projetos e a carreira.',
-            marcos: []
+            marcos: [
+                { nome: 'Linguagem Java', status: 'Fazendo' },
+                { nome: 'Linguagem JavaScript', status: 'Fazendo' },
+                { nome: 'Fundamentos de desenvolvimento web e algoritmos', status: 'Fazendo' },
+                { nome: 'Banco de dados', status: 'Fazendo' },
+                { nome: 'Engenharia de software', status: 'A fazer' },
+                { nome: 'Arquitetura de software', status: 'A fazer' },
+                { nome: 'CI/CD e Infraestrutura', status: 'A fazer' },
+                { nome: 'Inteligência Artificial na prática', status: 'A fazer' }
+            ]
+        },
+        {
+            nome: 'Outras metas',
+            descricao: 'Objetivos pessoais e profissionais para o futuro.',
+            marcos: [
+                {
+                    nome: 'Desenvolver uma aplicação ou empresa voltada ao desenvolvimento de sistemas para ganhar uma boa grana',
+                    status: 'A fazer'
+                }
+            ]
         }
     ];
     todosOsMarcos() {
